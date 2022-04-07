@@ -1,0 +1,216 @@
+.multi-file-upload__item-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.multi-file-upload__item {
+  padding: 10px 0;
+  border-bottom: 1px solid $govuk-border-colour;
+}
+
+.multi-file-upload__item-content {
+  @include govuk-media-query($from: tablet) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.multi-file-upload__file-container {
+  position: relative;
+  flex-shrink: 100; /* IE11 fix to avoid input pushing the Remove button off screen on smaller screens */
+}
+
+.multi-file-upload__file {
+  max-width: 100%;
+}
+
+.multi-file-upload__file-preview,
+.multi-file-upload__file-name {
+  display: none;
+  word-break: break-all;
+  margin-bottom: 10px;
+  margin-right: 10px;
+  @include govuk-font($size: 19);
+
+  @include govuk-media-query($from: tablet) {
+    margin-bottom: 0;
+  }
+  
+  font-weight: bold;
+}
+
+.multi-file-upload__description {
+  display: none;
+  word-break: break-all;
+  margin-bottom: 10px;
+  margin-right: 10px;
+  @include govuk-font($size: 19);
+
+  @include govuk-media-query($from: tablet) {
+    margin-bottom: 0;
+  }
+}
+
+.multi-file-upload__meta-container {
+  display: flex;
+  justify-content: flex-end;
+  flex-direction: row-reverse;
+
+  @include govuk-media-query($from: tablet) {
+    flex-direction: row;
+  }
+}
+
+.multi-file-upload__status {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.multi-file-upload__progress {
+  position: absolute;
+  display: none;
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #1d70b8;
+}
+
+.multi-file-upload__progress-bar {
+  display: block;
+  background-color: #1d70b8;
+  box-sizing: border-box;
+  width: 0;
+  min-width: 4rem;
+  height: 23px;
+  height: 1.4375rem;
+  padding: 4px 0 3px;
+  border: 2px solid #fff; 
+}
+    /* IE 11 */
+@media (-ms-high-contrast: active) {
+  .multi-file-upload__progress-bar  {
+    -ms-high-contrast-adjust: none;
+    background-color: highlight;
+ }
+}
+/* Edge 18+ */
+@media (forced-colors: active) {
+  .multi-file-upload__progress-bar  {
+    -ms-high-contrast-adjust: none;
+    background-color: highlight; 
+  }
+}
+
+.multi-file-upload__uploaded-tag {
+  // using visibility to ensure this element determines the width of the progress bar
+  visibility: hidden;
+}
+
+.multi-file-upload__waiting-tag {
+  display: none;
+}
+
+.multi-file-upload__remove-item {
+  margin-right: 15px;
+  padding: 0;
+  color: #1d70b8;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  @include govuk-font($size: 19);
+
+  @include govuk-media-query($from: tablet) {
+    margin-left: 15px;
+    margin-right: 0;
+  }
+}
+
+.multi-file-upload__remove-item:hover {
+  color: $govuk-link-hover-colour;
+}
+
+.multi-file-upload__removing {
+  display: none;
+  @include govuk-font($size: 19);
+}
+
+.multi-file-upload__item--waiting {
+  .multi-file-upload__file {
+    display: none;
+  }
+
+  .multi-file-upload__file-name {
+    display: inline-block;
+  }
+
+  .multi-file-upload__waiting-tag {
+    display: inline-block;
+  }
+}
+
+.multi-file-upload__item--uploading,
+.multi-file-upload__item--verifying {
+  .multi-file-upload__file {
+    display: none;
+  }
+
+  .multi-file-upload__file-name {
+    display: inline-block;
+  }
+
+  .multi-file-upload__progress {
+    display: inline-block;
+    
+  }
+}
+
+.multi-file-upload__item--uploaded {
+  .multi-file-upload__file {
+    display: none;
+  }
+
+  .multi-file-upload__file-preview {
+    display: inline-block;
+  }
+
+  .multi-file-upload__uploaded-tag {
+    visibility: visible;
+  }
+
+  .multi-file-upload__description {
+    display: inline-block;
+  }
+}
+
+.multi-file-upload__item--removing {
+  .multi-file-upload__file {
+    display: none;
+  }
+
+  .multi-file-upload__file-name {
+    display: inline-block;
+  }
+
+  .multi-file-upload__remove-item {
+    display: none;
+  }
+
+  .multi-file-upload__removing {
+    display: inline-block;
+  }
+}
+
+.multi-file-upload__item .govuk-form-group {
+  margin-bottom: 0;
+}
+
+.multi-file-upload__overall-status {
+  display: flex;
+  align-items: center;
+}
+
+.multi-file-upload .file-upload__spinner {
+  margin-top: -5px;
+  vertical-align: middle;
+}

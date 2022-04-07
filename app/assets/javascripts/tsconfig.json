@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "paths": {
+      "webjars/*": [
+        "../../../target/web/web-modules/main/webjars/*"
+      ]
+    }
+  }
+}

@@ -1,0 +1,48 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.uploaddocuments.models.CustomizedServiceContent
+
+@(acceptedFileExtensions: String)(implicit messages: Messages, serviceContent: CustomizedServiceContent)
+<li class="multi-file-upload__item">
+  <div class="govuk-form-group">
+    <label class="govuk-label multi-file-upload__item-label" for="file-{fileIndex}"></label>
+    <div class="multi-file-upload__item-content">
+      <div class="multi-file-upload__file-container">
+        <input class="multi-file-upload__file govuk-file-upload" type="file" id="file-{fileIndex}" accept="@acceptedFileExtensions">
+        <span class="multi-file-upload__file-name"></span>
+        <a href="" target="_blank" class="govuk-link multi-file-upload__file-preview" rel="noopener noreferer">Preview</a>
+      </div>
+
+      <div class="multi-file-upload__meta-container">
+        <div class="multi-file-upload__status">
+          <span class="multi-file-upload__progress">
+            <span class="multi-file-upload__progress-bar" aria-live="polite" aria-label="uploading"></span>
+          </span>
+          <span class="multi-file-upload__uploaded-tag govuk-tag">@serviceContent.fileUploadedProgressBarLabel.getOrElse(messages("view.upload-multiple-files.uploaded"))</span>
+          <span class="multi-file-upload__waiting-tag govuk-tag govuk-tag--grey">@messages("view.upload-multiple-files.pending")</span>
+        </div>
+
+        <button type="button" class="multi-file-upload__remove-item govuk-link">
+          @messages("view.upload-multiple-files.remove")
+          <span class="govuk-visually-hidden">@messages("view.upload-multiple-files.document") <span class="multi-file-upload__number">{fileNumber}</span></span>
+        </button>
+        <span class="multi-file-upload__removing">@messages("view.upload-multiple-files.removing")</span>
+      </div>
+    </div>
+  </div>
+  <div class="multi-file-upload__description"></div>
+</li>

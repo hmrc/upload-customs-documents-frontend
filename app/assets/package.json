@@ -1,0 +1,51 @@
+{
+  "name": "upload-customs-documents-frontend",
+  "repository": "https://github.com/hmrc/upload-customs-documents-frontend",
+  "version": "1.0.0",
+  "description": "Frontend components",
+  "scripts": {
+    "start": "webpack --config webpack.config.js",
+    "build": "npm test && webpack --config webpack.config.js",
+    "test": "node_modules/karma/bin/karma start --single-run",
+    "test-watch": "node_modules/karma/bin/karma start"
+  },
+  "author": "HMRC",
+  "license": "Apache-2.0",
+  "browserslist": [
+    "defaults"
+  ],
+  "dependencies": {
+    "isomorphic-fetch": "3.0.0",
+    "mdn-polyfills": "5.20.0",
+    "outdated": "^0.1.1",
+    "promise-polyfill": "8.2.1"
+  },
+  "devDependencies": {
+    "@babel/core": "7.16.7",
+    "@babel/plugin-proposal-class-properties": "7.16.7",
+    "@babel/preset-env": "7.16.8",
+    "@babel/preset-typescript": "7.16.7",
+    "@typescript-eslint/eslint-plugin": "5.9.1",
+    "@typescript-eslint/parser": "5.9.1",
+    "babel-loader": "8.2.3",
+    "css-loader": "6.5.1",
+    "css-minimizer-webpack-plugin": "^3.3.1",
+    "eslint": "8.6.0",
+    "eslint-webpack-plugin": "3.1.1",
+    "jasmine": "4.0.2",
+    "jasmine-core": "4.0.0",
+    "karma": "6.3.11",
+    "karma-chrome-launcher": "3.1.0",
+    "karma-jasmine": "4.0.1",
+    "karma-spec-reporter": "0.0.33",
+    "karma-webpack": "5.0.0",
+    "mini-css-extract-plugin": "2.5.0",
+    "puppeteer": "13.0.1",
+    "sass": "1.48.0",
+    "sass-loader": "12.4.0",
+    "typescript": "4.5.4",
+    "webpack": "5.66.0",
+    "webpack-cli": "4.9.1",
+    "webpack-merge": "5.8.0"
+  }
+}

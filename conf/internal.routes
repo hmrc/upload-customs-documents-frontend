@@ -1,0 +1,14 @@
+# internal (backchannel) routes
+
+# endpoint to (re)initialize documents upload session
++ nocsrf
+POST       /initialize                                                      @uk.gov.hmrc.uploaddocuments.controllers.internal.InitializeController.initialize
+
+# endpoint to effectively wipe-out current session data
++ nocsrf
+POST       /wipe-out                                                        @uk.gov.hmrc.uploaddocuments.controllers.internal.WipeOutController.wipeOut
+
+# endpoint to receive upscan notification
++ nocsrf
+POST       /callback-from-upscan/journey/:journeyId/:nonce                  @uk.gov.hmrc.uploaddocuments.controllers.internal.CallbackFromUpscanController.callbackFromUpscan(journeyId: String, nonce: String)
+

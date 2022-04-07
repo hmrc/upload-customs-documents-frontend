@@ -1,0 +1,100 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.uploaddocuments.models.{FileUploads,FileUpload,CustomizedServiceContent,Features}
+@import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
+@import uk.gov.hmrc.uploaddocuments.views.SummaryViewHelper
+
+@this(
+        govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.GovukLayoutWrapper,
+        forms: uk.gov.hmrc.uploaddocuments.views.components.forms,
+        html: uk.gov.hmrc.uploaddocuments.views.components.html,
+        appConfig: AppConfig,
+        context: SummaryViewHelper
+)
+
+@(
+  maxFileUploadsNumber: Int,
+  maximumFileSizeBytes: Long, 
+  form: Form[Boolean], 
+  fileUploads: FileUploads, 
+  postAction: Call, 
+  previewFileCall: (String,String) => Call, 
+  removeFileCall: String => Call, 
+  backLink: Call
+)(implicit request: Request[_], messages: Messages, features: Features, serviceContent: CustomizedServiceContent)
+
+@conditionalContent = {
+  @html.p(
+    content = Html(messages("form.file-uploaded.uploadAnotherFile.noConditional")),
+    classes = "govuk-body govuk-!-padding-bottom-4 govuk-!-padding-top-4"
+  )
+}
+
+@govukLayout(
+  pageTitle = pageWithFormTitle(if(fileUploads.isEmpty) "view.summary.empty.title" else if(fileUploads.isSingle) "view.summary.singular.title" else "view.summary.plural.title", form, fileUploads.acceptedCount)(messages, CustomizedServiceContent()),
+  backLink = Some(backLink.url)) {
+
+  @forms.errorSummary(form.errors)
+
+  @forms.formWithCSRF(action = postAction) {
+
+    @html.h1(
+      messages(if(fileUploads.isEmpty) "view.summary.empty.heading" else if(fileUploads.isSingle) "view.summary.singular.heading" else "view.summary.plural.heading", fileUploads.acceptedCount),
+      classes = serviceContent.pageTitleClasses.getOrElse("govuk-heading-l")
+    )
+
+    @if(fileUploads.isEmpty){
+
+      @serviceContent.safeDescriptionHtml.map(d => Html(d)).getOrElse {
+        @html.p{ @messages("view.upload-file.line1", maxFileUploadsNumber, maximumFileSizeBytes) }
+        @html.p{ @messages("view.upload-file.line2", maxFileUploadsNumber, maximumFileSizeBytes) }
+      }
+
+    }else{
+      @html.h2(messages("view.summary.list.heading"), classes = "govuk-heading-m")
+
+      @html.summaryList(context.summaryListOfFileUploads(fileUploads, previewFileCall, removeFileCall))
+    }
+
+    @forms.inputRadio(
+      form = form,
+      idPrefix = "choice",
+      name = "choice",
+      inline = true,
+      items = Seq(
+        RadioItem(
+          value = Some("yes"),
+          content = Text(messages("form.file-uploaded.choice.yes")),
+          checked = form("choice").value.contains("yes")
+        ),
+        RadioItem(
+          value = Some("no"),
+          content = Text(messages("form.file-uploaded.choice.no")),
+          checked = form("choice").value.contains("no"),
+          conditionalHtml = None
+        )
+      ),
+      legend = if(features.showYesNoQuestionBeforeContinue) serviceContent.yesNoQuestionText
+        else Some(if(fileUploads.isEmpty) "view.summary.uploadFile.heading" else "view.summary.uploadAnotherFile.heading"),
+      legendAsHeading = false,
+      legendAsH2 = false,
+      legendClasses = ""
+    )
+
+    @html.button("form.file-uploaded.continue")
+  }
+}

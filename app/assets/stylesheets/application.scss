@@ -1,1 +1,25 @@
-@import "lib/govuk-frontend/govuk/base";
+$images-path: "../images";
+$govuk-assets-path: "/upload-customs-documents/assets/lib/govuk-frontend/govuk/assets/";
+$hmrc-assets-path: "/upload-customs-documents/assets/lib/hmrc-frontend/hmrc/";
+
+@import "webjars/lib/govuk-frontend/govuk/all";
+@import "webjars/lib/hmrc-frontend/hmrc/all";
+
+@import "global/overrides";
+
+// 3rd party components
+@import "components/3rd-party/research-banner";
+@import "components/3rd-party/upload-loading";
+
+// Custom components
+@import "components/action-buttons";
+@import "components/contents-list";
+@import "components/multi-file-upload";
+@import "components/file-upload";
+
+.js-enabled #confirmation-heading-no-js{display: none;}
+.js-enabled #confirmation-heading{display: inline-block;}
+
+#print-receipt{display: none;}
+
+.js-enabled #print-receipt{display: inline-block; }

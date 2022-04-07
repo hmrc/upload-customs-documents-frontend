@@ -1,0 +1,201 @@
+service.name = Upload documents
+
+# Site wide messages
+# ----------------------------------------------------------
+site.fullStop =.
+site.back = Back
+site.review = Review
+site.delete = Delete
+site.edit = Change
+site.hidden-delete = Delete {0}
+site.hidden-edit = Change {0}
+site.no = No
+site.yes = Yes
+site.continue = Continue
+site.confirm = Confirm
+site.saveAndContinue = Save and continue
+site.submitAndContinue = Submit and continue
+site.acceptAndContinue = Accept and continue
+site.confirmAndSubmit = Confirm and submit
+site.textarea.char_limit = (Limit is {0} characters)
+site.serviceName = Upload documents
+site.govuk = GOV.UK
+site.signOut = Sign out
+site.getHelpWithThisPage = Get help with this page
+site.notProvided = Not Provided
+site.incomplete = Incomplete
+site.warning = Warning:
+site.opensInNewWindowOrTab = (opens in new tab)
+site.change = Change
+site.logOut = log out
+site.youCan = You can:
+site.file.remove = Remove
+site.switchLanguage=Newid yr iaith ir Gymraeg
+site.today = today
+site.tomorrow = tomorrow
+
+site.Jan = January
+site.Feb = February
+site.March = March
+site.Apr = April
+site.May = May
+site.June = June
+site.July = July
+site.Aug = August
+site.Sept = September
+site.Oct = October
+site.Nov = November
+site.Dec = December
+
+site.datetime.preposition=at
+
+# Validation errors
+error.summary.heading=There is a problem
+error.prefix=Error:
+error.email=Enter a valid email address
+error.date.required=Enter date the correct format
+error.date.invalid-format=Invalid date
+error.year.invalid-format=Enter a year
+error.day.invalid-format=Enter a day
+error.month.invalid-format=Enter a month
+
+button.continue=Continue
+button.submit=Submit
+
+# Global errors
+global.error.404.title=Page not found
+global.error.404.heading=Page not found
+global.error.404.line1=If you typed the web address, check it is correct.
+global.error.404.line2=If you pasted the web address, check you copied the entire address.
+
+global.error.500.title=Sorry, there is a problem with the service
+global.error.500.heading=Sorry, there is a problem with the service
+global.error.500.line1=Try again. If the issue persists and you need help, you can <a class="govuk-link" target="_blank" rel="noopener noreferrer" href="{0}">report the problem (opens in a new window or tab)</a>. We will respond to you within two working days. 
+global.error.500.line2=If you’ve entered any information, we have not saved your answers.
+
+global.ooh.error.500.line1=Try again. If the issue persists, please email your documents to <a href="mailto:nch@hmrc.gov.uk" class="govuk-link">nch@hmrc.gov.uk</a> instead. 
+global.ooh.error.500.line2=If you’ve entered any information, we have not saved your answers.
+
+external.update.error.500.title=Sorry, something has gone wrong
+external.update.error.500.heading=Sorry, something has gone wrong
+external.update.error.500.line1=You may have entered some incorrect details.
+external.update.error.500.line2=Try to <a class="govuk-link" href="{0}">enter your case reference number</a> again.
+
+# Banner
+# ----------------------------------------------------------
+feedback.before = This is a new service - your
+feedback.link = feedback
+feedback.after = will help us to improve it.
+
+# Footer Links
+# -----------------------
+footer.cookies         = Cookies
+footer.privacy         = Privacy policy
+footer.termsConditions = Terms and conditions
+footer.govukHelp       = Help using GOV.UK
+footer.accessibilityStatement = Accessibility statement
+
+# Research Banner Content
+# ----------------------------------------------------------
+researchBanner.heading = Help improve GOV.UK
+researchBanner.inviteLink = Help improve digital services by joining the HMRC user panel (opens in a new window)
+researchBanner.closeLink = No thanks
+
+# Summary messages
+# ----------------------------------------------------------
+summary.file-names=File names
+
+# File upload messages
+# ----------------------------------------------------------
+view.upload-multiple-files.heading=Upload your documents
+view.upload-multiple-files.title=Upload your documents
+view.upload-multiple-files.uploadMoreFilesThanLimit=You can upload up to {0} file.
+view.upload-multiple-files.document=Document
+view.upload-multiple-files.remove=Remove
+view.upload-multiple-files.removing=Removing...
+view.upload-multiple-files.pending=Pending
+view.upload-multiple-files.uploaded=Ready to submit
+view.upload-multiple-files.documentUploaded=Document {0} has been uploaded
+view.upload-multiple-files.documentDeleted=Document {0} has been deleted
+view.upload-multiple-files.chooseFirstFileLabel=Select the first file to upload
+view.upload-multiple-files.chooseNextFileLabel=Select another file to upload
+view.upload-multiple-files.stillTransferring=Files are still being transferred
+view.upload-multiple-files.uploadOnSelect=Choose your files to start uploading them
+view.upload-multiple-files.line1=You can upload up to {0} documents.
+view.upload-multiple-files.line2=Each document must be smaller than 6MB.
+view.upload-multiple-files.addAnother=Add another document
+view.upload-file.first.title=Upload your first document
+view.upload-file.first.heading=Upload your first document
+view.upload-file.first.fileLabel=Select the first file to upload
+view.upload-file.next.fileLabel=Select another file to upload
+view.upload-file.next.title=Upload another document
+view.upload-file.next.heading=Upload another document
+view.upload-file.waiting=Your document is being uploaded. You’ll be redirected once the file has been processed.
+view.upload-file.line1=You can upload up to {0} documents individually.
+view.upload-file.line2=Each document must be smaller than 6MB.
+view.upload-file.help.linkText=Types of file you can upload
+view.upload-file.help.line1=These file types are allowed:
+view.upload-file.help.fileFormat1=image (.jpg, .jpeg, .png or .tiff)
+view.upload-file.help.fileFormat2=PDF (.pdf)
+view.upload-file.help.fileFormat3=email (.txt or .msg)
+view.upload-file.help.fileFormat4=Microsoft (Word, Excel or PowerPoint)
+view.upload-file.help.fileFormat5=Open Document Format (ODF)
+view.upload-file.help.line4=You cannot upload zip files or documents that are password-protected.
+
+view.summary.empty.title=You haven’t uploaded any documents
+view.summary.empty.heading=You haven’t uploaded any documents
+view.summary.singular.title=You’ve uploaded 1 document
+view.summary.singular.heading=You’ve uploaded 1 document
+view.summary.plural.title=You’ve uploaded {0} documents
+view.summary.plural.heading=You’ve uploaded {0} documents
+view.summary.uploadFile.heading=Do you want to upload a document?
+view.summary.uploadAnotherFile.heading=Do you want to upload another document?
+view.summary.list.singular.heading=Document you’ve uploaded
+view.summary.list.heading=Documents you’ve uploaded
+view.summary.maximum=You can upload up to {0} files.
+
+form.upload-file.file=Upload a file
+form.upload-file.submit=Upload
+form.file-uploaded.choice.yes=Yes
+form.file-uploaded.choice.no=No
+form.file-uploaded.choice.noConditional=By continuing, you will now submit all the documents you’ve uploaded
+form.file-uploaded.continue=Continue
+form.upload-multiple-files.continue=Continue
+
+error.file-upload.required=Select a file
+error.file-upload.invalid-size-small=The selected file is empty
+error.file-upload.invalid-size-large=The selected file must be smaller than {0}MB
+error.file-upload.invalid-type=The selected file must be {1}
+error.file-upload.quarantine=The selected file contains a virus - upload a different one
+error.file-upload.unknown=The selected file could not be uploaded
+error.file-upload.try-again=The selected file could not be uploaded - try again
+error.file-upload.remove.try-again=The selected file could not be removed - try again
+error.choice.required=Select yes if you want to upload another document
+error.file-upload.duplicate=The selected file has already been uploaded
+
+# Common form messages
+# ----------------------------------------------------------
+error.browser.title.prefix = Error:
+error.summary.title=There is a problem
+date.day = Day
+date.month = Month
+date.year = Year
+time.hour = Hour
+time.minutes = Minute
+time.period = am or pm
+time.period.none=
+time.period.am=am
+time.period.pm=pm
+
+# Timed Out messages
+# -----------------------------------------------------------
+view.timedout.title=For your security, we signed you out
+view.timedout.heading=For your security, we signed you out
+view.timedout.description=We did not save your answers.
+view.timedout.signIn=Sign in
+
+skip.link=Skip to main content
+
+view.timedout.dialog.message=For your security, we will sign you out in
+view.timedout.dialog.message.suffix=We will not save your answers.
+
