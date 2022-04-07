@@ -265,8 +265,8 @@ Each uploaded file can be marked with a label. Each empty input row can have a l
 
 ### Running the app locally
 
-    sm --start UPLOAD_DOCUMENTS_ALL
-    sm --stop UPLOAD_DOCUMENTS_FRONTEND 
+    sm --start UPLOAD_CUSTOMS_DOCUMENTS_ALL
+    sm --stop UPLOAD_CUSTOMS_DOCUMENTS_FRONTEND 
     sbt run
 
 It should then be listening on port 10110

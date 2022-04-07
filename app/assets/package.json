@@ -15,6 +15,7 @@
     "defaults"
   ],
   "dependencies": {
+    "graceful-fs": "^4.2.10",
     "isomorphic-fetch": "3.0.0",
     "mdn-polyfills": "5.20.0",
     "outdated": "^0.1.1",
