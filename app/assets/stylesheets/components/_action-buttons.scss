@@ -1,0 +1,62 @@
+.action-buttons {
+  margin-bottom: 40px;
+  padding-left: 0;
+  list-style: none;
+}
+
+.action-buttons__item {
+  @include govuk-media-query($from: desktop) {
+    display: inline-block;
+    margin-right: 20px;
+
+    &:last-of-type {
+      margin-right: 0;
+    }
+  }
+}
+
+.action-buttons__button {
+  padding: 0;
+  color: #1d70b8;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  font-size: 16px;
+  font-size: 1rem;
+  font-family: $govuk-font-family;
+
+  &:hover {
+    color: $govuk-link-hover-colour;
+  }
+
+  &:focus {
+    outline: 3px solid transparent;
+    color: #0b0c0c;
+    background-color: #fd0;
+    box-shadow: 0 -2px #fd0, 0 4px #0b0c0c;
+    text-decoration: none;
+  }
+
+  &::before {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    margin-right: 5px;
+    vertical-align: middle;
+    content: '';
+    background-size: 18px 18px;
+  }
+}
+
+.action-buttons__button--download {
+  &::before {
+    background-image: url($images-path + "/save-icon.svg");
+  }
+}
+
+.action-buttons__button--print {
+  &::before {
+    background-image: url($images-path + "/print-icon.svg");
+  }
+}

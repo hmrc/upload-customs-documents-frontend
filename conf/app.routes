@@ -1,5 +1,47 @@
 # microservice specific routes
 
-->         /hmrc-frontend           hmrcfrontend.Routes
-GET        /                        uk.gov.hmrc.uploadcustomsdocumentsfrontend.controllers.HelloWorldController.helloWorld
-GET        /assets/*file            controllers.Assets.versioned(path = "/public", file: Asset)
+->         /hmrc-frontend                                           hmrcfrontend.Routes 
+
+GET        /                                                        @uk.gov.hmrc.uploaddocuments.controllers.StartController.start
+
+GET        /choose-files                                            @uk.gov.hmrc.uploaddocuments.controllers.ChooseMultipleFilesController.showChooseMultipleFiles
+GET        /choose-file                                             @uk.gov.hmrc.uploaddocuments.controllers.ChooseSingleFileController.showChooseFile
+
++ nocsrf
+POST       /initiate-upscan/:uploadId                               @uk.gov.hmrc.uploaddocuments.controllers.InitiateUpscanController.initiateNextFileUpload(uploadId: String)
+
+GET        /file-rejected                                           @uk.gov.hmrc.uploaddocuments.controllers.FileRejectedController.markFileUploadAsRejected
++ nocsrf
+POST       /file-rejected                                           @uk.gov.hmrc.uploaddocuments.controllers.FileRejectedController.markFileUploadAsRejectedAsync
+
+GET        /journey/:journeyId/file-posted                          @uk.gov.hmrc.uploaddocuments.controllers.FilePostedController.asyncMarkFileUploadAsPosted(journeyId: String)
+OPTIONS    /journey/:journeyId/file-posted                          @uk.gov.hmrc.uploaddocuments.controllers.FilePostedController.preflightUpload(journeyId: String)
+
+GET        /journey/:journeyId/file-rejected                        @uk.gov.hmrc.uploaddocuments.controllers.FileRejectedController.asyncMarkFileUploadAsRejected(journeyId: String)
+OPTIONS    /journey/:journeyId/file-rejected                        @uk.gov.hmrc.uploaddocuments.controllers.FileRejectedController.preflightUpload(journeyId: String)
+
+GET        /journey/:journeyId/file-verification                    @uk.gov.hmrc.uploaddocuments.controllers.FileVerificationController.asyncWaitingForFileVerification(journeyId: String)
+
+GET        /file-verification                                       @uk.gov.hmrc.uploaddocuments.controllers.FileVerificationController.showWaitingForFileVerification
+GET        /file-verification/:reference/status                     @uk.gov.hmrc.uploaddocuments.controllers.FileVerificationController.checkFileVerificationStatus(reference: String)
+
+GET        /summary                                                 @uk.gov.hmrc.uploaddocuments.controllers.SummaryController.showSummary
+POST       /summary                                                 @uk.gov.hmrc.uploaddocuments.controllers.SummaryController.submitUploadAnotherFileChoice
+
+GET        /uploaded/:reference/remove                              @uk.gov.hmrc.uploaddocuments.controllers.RemoveController.removeFileUploadByReference(reference: String)
++ nocsrf
+POST       /uploaded/:reference/remove                              @uk.gov.hmrc.uploaddocuments.controllers.RemoveController.removeFileUploadByReferenceAsync(reference: String)
+
+GET        /preview/:reference/:fileName                            @uk.gov.hmrc.uploaddocuments.controllers.PreviewController.previewFileUploadByReference(reference: String, fileName: String)
+
+GET        /continue-to-host                                        @uk.gov.hmrc.uploaddocuments.controllers.ContinueToHostController.continueToHost
+POST       /continue-to-host                                        @uk.gov.hmrc.uploaddocuments.controllers.ContinueToHostController.continueWithYesNo
+
+GET        /timedout                                                @uk.gov.hmrc.uploaddocuments.controllers.SessionController.showTimeoutPage
+GET        /keep-alive                                              @uk.gov.hmrc.uploaddocuments.controllers.SessionController.keepAlive(continueUrl: Option[String] ?= None)
+
+GET        /sign-out                                                @uk.gov.hmrc.uploaddocuments.controllers.SignOutController.signOut(continueUrl: Option[String] ?= None)
+GET        /sign-out/timeout                                        @uk.gov.hmrc.uploaddocuments.controllers.SignOutController.signOutTimeout(continueUrl: Option[String] ?= None)
+
+GET        /language/:lang                                          @uk.gov.hmrc.uploaddocuments.controllers.LanguageSwitchController.switchToLanguage(lang: String)
+GET        /assets/*file                                            controllers.Assets.versioned(path="/public", file: Asset)

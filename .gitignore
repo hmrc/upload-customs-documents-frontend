@@ -1,9 +1,11 @@
 .*
 
+!.eslintrc
 !.gitignore
 !.scalafmt.conf
-bin
-.bloop/
+!.description
+!.scalafix.conf
+
 .cache
 /.classpath
 db
@@ -14,19 +16,16 @@ eclipse
 *.eml
 .history
 .idea
-.idea_modules
 /.idea_modules
 *.iml
 lib
 lib_managed
 log
 logs
-.metals/
-modules
+/modules
 /out
 precompiled
 /.project
-project/metals.sbt
 project/project
 project/target
 /RUNNING_PID
@@ -36,4 +35,11 @@ target
 .target
 test-result
 tmp
+.idea_modules
+bin
+.metals/
 .vscode/
+project/metals.sbt
+
+node_modules/
+app/assets/build/

@@ -1,0 +1,60 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.uploaddocuments.models.{FileUploads,FileUpload,CustomizedServiceContent,Features}
+@import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
+@import uk.gov.hmrc.uploaddocuments.views.SummaryViewHelper
+
+@this(
+        govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.GovukLayoutWrapper,
+        forms: uk.gov.hmrc.uploaddocuments.views.components.forms,
+        html: uk.gov.hmrc.uploaddocuments.views.components.html,
+        appConfig: AppConfig,
+        context: SummaryViewHelper
+)
+
+@(maxFileUploadsNumber: Int, fileUploads: FileUploads, postAction: Call, previewFileCall: (String,String) => Call, removeFileCall: String => Call, backLink: Call)(implicit request: Request[_], messages: Messages, features: Features, serviceContent: CustomizedServiceContent)
+
+@govukLayout(
+  pageTitle = pageTitle(if(fileUploads.isEmpty) "view.summary.empty.title" else if(fileUploads.isSingle) "view.summary.singular.title" else "view.summary.plural.title", fileUploads.acceptedCount)(messages, CustomizedServiceContent()),
+  backLink = Some(backLink.url)) {
+
+  @html.h1(
+      messages(if(fileUploads.isEmpty) "view.summary.empty.heading" else if(fileUploads.isSingle) "view.summary.singular.heading" else "view.summary.plural.heading", fileUploads.acceptedCount),
+      classes = serviceContent.pageTitleClasses.getOrElse("govuk-heading-l")
+    )
+    
+  @if(fileUploads.isSingle){  
+    @html.h2(messages("view.summary.list.singular.heading"), classes = "govuk-heading-m")
+  } else {
+    @html.h2(messages("view.summary.list.heading"), classes = "govuk-heading-m")
+  }
+
+  @html.summaryList(context.summaryListOfFileUploads(fileUploads,previewFileCall,removeFileCall))
+  
+  @forms.formWithCSRF(action = postAction) {
+
+    @html.p {
+      @if(maxFileUploadsNumber > 1){
+        @messages("view.summary.maximum",maxFileUploadsNumber)
+      }
+    }
+
+    @html.button("form.file-uploaded.continue")
+
+  }
+
+}

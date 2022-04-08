@@ -1,0 +1,110 @@
+@*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *@
+
+@import uk.gov.hmrc.uploaddocuments.models.{FileUploads,UploadRequest,FileUploadError,CustomizedServiceContent,Features}
+@import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
+@import uk.gov.hmrc.uploaddocuments.views.UploadFileViewHelper
+
+@this(
+govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.GovukLayoutWrapper,
+forms: uk.gov.hmrc.uploaddocuments.views.components.forms,
+html: uk.gov.hmrc.uploaddocuments.views.components.html,
+details: uk.gov.hmrc.uploaddocuments.views.html.components.details,
+govukFileUpload: GovukFileUpload,
+govukButton: GovukButton,
+appConfig: AppConfig,
+context: UploadFileViewHelper
+)
+
+@(
+  maxFileUploadsNumber: Int, 
+  maximumFileSizeBytes: Long, 
+  filePickerAcceptFilter: String, 
+  allowedFileTypesHint: String,
+  newFileDescription: Option[String],
+  uploadRequest: UploadRequest, 
+  fileUploads: FileUploads, 
+  maybeUploadError: Option[FileUploadError], 
+  successAction: Call, 
+  failureAction: Call, 
+  checkStatusAction: Call, 
+  backLink: Call
+)(implicit request: Request[_], messages: Messages, features: Features, serviceContent: CustomizedServiceContent)
+
+@govukLayout(
+  pageTitle = pageTitle(if(fileUploads.isEmpty) "view.upload-file.first.title" else "view.upload-file.next.title", maybeUploadError.isDefined),
+  backLink = Some(backLink.url)
+) {
+
+  @maybeUploadError.map { fileUploadError =>
+    @forms.errorSummary(Seq(context.toFormError(fileUploadError, maximumFileSizeBytes, allowedFileTypesHint)))
+  }
+
+  @html.h1(pageHeading(if(fileUploads.isEmpty) "view.upload-file.first.heading" else "view.upload-file.next.heading"), classes = serviceContent.pageTitleClasses.getOrElse("govuk-heading-l"))
+
+  <form action="@uploadRequest.href" method="POST" enctype="multipart/form-data" class="js-form file-upload" novalidate
+  data-file-upload-redirect-success-url="@successAction.url"
+  data-file-upload-redirect-failure-url="@failureAction.url"
+  data-file-upload-check-status-url="@checkStatusAction.url"
+  data-file-upload-aria-live-message="@messages("view.upload-file.waiting")">
+
+    @uploadRequest.fields.map { case (key, value) =>
+      @forms.inputHidden(key, value)
+    }
+
+     @serviceContent.safeDescriptionHtml.map(d => Html(d)).getOrElse {
+        @html.p{ @messages("view.upload-file.line1", maxFileUploadsNumber, maximumFileSizeBytes) }
+        @html.p{ @messages("view.upload-file.line2", maxFileUploadsNumber, maximumFileSizeBytes) }
+      }
+
+    @govukFileUpload(FileUpload(
+      name = "file",
+      id = "file",
+      value = Some(""),
+      describedBy = None,
+      label = Label(
+        content = Text(
+          if(fileUploads.isEmpty || !newFileDescription.exists(fileUploads.hasFileWithDescription(_)))
+            serviceContent.chooseFirstFileLabel.getOrElse(messages("view.upload-file.first.fileLabel"))
+          else 
+            serviceContent.chooseNextFileLabel.getOrElse(messages("view.upload-file.next.fileLabel"))
+        )
+      ),
+      hint = None,
+      errorMessage = maybeUploadError.map(context.toFormError(_, maximumFileSizeBytes, allowedFileTypesHint)).map(err => ErrorMessage(content = Text(messages(err.message, err.args: _*)))),
+      formGroupClasses = "",
+      classes = "",
+      attributes = Map(
+        "accept" -> filePickerAcceptFilter,
+        "data-msg-required" -> messages("error.file-upload.required"),
+        "data-msg-filesize" -> messages("error.file-upload.invalid-size-large",(maximumFileSizeBytes / (1024 * 1024))),
+        "data-msg-accept" -> messages("error.upload-file.other", allowedFileTypesHint)
+      ))
+    )
+
+    <div>
+      @govukButton(Button(
+        content = Text(messages("form.upload-file.submit")),
+        preventDoubleClick = true,
+        classes = "file-upload__submit"
+      ))
+      <div class="file-upload__spinner ccms-loader hidden"></div>
+    </div>
+
+    <div class="file-upload__loading-container" aria-live="polite" role="region"></div>
+
+  </form>
+}
