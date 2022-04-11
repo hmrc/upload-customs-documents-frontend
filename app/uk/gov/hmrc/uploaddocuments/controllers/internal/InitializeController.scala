@@ -18,9 +18,11 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 
 import play.api.libs.json.JsValue
 import play.api.mvc.Action
+import uk.gov.hmrc.mongo.cache.DataKey
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, Renderer}
 import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
 import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
@@ -30,7 +32,8 @@ import scala.concurrent.ExecutionContext
 class InitializeController @Inject() (
   sessionStateService: SessionStateService,
   renderer: Renderer,
-  components: BaseControllerComponents
+  components: BaseControllerComponents,
+  newJourneyCacheRepository: NewJourneyCacheRepository
 )(implicit ec: ExecutionContext)
     extends BaseController(components) {
 
@@ -40,11 +43,11 @@ class InitializeController @Inject() (
       withJsonBody[FileUploadInitializationRequest] { payload =>
         whenInSession {
           whenAuthenticatedInBackchannel {
-            val sessionStateUpdate =
-              JourneyModel.initialize(HostService.from(request))(payload)
-            sessionStateService
-              .updateSessionState(sessionStateUpdate)
-              .map(renderer.initializationResponse)
+            val sessionStateUpdate = JourneyModel.initialize(HostService.from(request))(payload)
+            for {
+              _       <- newJourneyCacheRepository.storeJourneyConfig(currentJourneyId)(payload)
+              session <- sessionStateService.updateSessionState(sessionStateUpdate) // Parallel Session State for now
+            } yield renderer.initializationResponse(session)
           }
         }
       }

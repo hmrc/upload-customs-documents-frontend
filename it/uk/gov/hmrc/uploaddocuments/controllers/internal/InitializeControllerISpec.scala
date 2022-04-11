@@ -67,6 +67,10 @@ class InitializeControllerISpec extends ControllerISpecBase {
           ),
           FileUploads()
         )
+
+        await(newJourneyRepo.getJourneyConfig(sessionStateService.getJourneyId(hc).get)) shouldBe Some(
+          FileUploadInitializationRequest(fileUploadSessionConfig, Seq.empty)
+        )
       }
 
       "register config and pre-existing file uploads" in {
@@ -102,6 +106,10 @@ class InitializeControllerISpec extends ControllerISpecBase {
             HostService.Any
           ),
           FileUploads(preexistingUploads.map(_.toFileUpload))
+        )
+
+        await(newJourneyRepo.getJourneyConfig(sessionStateService.getJourneyId(hc).get)) shouldBe Some(
+          FileUploadInitializationRequest(fileUploadSessionConfig, preexistingUploads)
         )
       }
     }

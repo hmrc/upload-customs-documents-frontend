@@ -9,7 +9,7 @@ import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.{HeaderCarrier, SessionId, SessionKeys}
 import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.repository.CacheRepository
+import uk.gov.hmrc.uploaddocuments.repository.{CacheRepository, NewJourneyCacheRepository}
 import uk.gov.hmrc.uploaddocuments.services.{EncryptedSessionCache, KeyProvider, SessionStateService}
 import uk.gov.hmrc.uploaddocuments.support.{SHA256, ServerISpec, StateMatchers, TestData, TestSessionStateService}
 
@@ -20,6 +20,8 @@ trait ControllerISpecBase extends ServerISpec with StateMatchers {
   val journeyId = "sadasdjkasdhuqyhwa326176318346674e764764"
 
   implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(journeyId)))
+
+  lazy val newJourneyRepo = app.injector.instanceOf[NewJourneyCacheRepository]
 
   import play.api.i18n._
   implicit val messages: Messages = MessagesImpl(Lang("en"), app.injector.instanceOf[MessagesApi])
