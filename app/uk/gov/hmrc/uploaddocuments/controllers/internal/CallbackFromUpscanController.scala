@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers.internal
 
-import com.fasterxml.jackson.core.JsonParseException
-import play.api.mvc.{Action, AnyContent}
+import play.api.libs.json.JsValue
+import play.api.mvc.Action
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents}
 import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
@@ -25,7 +25,7 @@ import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class CallbackFromUpscanController @Inject() (
@@ -36,25 +36,17 @@ class CallbackFromUpscanController @Inject() (
     extends BaseController(components) {
 
   // POST /callback-from-upscan/journey/:journeyId/:nonce
-  final def callbackFromUpscan(journeyId: String, nonce: String): Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession {
-        Future(request.body.asJson.flatMap(_.asOpt[UpscanNotification]))
-          .flatMap {
-            case Some(payload) =>
-              val sessionStateUpdate =
-                JourneyModel
-                  .upscanCallbackArrived(fileUploadResultPushConnector.push(_))(Nonce(nonce))(payload)
-              sessionStateService
-                .updateSessionState(sessionStateUpdate)
-                .map(_ => NoContent)
-
-            case None => BadRequest.asFuture
-          }
-          .recover {
-            case e: JsonParseException => BadRequest(e.getMessage())
-            case e                     => InternalServerError
-          }
+  final def callbackFromUpscan(journeyId: String, nonce: String): Action[JsValue] =
+    Action.async(parse.tolerantJson) { implicit request =>
+      withJsonBody[UpscanNotification] { payload =>
+        whenInSession {
+          val sessionStateUpdate =
+            JourneyModel
+              .upscanCallbackArrived(fileUploadResultPushConnector.push(_))(Nonce(nonce))(payload)
+          sessionStateService
+            .updateSessionState(sessionStateUpdate)
+            .map(_ => NoContent)
+        }
       }
     }
 

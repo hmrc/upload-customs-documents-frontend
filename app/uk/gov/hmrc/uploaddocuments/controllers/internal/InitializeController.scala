@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers.internal
 
-import com.fasterxml.jackson.core.JsonParseException
-import play.api.mvc.{Action, AnyContent}
+import play.api.libs.json.JsValue
+import play.api.mvc.Action
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, Renderer}
 import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class InitializeController @Inject() (
@@ -35,25 +35,17 @@ class InitializeController @Inject() (
     extends BaseController(components) {
 
   // POST /internal/initialize
-  final val initialize: Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession {
-        whenAuthenticatedInBackchannel {
-          Future(request.body.asJson.flatMap(_.asOpt[FileUploadInitializationRequest]))
-            .flatMap {
-              case Some(payload) =>
-                val sessionStateUpdate =
-                  JourneyModel.initialize(HostService.from(request))(payload)
-                sessionStateService
-                  .updateSessionState(sessionStateUpdate)
-                  .map(renderer.initializationResponse)
-
-              case None => BadRequest.asFuture
-            }
-            .recover {
-              case e: JsonParseException => BadRequest(e.getMessage())
-              case e                     => InternalServerError
-            }
+  final val initialize: Action[JsValue] =
+    Action.async(parse.tolerantJson) { implicit request =>
+      withJsonBody[FileUploadInitializationRequest] { payload =>
+        whenInSession {
+          whenAuthenticatedInBackchannel {
+            val sessionStateUpdate =
+              JourneyModel.initialize(HostService.from(request))(payload)
+            sessionStateService
+              .updateSessionState(sessionStateUpdate)
+              .map(renderer.initializationResponse)
+          }
         }
       }
     }
