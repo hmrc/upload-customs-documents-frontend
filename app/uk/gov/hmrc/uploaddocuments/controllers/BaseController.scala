@@ -24,12 +24,14 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody}
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.connectors.FrontendAuthConnector
+import uk.gov.hmrc.uploaddocuments.models.FileUploadInitializationRequest
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 import uk.gov.hmrc.uploaddocuments.support.SHA256
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class BaseControllerComponents @Inject() (
@@ -38,7 +40,8 @@ class BaseControllerComponents @Inject() (
   val authConnector: FrontendAuthConnector,
   val environment: Environment,
   val configuration: Configuration,
-  val messagesControllerComponents: MessagesControllerComponents
+  val messagesControllerComponents: MessagesControllerComponents,
+  val newJourneyCacheRepository: NewJourneyCacheRepository
 )
 
 abstract class BaseController(
@@ -84,6 +87,14 @@ abstract class BaseController(
     journeyId match {
       case None => Future.successful(Redirect(components.appConfig.govukStartUrl))
       case _    => body
+    }
+
+  final def withJourneyConfig(
+    body: FileUploadInitializationRequest => Future[Result]
+  )(implicit request: Request[_], ec: ExecutionContext): Future[Result] =
+    components.newJourneyCacheRepository.getJourneyConfig(currentJourneyId) flatMap {
+      case Some(journey) => body(journey)
+      case _             => Future.successful(Redirect(components.appConfig.govukStartUrl))
     }
 
 }

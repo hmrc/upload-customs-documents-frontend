@@ -16,20 +16,26 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.mvc.{Action, AnyContent}
+import play.api.data.Form
+import play.api.i18n.Messages
+import play.api.mvc.{Action, AnyContent, Call, Request}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.uploaddocuments.controllers.Forms.YesNoChoiceForm
 import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
 import uk.gov.hmrc.uploaddocuments.journeys.State
+import uk.gov.hmrc.uploaddocuments.models.FileUploadInitializationRequest
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
+import uk.gov.hmrc.uploaddocuments.views.html.UploadMultipleFilesView
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ChooseMultipleFilesController @Inject() (
   sessionStateService: SessionStateService,
   router: Router,
-  renderer: Renderer,
-  components: BaseControllerComponents
+  components: BaseControllerComponents,
+  uploadMultipleFilesView: UploadMultipleFilesView
 )(implicit ec: ExecutionContext)
     extends BaseController(components) {
 
@@ -38,18 +44,51 @@ class ChooseMultipleFilesController @Inject() (
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          val sessionStateUpdate =
-            JourneyModel.toUploadMultipleFiles(router.preferUploadMultipleFiles)
-          sessionStateService
-            .updateSessionState(sessionStateUpdate)
-            .map {
-              case (uploadMultipleFiles: State.UploadMultipleFiles, breadcrumbs) =>
-                renderer.display(uploadMultipleFiles, breadcrumbs, None)
+          withJourneyConfig { journeyConfig =>
+            val sessionStateUpdate =
+              JourneyModel.toUploadMultipleFiles(router.preferUploadMultipleFiles)
+            sessionStateService
+              .updateSessionState(sessionStateUpdate)
+              .map {
+                case (_: State.UploadMultipleFiles, _) =>
+                  Ok(renderView(journeyConfig, YesNoChoiceForm))
 
-              case other =>
-                router.redirectTo(other)
-            }
+                case other =>
+                  router.redirectTo(other)
+              }
+          }
         }
       }
     }
+
+  private def renderView(context: FileUploadInitializationRequest, form: Form[Boolean])(implicit
+    hc: HeaderCarrier,
+    messages: Messages,
+    request: Request[_]
+  ) =
+    uploadMultipleFilesView(
+      minimumNumberOfFiles = context.config.minimumNumberOfFiles,
+      maximumNumberOfFiles = context.config.maximumNumberOfFiles,
+      initialNumberOfEmptyRows = context.config.initialNumberOfEmptyRows,
+      maximumFileSizeBytes = context.config.maximumFileSizeBytes,
+      filePickerAcceptFilter = context.config.getFilePickerAcceptFilter,
+      allowedFileTypesHint = context.config.content.allowedFilesTypesHint
+        .orElse(context.config.allowedFileExtensions)
+        .getOrElse(context.config.allowedContentTypes),
+      context.config.newFileDescription,
+      initialFileUploads = context.existingFiles.map(_.toFileUpload),
+      initiateNextFileUpload = router.initiateNextFileUpload,
+      checkFileVerificationStatus = router.checkFileVerificationStatus,
+      removeFile = router.removeFileUploadByReferenceAsync,
+      previewFile = router.previewFileUploadByReference,
+      markFileRejected = router.markFileUploadAsRejectedAsync,
+      continueAction =
+        if (context.config.features.showYesNoQuestionBeforeContinue)
+          router.continueWithYesNo
+        else router.continueToHost,
+      backLink = Call("GET", context.config.backlinkUrl),
+      context.config.features.showYesNoQuestionBeforeContinue,
+      context.config.content.yesNoQuestionText,
+      form
+    )(request, messages, context.config.features, context.config.content)
 }
