@@ -16,9 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import akka.actor.ActorSystem
 import play.api.libs.json.Json
-import play.api.mvc.Results.{Forbidden, NotFound, Ok}
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
 import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
@@ -34,8 +32,7 @@ class InitiateUpscanController @Inject() (
   upscanInitiateConnector: UpscanInitiateConnector,
   val router: Router,
   renderer: Renderer,
-  components: BaseControllerComponents,
-  actorSystem: ActorSystem
+  components: BaseControllerComponents
 )(implicit ec: ExecutionContext)
     extends BaseController(components) with UpscanRequestSupport {
 

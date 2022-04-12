@@ -30,7 +30,6 @@ class RemoveController @Inject() (
   upscanInitiateConnector: UpscanInitiateConnector,
   fileUploadResultPushConnector: FileUploadResultPushConnector,
   val router: Router,
-  renderer: Renderer,
   components: BaseControllerComponents
 )(implicit ec: ExecutionContext)
     extends BaseController(components) with UpscanRequestSupport {

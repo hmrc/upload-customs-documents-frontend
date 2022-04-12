@@ -19,7 +19,7 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 import play.api.libs.json.JsValue
 import play.api.mvc.Action
 import play.mvc.Http.HeaderNames
-import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, Renderer, Router, routes => mainRoutes}
+import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, Renderer, routes => mainRoutes}
 import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
@@ -33,7 +33,6 @@ import scala.concurrent.ExecutionContext
 class InitializeController @Inject() (
   sessionStateService: SessionStateService,
   renderer: Renderer,
-  router: Router,
   components: BaseControllerComponents,
   newJourneyCacheRepository: NewJourneyCacheRepository
 )(implicit ec: ExecutionContext)
@@ -66,7 +65,7 @@ class InitializeController @Inject() (
           HeaderNames.LOCATION ->
             (
               if (!context.config.features.showUploadMultiple)
-                router.showChooseSingleFile
+                mainRoutes.ChooseSingleFileController.showChooseFile
               else
                 mainRoutes.StartController.start
             ).url

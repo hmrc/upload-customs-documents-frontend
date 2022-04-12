@@ -75,9 +75,9 @@ class ChooseSingleFileController @Inject() (
       uploadRequest = uploadSingleFile.uploadRequest,
       fileUploads = uploadSingleFile.fileUploads,
       maybeUploadError = uploadSingleFile.maybeUploadError,
-      successAction = router.showSummary,
-      failureAction = router.showChooseSingleFile,
-      checkStatusAction = router.checkFileVerificationStatus(uploadSingleFile.reference),
+      successAction = routes.SummaryController.showSummary,
+      failureAction = routes.ChooseSingleFileController.showChooseFile,
+      checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(uploadSingleFile.reference),
       backLink = renderer.backlink(breadcrumbs)
     )(implicitly[Request[_]], journeyConfig.messages, journeyConfig.config.features, journeyConfig.config.content)
 }

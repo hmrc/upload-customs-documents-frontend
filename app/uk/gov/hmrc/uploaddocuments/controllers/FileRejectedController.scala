@@ -16,22 +16,20 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import akka.actor.ActorSystem
+import play.api.http.HeaderNames
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
-import play.api.http.HeaderNames
 
 @Singleton
 class FileRejectedController @Inject() (
   sessionStateService: SessionStateService,
   router: Router,
   renderer: Renderer,
-  components: BaseControllerComponents,
-  actorSystem: ActorSystem
+  components: BaseControllerComponents
 )(implicit ec: ExecutionContext)
     extends BaseController(components) {
 

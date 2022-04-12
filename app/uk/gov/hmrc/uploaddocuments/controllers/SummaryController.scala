@@ -71,21 +71,21 @@ class SummaryController @Inject() (
       view(
         maxFileUploadsNumber = context.config.maximumNumberOfFiles,
         maximumFileSizeBytes = context.config.maximumFileSizeBytes,
-        form,
-        fileUploads,
-        router.submitUploadAnotherFileChoice,
-        router.previewFileUploadByReference,
-        router.removeFileUploadByReference,
-        renderer.backlink(breadcrumbs)
+        form = form,
+        fileUploads = fileUploads,
+        postAction = routes.SummaryController.submitUploadAnotherFileChoice,
+        previewFileCall = routes.PreviewController.previewFileUploadByReference,
+        removeFileCall = routes.RemoveController.removeFileUploadByReference,
+        backLink = renderer.backlink(breadcrumbs)
       )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
     else
       viewNoChoice(
-        context.config.maximumNumberOfFiles,
-        fileUploads,
-        router.continueToHost,
-        router.previewFileUploadByReference,
-        router.removeFileUploadByReference,
-        Call("GET", context.config.backlinkUrl)
+        maxFileUploadsNumber = context.config.maximumNumberOfFiles,
+        fileUploads = fileUploads,
+        postAction = routes.ContinueToHostController.continueToHost,
+        previewFileCall = routes.PreviewController.previewFileUploadByReference,
+        removeFileCall = routes.RemoveController.removeFileUploadByReference,
+        backLink = Call("GET", context.config.backlinkUrl)
       )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
 
   // POST /summary

@@ -27,25 +27,6 @@ import javax.inject.{Inject, Singleton}
 @Singleton
 class Router @Inject() (appConfig: AppConfig) {
 
-  final val start = routes.StartController.start
-  final val continueToHost = routes.ContinueToHostController.continueToHost
-  final val continueWithYesNo = routes.ContinueToHostController.continueWithYesNo
-  final val showChooseMultipleFiles = routes.ChooseMultipleFilesController.showChooseMultipleFiles
-  final val showChooseSingleFile = routes.ChooseSingleFileController.showChooseFile
-  final val showSummary = routes.SummaryController.showSummary
-  final val submitUploadAnotherFileChoice = routes.SummaryController.submitUploadAnotherFileChoice
-  final val showWaitingForFileVerification = routes.FileVerificationController.showWaitingForFileVerification
-  final val checkFileVerificationStatus = routes.FileVerificationController.checkFileVerificationStatus _
-  final val markFileUploadAsRejected = routes.FileRejectedController.markFileUploadAsRejected
-  final val markFileUploadAsRejectedAsync = routes.FileRejectedController.markFileUploadAsRejectedAsync
-  final val asyncMarkFileUploadAsPosted = routes.FilePostedController.asyncMarkFileUploadAsPosted _
-  final val asyncMarkFileUploadAsRejected = routes.FileRejectedController.asyncMarkFileUploadAsRejected _
-  final val asyncWaitingForFileVerification = routes.FileVerificationController.asyncWaitingForFileVerification _
-  final val removeFileUploadByReference = routes.RemoveController.removeFileUploadByReference _
-  final val removeFileUploadByReferenceAsync = routes.RemoveController.removeFileUploadByReferenceAsync _
-  final val initiateNextFileUpload = routes.InitiateUpscanController.initiateNextFileUpload _
-  final val previewFileUploadByReference = routes.PreviewController.previewFileUploadByReference _
-
   /** This cookie is set by the script on each request coming from one of our own pages open in the browser.
     */
   final val COOKIE_JSENABLED = "jsenabled"
@@ -62,7 +43,7 @@ class Router @Inject() (appConfig: AppConfig) {
     Redirect(
       stateAndBreadcrumbsOpt
         .map { case (s, _) => routeTo(s) }
-        .getOrElse(start)
+        .getOrElse(routes.StartController.start)
     )
       .flashing(Flash {
         val data = formWithErrors.data
@@ -79,13 +60,13 @@ class Router @Inject() (appConfig: AppConfig) {
             .getOrElse(context.config.backlinkUrl)
         )
 
-      case State.ContinueToHost(context, fileUploads) => continueToHost
-      case _: State.UploadMultipleFiles               => showChooseMultipleFiles
-      case _: State.UploadSingleFile                  => showChooseSingleFile
-      case _: State.WaitingForFileVerification        => showWaitingForFileVerification
-      case _: State.Summary                           => showSummary
-      case _: State.SwitchToUploadSingleFile          => showChooseSingleFile
-      case _                                          => Call("GET", appConfig.govukStartUrl)
+      case State.ContinueToHost(context, fileUploads) => routes.ContinueToHostController.continueToHost
+      case _: State.UploadMultipleFiles               => routes.ChooseMultipleFilesController.showChooseMultipleFiles
+      case _: State.UploadSingleFile                  => routes.ChooseSingleFileController.showChooseFile
+      case _: State.WaitingForFileVerification => routes.FileVerificationController.showWaitingForFileVerification
+      case _: State.Summary                    => routes.SummaryController.showSummary
+      case _: State.SwitchToUploadSingleFile   => routes.ChooseSingleFileController.showChooseFile
+      case _                                   => Call("GET", appConfig.govukStartUrl)
     }
 
   final def callbackFromUpscan(journeyId: String, nonce: String) =
@@ -94,17 +75,17 @@ class Router @Inject() (appConfig: AppConfig) {
 
   final def successRedirect(journeyId: String)(implicit rh: RequestHeader): String =
     appConfig.baseExternalCallbackUrl + (rh.cookies.get(COOKIE_JSENABLED) match {
-      case Some(_) => asyncWaitingForFileVerification(journeyId)
-      case None    => showWaitingForFileVerification
+      case Some(_) => routes.FileVerificationController.asyncWaitingForFileVerification(journeyId)
+      case None    => routes.FileVerificationController.showWaitingForFileVerification
     })
 
   final def successRedirectWhenUploadingMultipleFiles(journeyId: String): String =
-    appConfig.baseExternalCallbackUrl + asyncMarkFileUploadAsPosted(journeyId)
+    appConfig.baseExternalCallbackUrl + routes.FilePostedController.asyncMarkFileUploadAsPosted(journeyId)
 
   final def errorRedirect(journeyId: String)(implicit rh: RequestHeader): String =
     appConfig.baseExternalCallbackUrl + (rh.cookies.get(COOKIE_JSENABLED) match {
-      case Some(_) => asyncMarkFileUploadAsRejected(journeyId)
-      case None    => markFileUploadAsRejected
+      case Some(_) => routes.FileRejectedController.asyncMarkFileUploadAsRejected(journeyId)
+      case None    => routes.FileRejectedController.markFileUploadAsRejected
     })
 
 }

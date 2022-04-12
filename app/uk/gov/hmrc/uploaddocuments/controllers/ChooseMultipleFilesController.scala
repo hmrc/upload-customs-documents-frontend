@@ -18,7 +18,6 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.data.Form
 import play.api.mvc.{Action, AnyContent, Call, Request}
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.uploaddocuments.controllers.Forms.YesNoChoiceForm
 import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
@@ -76,15 +75,16 @@ class ChooseMultipleFilesController @Inject() (
         .getOrElse(context.config.allowedContentTypes),
       context.config.newFileDescription,
       initialFileUploads = files.files,
-      initiateNextFileUpload = router.initiateNextFileUpload,
-      checkFileVerificationStatus = router.checkFileVerificationStatus,
-      removeFile = router.removeFileUploadByReferenceAsync,
-      previewFile = router.previewFileUploadByReference,
-      markFileRejected = router.markFileUploadAsRejectedAsync,
-      continueAction =
-        if (context.config.features.showYesNoQuestionBeforeContinue)
-          router.continueWithYesNo
-        else router.continueToHost,
+      initiateNextFileUpload = routes.InitiateUpscanController.initiateNextFileUpload,
+      checkFileVerificationStatus = routes.FileVerificationController.checkFileVerificationStatus,
+      removeFile = routes.RemoveController.removeFileUploadByReferenceAsync,
+      previewFile = routes.PreviewController.previewFileUploadByReference,
+      markFileRejected = routes.FileRejectedController.markFileUploadAsRejectedAsync,
+      continueAction = if (context.config.features.showYesNoQuestionBeforeContinue) {
+        routes.ContinueToHostController.continueWithYesNo
+      } else {
+        routes.ContinueToHostController.continueToHost
+      },
       backLink = Call("GET", context.config.backlinkUrl),
       context.config.features.showYesNoQuestionBeforeContinue,
       context.config.content.yesNoQuestionText,

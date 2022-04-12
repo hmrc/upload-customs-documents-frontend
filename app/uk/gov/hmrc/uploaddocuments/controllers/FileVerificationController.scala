@@ -78,9 +78,9 @@ class FileVerificationController @Inject() (
     request: Request[_]
   ) =
     waitingView(
-      successAction = router.showSummary,
-      failureAction = router.showChooseSingleFile,
-      checkStatusAction = router.checkFileVerificationStatus(reference),
+      successAction = routes.SummaryController.showSummary,
+      failureAction = routes.ChooseSingleFileController.showChooseFile,
+      checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(reference),
       backLink = renderer.backlink(breadcrumbs)
     )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
 
@@ -111,7 +111,7 @@ class FileVerificationController @Inject() (
                 FileVerificationStatus(
                   file,
                   uploadFileViewHelper,
-                  router.previewFileUploadByReference(_, _),
+                  routes.PreviewController.previewFileUploadByReference(_, _),
                   s.context.config.maximumFileSizeBytes.toInt,
                   s.context.config.content.allowedFilesTypesHint
                     .orElse(s.context.config.allowedFileExtensions)
