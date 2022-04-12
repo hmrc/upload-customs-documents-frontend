@@ -63,7 +63,6 @@ class ChooseMultipleFilesController @Inject() (
     }
 
   private def renderView(context: FileUploadContext, files: FileUploads, form: Form[Boolean])(implicit
-    hc: HeaderCarrier,
     request: Request[_]
   ) =
     uploadMultipleFilesView(

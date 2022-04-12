@@ -16,21 +16,18 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import akka.actor.Scheduler
+import akka.actor.{ActorSystem, Scheduler}
+import play.api.i18n.Messages
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, Request}
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
-import uk.gov.hmrc.uploaddocuments.journeys.State
+import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileVerificationStatus}
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
+import uk.gov.hmrc.uploaddocuments.views.UploadFileViewHelper
+import uk.gov.hmrc.uploaddocuments.views.html.WaitingForFileVerificationView
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
-import akka.actor.ActorSystem
-import play.api.i18n.Messages
-import uk.gov.hmrc.govukfrontend.views.viewmodels.breadcrumbs.Breadcrumbs
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.uploaddocuments.journeys.State.WaitingForFileVerification
-import uk.gov.hmrc.uploaddocuments.models.FileUploadContext
-import uk.gov.hmrc.uploaddocuments.views.html.WaitingForFileVerificationView
 
 @Singleton
 class FileVerificationController @Inject() (
@@ -39,6 +36,7 @@ class FileVerificationController @Inject() (
   renderer: Renderer,
   components: BaseControllerComponents,
   waitingView: WaitingForFileVerificationView,
+  uploadFileViewHelper: UploadFileViewHelper,
   actorSystem: ActorSystem
 )(implicit ec: ExecutionContext)
     extends BaseController(components) {
@@ -94,13 +92,36 @@ class FileVerificationController @Inject() (
           sessionStateService.currentSessionState.map {
             case Some(sab) =>
               val messages = implicitly[Messages]
-              renderer.renderFileVerificationStatus(reference)(messages)(sab)
+              renderFileVerificationStatus(reference)(messages)(sab)
 
             case None =>
               NotFound
           }
         }
       }
+    }
+
+  private def renderFileVerificationStatus(reference: String)(implicit messages: Messages) =
+    renderer.resultOf {
+      case s: State.FileUploadState =>
+        s.fileUploads.files.find(_.reference == reference) match {
+          case Some(file) =>
+            Ok(
+              Json.toJson(
+                FileVerificationStatus(
+                  file,
+                  uploadFileViewHelper,
+                  router.previewFileUploadByReference(_, _),
+                  s.context.config.maximumFileSizeBytes.toInt,
+                  s.context.config.content.allowedFilesTypesHint
+                    .orElse(s.context.config.allowedFileExtensions)
+                    .getOrElse(s.context.config.allowedContentTypes)
+                )
+              )
+            )
+          case None => NotFound
+        }
+      case _ => NotFound
     }
 
   // GET /journey/:journeyId/file-verification

@@ -17,11 +17,15 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
     "GET /summary" should {
       "show uploaded singular file view" in {
-        val state = State.Summary(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads = FileUploads(files = Seq(TestData.acceptedFileUpload))
-        )
+
+        val context = FileUploadContext(fileUploadSessionConfig)
+        val fileUploads = FileUploads(files = Seq(TestData.acceptedFileUpload))
+        val state = State.Summary(context, fileUploads)
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val result = await(request("/summary").get())
@@ -33,36 +37,40 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
       }
 
       "show uploaded plural file view" in {
-        val state = State.Summary(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads = FileUploads(files =
-            Seq(
-              FileUpload.Accepted(
-                Nonce.Any,
-                Timestamp.Any,
-                "11370e18-6e24-453e-b45a-76d3e32ea33d",
-                "https://s3.amazonaws.com/bucket/123",
-                ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-                "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-                "test2.pdf",
-                "application/pdf",
-                5234567
-              ),
-              FileUpload.Accepted(
-                Nonce.Any,
-                Timestamp.Any,
-                "22370e18-6e24-453e-b45a-76d3e32ea33d",
-                "https://s3.amazonaws.com/bucket/123",
-                ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-                "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-                "test1.png",
-                "image/png",
-                4567890
-              )
+
+        val context = FileUploadContext(fileUploadSessionConfig)
+        val fileUploads = FileUploads(files =
+          Seq(
+            FileUpload.Accepted(
+              Nonce.Any,
+              Timestamp.Any,
+              "11370e18-6e24-453e-b45a-76d3e32ea33d",
+              "https://s3.amazonaws.com/bucket/123",
+              ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+              "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+              "test2.pdf",
+              "application/pdf",
+              5234567
+            ),
+            FileUpload.Accepted(
+              Nonce.Any,
+              Timestamp.Any,
+              "22370e18-6e24-453e-b45a-76d3e32ea33d",
+              "https://s3.amazonaws.com/bucket/123",
+              ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+              "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+              "test1.png",
+              "image/png",
+              4567890
             )
           )
         )
+        val state = State.Summary(context, fileUploads)
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val result = await(request("/summary").get())
@@ -74,11 +82,15 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
       }
 
       "show file upload summary view" in {
-        val state = State.Summary(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads = nFileUploads(FILES_LIMIT)
-        )
+
+        val context = FileUploadContext(fileUploadSessionConfig)
+        val fileUploads = nFileUploads(FILES_LIMIT)
+        val state = State.Summary(context, fileUploads)
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val result = await(request("/summary").get())
@@ -94,12 +106,14 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
       "show upload a file view for export when yes and number of files below the limit" in {
 
+        val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files = for (i <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
-        val state = State.Summary(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads
-        )
+        val state = State.Summary(context, fileUploads)
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val callbackUrl =
           appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/${SHA256.compute(journeyId)}"
@@ -138,12 +152,14 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
       "show upload a file view when yes and number of files below the limit" in {
 
+        val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files = for (i <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
-        val state = State.Summary(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads
-        )
+        val state = State.Summary(context, fileUploads)
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val callbackUrl =
           appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/${SHA256.compute(journeyId)}"

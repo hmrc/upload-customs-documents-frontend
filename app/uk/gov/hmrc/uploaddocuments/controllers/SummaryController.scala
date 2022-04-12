@@ -16,11 +16,14 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.mvc.{Action, AnyContent}
+import play.api.data.Form
+import play.api.mvc.{Action, AnyContent, Call, Request}
 import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
-import uk.gov.hmrc.uploaddocuments.journeys.State
+import uk.gov.hmrc.uploaddocuments.controllers.Forms.YesNoChoiceForm
+import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
+import uk.gov.hmrc.uploaddocuments.views.html.{SummaryNoChoiceView, SummaryView}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -31,6 +34,8 @@ class SummaryController @Inject() (
   upscanInitiateConnector: UpscanInitiateConnector,
   val router: Router,
   renderer: Renderer,
+  view: SummaryView,
+  viewNoChoice: SummaryNoChoiceView,
   components: BaseControllerComponents
 )(implicit ec: ExecutionContext)
     extends BaseController(components) with UpscanRequestSupport {
@@ -40,19 +45,48 @@ class SummaryController @Inject() (
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          val sessionStateUpdate = JourneyModel.backToSummary
-          sessionStateService
-            .getCurrentOrUpdateSessionState[State.Summary](sessionStateUpdate)
-            .map {
-              case (summary: State.Summary, breadcrumbs) =>
-                renderer.display(summary, breadcrumbs, None)
+          withJourneyContext { journeyConfig =>
+            val sessionStateUpdate = JourneyModel.backToSummary
+            sessionStateService
+              .getCurrentOrUpdateSessionState[State.Summary](sessionStateUpdate)
+              .map {
+                case (summary: State.Summary, breadcrumbs) =>
+                  Ok(renderView(YesNoChoiceForm, journeyConfig, summary.fileUploads, breadcrumbs))
 
-              case other =>
-                router.redirectTo(other)
-            }
+                case other =>
+                  router.redirectTo(other)
+              }
+          }
         }
       }
     }
+
+  private def renderView(
+    form: Form[Boolean],
+    context: FileUploadContext,
+    fileUploads: FileUploads,
+    breadcrumbs: List[State]
+  )(implicit request: Request[_]) =
+    if (fileUploads.acceptedCount < context.config.maximumNumberOfFiles)
+      view(
+        maxFileUploadsNumber = context.config.maximumNumberOfFiles,
+        maximumFileSizeBytes = context.config.maximumFileSizeBytes,
+        form,
+        fileUploads,
+        router.submitUploadAnotherFileChoice,
+        router.previewFileUploadByReference,
+        router.removeFileUploadByReference,
+        renderer.backlink(breadcrumbs)
+      )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
+    else
+      viewNoChoice(
+        context.config.maximumNumberOfFiles,
+        fileUploads,
+        router.continueToHost,
+        router.previewFileUploadByReference,
+        router.removeFileUploadByReference,
+        Call("GET", context.config.backlinkUrl)
+      )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
 
   // POST /summary
   final val submitUploadAnotherFileChoice: Action[AnyContent] =
