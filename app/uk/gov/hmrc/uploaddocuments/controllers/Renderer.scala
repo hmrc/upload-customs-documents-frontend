@@ -48,7 +48,7 @@ class Renderer @Inject() (
   final def display(state: State, breadcrumbs: List[State], formWithErrors: Option[Form[_]])(implicit
     request: Request[_],
     m: Messages
-  ): Result = {
+  ): Result =
     state match {
       case State.Uninitialized =>
         Redirect(appConfig.govukStartUrl)
@@ -66,55 +66,6 @@ class Renderer @Inject() (
           Redirect(context.config.getContinueWhenFullUrl)
         else
           Redirect(context.config.continueUrl)
-
-      case State.UploadMultipleFiles(context, fileUploads) =>
-        Ok(
-          views.uploadMultipleFilesView(
-            minimumNumberOfFiles = context.config.minimumNumberOfFiles,
-            maximumNumberOfFiles = context.config.maximumNumberOfFiles,
-            initialNumberOfEmptyRows = context.config.initialNumberOfEmptyRows,
-            maximumFileSizeBytes = context.config.maximumFileSizeBytes,
-            filePickerAcceptFilter = context.config.getFilePickerAcceptFilter,
-            allowedFileTypesHint = context.config.content.allowedFilesTypesHint
-              .orElse(context.config.allowedFileExtensions)
-              .getOrElse(context.config.allowedContentTypes),
-            context.config.newFileDescription,
-            initialFileUploads = fileUploads.files,
-            initiateNextFileUpload = router.initiateNextFileUpload,
-            checkFileVerificationStatus = router.checkFileVerificationStatus,
-            removeFile = router.removeFileUploadByReferenceAsync,
-            previewFile = router.previewFileUploadByReference,
-            markFileRejected = router.markFileUploadAsRejectedAsync,
-            continueAction =
-              if (context.config.features.showYesNoQuestionBeforeContinue)
-                router.continueWithYesNo
-              else router.continueToHost,
-            backLink = Call("GET", context.config.backlinkUrl),
-            context.config.features.showYesNoQuestionBeforeContinue,
-            context.config.content.yesNoQuestionText,
-            formWithErrors.or(YesNoChoiceForm)
-          )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
-        )
-
-      case State.UploadSingleFile(context, reference, uploadRequest, fileUploads, maybeUploadError) =>
-        Ok(
-          views.uploadSingleFileView(
-            maxFileUploadsNumber = context.config.maximumNumberOfFiles,
-            maximumFileSizeBytes = context.config.maximumFileSizeBytes,
-            filePickerAcceptFilter = context.config.getFilePickerAcceptFilter,
-            allowedFileTypesHint = context.config.content.allowedFilesTypesHint
-              .orElse(context.config.allowedFileExtensions)
-              .getOrElse(context.config.allowedContentTypes),
-            context.config.newFileDescription,
-            uploadRequest = uploadRequest,
-            fileUploads = fileUploads,
-            maybeUploadError = maybeUploadError,
-            successAction = router.showSummary,
-            failureAction = router.showChooseSingleFile,
-            checkStatusAction = router.checkFileVerificationStatus(reference),
-            backLink = backlink(breadcrumbs)
-          )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
-        )
 
       case State.WaitingForFileVerification(context, reference, _, _, _) =>
         Ok(
@@ -152,7 +103,6 @@ class Renderer @Inject() (
 
       case _ => NotImplemented
     }
-  }
 
   final def renderUploadRequestJson(
     uploadId: String
@@ -258,7 +208,7 @@ class Renderer @Inject() (
     }).withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
   }
 
-  private def backlink(breadcrumbs: List[State]): Call =
+  def backlink(breadcrumbs: List[State]): Call =
     breadcrumbs.headOption
       .map(router.routeTo)
       .getOrElse(router.routeTo(State.Uninitialized))

@@ -16,11 +16,14 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.Results.Ok
+import play.api.mvc.{Action, AnyContent, Request}
+import uk.gov.hmrc.govukfrontend.views.viewmodels.breadcrumbs.Breadcrumbs
 import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
-import uk.gov.hmrc.uploaddocuments.journeys.State
+import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploadInitializationRequest}
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
+import uk.gov.hmrc.uploaddocuments.views.html.UploadSingleFileView
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -31,7 +34,8 @@ class ChooseSingleFileController @Inject() (
   upscanInitiateConnector: UpscanInitiateConnector,
   val router: Router,
   renderer: Renderer,
-  components: BaseControllerComponents
+  components: BaseControllerComponents,
+  view: UploadSingleFileView
 )(implicit ec: ExecutionContext)
     extends BaseController(components) with UpscanRequestSupport {
 
@@ -40,19 +44,41 @@ class ChooseSingleFileController @Inject() (
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          val sessionStateUpdate =
-            JourneyModel
-              .initiateFileUpload(upscanRequest(currentJourneyId))(upscanInitiateConnector.initiate(_, _))
-          sessionStateService
-            .updateSessionState(sessionStateUpdate)
-            .map {
-              case (uploadSingleFile: State.UploadSingleFile, breadcrumbs) =>
-                renderer.display(uploadSingleFile, breadcrumbs, None)
+          withJourneyConfig { journeyConfig =>
+            val sessionStateUpdate =
+              JourneyModel
+                .initiateFileUpload(upscanRequest(currentJourneyId))(upscanInitiateConnector.initiate(_, _))
+            sessionStateService
+              .updateSessionState(sessionStateUpdate)
+              .map {
+                case (uploadSingleFile: State.UploadSingleFile, breadcrumbs) =>
+                  Ok(renderView(journeyConfig, uploadSingleFile, breadcrumbs))
 
-              case other =>
-                router.redirectTo(other)
-            }
+                case other =>
+                  router.redirectTo(other)
+              }
+          }
         }
       }
     }
+
+  def renderView(journeyConfig: FileUploadContext, uploadSingleFile: State.UploadSingleFile, breadcrumbs: List[State])(
+    implicit request: Request[_]
+  ) =
+    view(
+      maxFileUploadsNumber = journeyConfig.config.maximumNumberOfFiles,
+      maximumFileSizeBytes = journeyConfig.config.maximumFileSizeBytes,
+      filePickerAcceptFilter = journeyConfig.config.getFilePickerAcceptFilter,
+      allowedFileTypesHint = journeyConfig.config.content.allowedFilesTypesHint
+        .orElse(journeyConfig.config.allowedFileExtensions)
+        .getOrElse(journeyConfig.config.allowedContentTypes),
+      journeyConfig.config.newFileDescription,
+      uploadRequest = uploadSingleFile.uploadRequest,
+      fileUploads = uploadSingleFile.fileUploads,
+      maybeUploadError = uploadSingleFile.maybeUploadError,
+      successAction = router.showSummary,
+      failureAction = router.showChooseSingleFile,
+      checkStatusAction = router.checkFileVerificationStatus(uploadSingleFile.reference),
+      backLink = renderer.backlink(breadcrumbs)
+    )(implicitly[Request[_]], journeyConfig.messages, journeyConfig.config.features, journeyConfig.config.content)
 }

@@ -24,8 +24,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody}
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.connectors.FrontendAuthConnector
-import uk.gov.hmrc.uploaddocuments.models.FileUploadInitializationRequest
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploadInitializationRequest, FileUploads}
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 import uk.gov.hmrc.uploaddocuments.support.SHA256
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
@@ -90,11 +91,19 @@ abstract class BaseController(
     }
 
   final def withJourneyConfig(
-    body: FileUploadInitializationRequest => Future[Result]
+    body: FileUploadContext => Future[Result]
   )(implicit request: Request[_], ec: ExecutionContext): Future[Result] =
-    components.newJourneyCacheRepository.getJourneyConfig(currentJourneyId) flatMap {
+    components.newJourneyCacheRepository.get(currentJourneyId)(DataKeys.journeyConfigDataKey) flatMap {
       case Some(journey) => body(journey)
       case _             => Future.successful(Redirect(components.appConfig.govukStartUrl))
+    }
+
+  final def withUploadedFiles(
+    body: FileUploads => Future[Result]
+  )(implicit request: Request[_], ec: ExecutionContext): Future[Result] =
+    components.newJourneyCacheRepository.get(currentJourneyId)(DataKeys.uploadedFiles) flatMap {
+      case Some(files) => body(files)
+      case _           => Future.successful(Redirect(components.appConfig.govukStartUrl))
     }
 
 }
