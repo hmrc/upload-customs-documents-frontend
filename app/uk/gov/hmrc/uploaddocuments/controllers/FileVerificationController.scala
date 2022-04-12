@@ -27,7 +27,7 @@ import uk.gov.hmrc.uploaddocuments.views.UploadFileViewHelper
 import uk.gov.hmrc.uploaddocuments.views.html.WaitingForFileVerificationView
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class FileVerificationController @Inject() (
@@ -84,44 +84,76 @@ class FileVerificationController @Inject() (
       backLink = renderer.backlink(breadcrumbs)
     )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
 
+//  // GET /file-verification/:reference/status
+//  final def oldCheckFileVerificationStatus(reference: String): Action[AnyContent] =
+//    Action.async { implicit request =>
+//      whenInSession {
+//        whenAuthenticated {
+//          sessionStateService.currentSessionState.map {
+//            case Some(sab) =>
+//              val messages = implicitly[Messages]
+//              renderFileVerificationStatus(reference)(messages)(sab)
+//
+//            case None =>
+//              NotFound
+//          }
+//        }
+//      }
+//    }
+//
+//  private def renderFileVerificationStatus(reference: String)(implicit messages: Messages) =
+//    renderer.resultOf {
+//      case s: State.FileUploadState =>
+//        s.fileUploads.files.find(_.reference == reference) match {
+//          case Some(file) =>
+//            Ok(
+//              Json.toJson(
+//                FileVerificationStatus(
+//                  file,
+//                  uploadFileViewHelper,
+//                  routes.PreviewController.previewFileUploadByReference(_, _),
+//                  s.context.config.maximumFileSizeBytes.toInt,
+//                  s.context.config.content.allowedFilesTypesHint
+//                    .orElse(s.context.config.allowedFileExtensions)
+//                    .getOrElse(s.context.config.allowedContentTypes)
+//                )
+//              )
+//            )
+//          case None => NotFound
+//        }
+//      case _ => NotFound
+//    }
+
   // GET /file-verification/:reference/status
   final def checkFileVerificationStatus(reference: String): Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          sessionStateService.currentSessionState.map {
-            case Some(sab) =>
-              val messages = implicitly[Messages]
-              renderFileVerificationStatus(reference)(messages)(sab)
-
-            case None =>
-              NotFound
+          withJourneyContext { journeyContext =>
+            withUploadedFiles {
+              _.files.find(_.reference == reference) match {
+                case Some(file) =>
+                  Future(
+                    Ok(
+                      Json.toJson(
+                        FileVerificationStatus(
+                          fileUpload = file,
+                          uploadFileViewHelper = uploadFileViewHelper,
+                          filePreviewUrl = routes.PreviewController.previewFileUploadByReference(_, _),
+                          maximumFileSizeBytes = journeyContext.config.maximumFileSizeBytes.toInt,
+                          allowedFileTypesHint = journeyContext.config.content.allowedFilesTypesHint
+                            .orElse(journeyContext.config.allowedFileExtensions)
+                            .getOrElse(journeyContext.config.allowedContentTypes)
+                        )
+                      )
+                    )
+                  )
+                case None => Future(NotFound)
+              }
+            }
           }
         }
       }
-    }
-
-  private def renderFileVerificationStatus(reference: String)(implicit messages: Messages) =
-    renderer.resultOf {
-      case s: State.FileUploadState =>
-        s.fileUploads.files.find(_.reference == reference) match {
-          case Some(file) =>
-            Ok(
-              Json.toJson(
-                FileVerificationStatus(
-                  file,
-                  uploadFileViewHelper,
-                  routes.PreviewController.previewFileUploadByReference(_, _),
-                  s.context.config.maximumFileSizeBytes.toInt,
-                  s.context.config.content.allowedFilesTypesHint
-                    .orElse(s.context.config.allowedFileExtensions)
-                    .getOrElse(s.context.config.allowedContentTypes)
-                )
-              )
-            )
-          case None => NotFound
-        }
-      case _ => NotFound
     }
 
   // GET /journey/:journeyId/file-verification

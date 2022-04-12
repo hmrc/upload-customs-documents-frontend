@@ -45,11 +45,12 @@ class InitializeController @Inject() (
         whenInSession {
           whenAuthenticatedInBackchannel {
             val host = HostService.from(request)
-            val journeyConfig = FileUploadContext(payload.config, host)
-            val previouslyUploadedFiles = payload.toFileUploads
             for {
-              _ <- newJourneyCacheRepository.put(currentJourneyId)(DataKeys.journeyContextDataKey, journeyConfig)
-              _ <- newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, previouslyUploadedFiles)
+              _ <- newJourneyCacheRepository.put(currentJourneyId)(
+                     DataKeys.journeyContextDataKey,
+                     FileUploadContext(payload.config, host)
+                   )
+              _ <- newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, payload.toFileUploads)
               // Store parallel Session State for now - until we can remove the session state service
               session <- sessionStateService.updateSessionState(JourneyModel.initialize(host)(payload))
             } yield initializationResponse(session)

@@ -20,7 +20,9 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
 import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
-import uk.gov.hmrc.uploaddocuments.models.UploadRequest
+import uk.gov.hmrc.uploaddocuments.models.{FileUpload, Nonce, Timestamp, UploadRequest}
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
@@ -37,40 +39,79 @@ class InitiateUpscanController @Inject() (
     extends BaseController(components) with UpscanRequestSupport {
 
   // POST /initiate-upscan/:uploadId
+//  final def initiateNextFileUpload(uploadId: String): Action[AnyContent] =
+//    Action.async { implicit request =>
+//      whenInSession {
+//        whenAuthenticated {
+//          val sessionStateUpdate =
+//            JourneyModel
+//              .initiateNextFileUpload(uploadId)(upscanRequestWhenUploadingMultipleFiles(currentJourneyId))(
+//                upscanInitiateConnector.initiate(_, _)
+//              )
+//          sessionStateService
+//            .updateSessionState(sessionStateUpdate)
+//            .map(renderUploadRequestJson(uploadId))
+//        }
+//      }
+//    }
+//
+//  def renderUploadRequestJson(uploadId: String) =
+//    renderer.resultOf {
+//      case s: State.UploadMultipleFiles =>
+//        s.fileUploads
+//          .findReferenceAndUploadRequestForUploadId(uploadId) match {
+//          case Some((reference, uploadRequest)) =>
+//            val json =
+//              Json.obj(
+//                "upscanReference" -> reference,
+//                "uploadId"        -> uploadId,
+//                "uploadRequest"   -> UploadRequest.formats.writes(uploadRequest)
+//              )
+//            Ok(json)
+//
+//          case None => NotFound
+//        }
+//
+//      case _ => Forbidden
+//    }
+
+  // POST /new/initiate-upscan/:uploadId
   final def initiateNextFileUpload(uploadId: String): Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          val sessionStateUpdate =
-            JourneyModel
-              .initiateNextFileUpload(uploadId)(upscanRequestWhenUploadingMultipleFiles(currentJourneyId))(
-                upscanInitiateConnector.initiate(_, _)
-              )
-          sessionStateService
-            .updateSessionState(sessionStateUpdate)
-            .map(renderUploadRequestJson(uploadId))
+          withJourneyContext { journeyContext =>
+            withUploadedFiles { files =>
+              val nonce = Nonce.random
+              for {
+                upscanResponse <- upscanInitiateConnector.initiate(
+                                    journeyContext.hostService.userAgent,
+                                    upscanRequestWhenUploadingMultipleFiles(currentJourneyId)(
+                                      nonce.toString,
+                                      journeyContext.config.maximumFileSizeBytes
+                                    )
+                                  )
+                updatedFiles = files + FileUpload.Initiated(
+                                 nonce = nonce,
+                                 timestamp = Timestamp.now,
+                                 reference = upscanResponse.reference,
+                                 uploadRequest = Some(upscanResponse.uploadRequest),
+                                 uploadId = Some(uploadId)
+                               )
+                _ <- components.newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, updatedFiles)
+              } yield {
+                val json =
+                  Json.obj(
+                    "upscanReference" -> upscanResponse.reference,
+                    "uploadId"        -> uploadId,
+                    "uploadRequest"   -> UploadRequest.formats.writes(upscanResponse.uploadRequest)
+                  )
+                Ok(json)
+              }
+            }
+          }
         }
       }
-    }
-
-  def renderUploadRequestJson(uploadId: String) =
-    renderer.resultOf {
-      case s: State.UploadMultipleFiles =>
-        s.fileUploads
-          .findReferenceAndUploadRequestForUploadId(uploadId) match {
-          case Some((reference, uploadRequest)) =>
-            val json =
-              Json.obj(
-                "upscanReference" -> reference,
-                "uploadId"        -> uploadId,
-                "uploadRequest"   -> UploadRequest.formats.writes(uploadRequest)
-              )
-            Ok(json)
-
-          case None => NotFound
-        }
-
-      case _ => Forbidden
     }
 
 }
