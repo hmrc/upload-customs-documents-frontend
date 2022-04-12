@@ -23,6 +23,7 @@ import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerCo
 import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
@@ -43,10 +44,15 @@ class InitializeController @Inject() (
       withJsonBody[FileUploadInitializationRequest] { payload =>
         whenInSession {
           whenAuthenticatedInBackchannel {
-            val sessionStateUpdate = JourneyModel.initialize(HostService.from(request))(payload)
+            val host = HostService.from(request)
+            val journeyConfig = FileUploadContext(payload.config, host)
+            val previouslyUploadedFiles = payload.toFileUploads
             for {
-              _       <- newJourneyCacheRepository.storeJourneyConfig(currentJourneyId)(payload)
-              session <- sessionStateService.updateSessionState(sessionStateUpdate) // Parallel Session State for now
+              _ <- newJourneyCacheRepository.put(currentJourneyId)(DataKeys.journeyConfigDataKey, journeyConfig)
+              _ <- newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, previouslyUploadedFiles)
+              session <- sessionStateService.updateSessionState(
+                           JourneyModel.initialize(host)(payload)
+                         ) // Parallel Session State for now
             } yield renderer.initializationResponse(session)
           }
         }

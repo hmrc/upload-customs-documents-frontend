@@ -17,94 +17,17 @@
 package uk.gov.hmrc.uploaddocuments.repositories
 
 import uk.gov.hmrc.mongo.cache.DataKey
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadInitializationRequest, FileUploadSessionConfig, Nonce}
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadSessionConfig, FileUploads}
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
-import uk.gov.hmrc.uploaddocuments.support.{BaseISpec, MongoHelpers}
+import uk.gov.hmrc.uploaddocuments.support.UnitSpec
 
-class NewJourneyCacheRepositoryISpec extends BaseISpec with MongoHelpers {
+class NewJourneyCacheRepositoryISpec extends UnitSpec {
 
-  lazy val app = appBuilder.build()
-
-  lazy val repo: NewJourneyCacheRepository = app.injector.instanceOf[NewJourneyCacheRepository]
-
-  val journeyId = "foo"
-
-  val dummyConfig = FileUploadSessionConfig(
-    Nonce.toNonce(12345),
-    "continueUrl",
-    "backlinkUrl",
-    "callbackUrl"
-  )
-  val dummyRequest = FileUploadInitializationRequest(
-    dummyConfig,
-    Seq()
-  )
-
-  override def beforeEach(): Unit = {
-    super.beforeEach()
-    removeAll(repo)
-    await(repo.collection.countDocuments().toFuture()) shouldBe 0
-  }
-
-  ".journeyConfigDataKey" must {
+  "DataKeys" must {
 
     "have the correct key and model type" in {
-      repo.journeyConfigDataKey shouldBe DataKey[FileUploadInitializationRequest]("journeyConfig")
-    }
-  }
-
-  ".storeJourneyConfig(id: String)(data: FileUploadInitializationRequest)" when {
-
-    "no record exists" must {
-
-      "upsert the first" in {
-
-        await(repo.storeJourneyConfig(journeyId)(dummyRequest))
-        await(repo.collection.countDocuments().toFuture()) shouldBe 1
-
-        await(repo.get[FileUploadInitializationRequest](journeyId)(repo.journeyConfigDataKey)) shouldBe Some(
-          dummyRequest
-        )
-      }
-    }
-
-    "record already exists" must {
-
-      "update existing" in {
-
-        await(repo.storeJourneyConfig(journeyId)(dummyRequest))
-        await(repo.collection.countDocuments().toFuture()) shouldBe 1
-
-        val updatedModel = dummyRequest.copy(config = dummyConfig.copy(initialNumberOfEmptyRows = 10))
-
-        await(repo.storeJourneyConfig(journeyId)(updatedModel))
-        await(repo.collection.countDocuments().toFuture()) shouldBe 1
-
-        await(repo.get[FileUploadInitializationRequest](journeyId)(repo.journeyConfigDataKey)) shouldBe Some(
-          updatedModel
-        )
-      }
-    }
-  }
-
-  ".getJourneyConfig(id: String)" when {
-
-    "record exists" must {
-
-      "return the journey config" in {
-
-        await(repo.storeJourneyConfig(journeyId)(dummyRequest))
-        await(repo.collection.countDocuments().toFuture()) shouldBe 1
-
-        await(repo.getJourneyConfig(journeyId)) shouldBe Some(dummyRequest)
-      }
-    }
-
-    "record does not exist" must {
-
-      "return None" in {
-        await(repo.getJourneyConfig(journeyId)) shouldBe None
-      }
+      NewJourneyCacheRepository.DataKeys.journeyConfigDataKey shouldBe DataKey[FileUploadSessionConfig]("journeyConfig")
+      NewJourneyCacheRepository.DataKeys.uploadedFiles shouldBe DataKey[FileUploads]("uploadedFiles")
     }
   }
 }

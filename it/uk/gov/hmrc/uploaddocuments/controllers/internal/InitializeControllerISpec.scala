@@ -4,6 +4,7 @@ import play.api.libs.json.{JsString, Json}
 import uk.gov.hmrc.uploaddocuments.controllers.ControllerISpecBase
 import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 
 import java.time.ZonedDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -68,8 +69,17 @@ class InitializeControllerISpec extends ControllerISpecBase {
           FileUploads()
         )
 
-        await(newJourneyRepo.getJourneyConfig(sessionStateService.getJourneyId(hc).get)) shouldBe Some(
-          FileUploadInitializationRequest(fileUploadSessionConfig, Seq.empty)
+        await(
+          newJourneyRepo.get(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyConfigDataKey)
+        ) shouldBe Some(
+          FileUploadContext(
+            fileUploadSessionConfig,
+            HostService.Any
+          )
+        )
+
+        await(newJourneyRepo.get(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles)) shouldBe Some(
+          FileUploads()
         )
       }
 
@@ -108,8 +118,17 @@ class InitializeControllerISpec extends ControllerISpecBase {
           FileUploads(preexistingUploads.map(_.toFileUpload))
         )
 
-        await(newJourneyRepo.getJourneyConfig(sessionStateService.getJourneyId(hc).get)) shouldBe Some(
-          FileUploadInitializationRequest(fileUploadSessionConfig, preexistingUploads)
+        await(
+          newJourneyRepo.get(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyConfigDataKey)
+        ) shouldBe Some(
+          FileUploadContext(
+            fileUploadSessionConfig,
+            HostService.Any
+          )
+        )
+
+        await(newJourneyRepo.get(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles)) shouldBe Some(
+          FileUploads(preexistingUploads.map(_.toFileUpload))
         )
       }
     }
