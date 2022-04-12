@@ -39,7 +39,7 @@ class NewJourneyCacheRepository @Inject() (
 
 object NewJourneyCacheRepository {
   object DataKeys {
-    val journeyConfigDataKey = DataKey[FileUploadContext]("journeyConfig")
+    val journeyContextDataKey = DataKey[FileUploadContext]("journeyConfig")
     val uploadedFiles = DataKey[FileUploads]("uploadedFiles")
   }
 }

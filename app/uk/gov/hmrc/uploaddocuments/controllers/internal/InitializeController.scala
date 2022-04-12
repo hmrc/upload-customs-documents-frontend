@@ -18,9 +18,9 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 
 import play.api.libs.json.JsValue
 import play.api.mvc.Action
-import uk.gov.hmrc.mongo.cache.DataKey
-import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, Renderer}
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
+import play.mvc.Http.HeaderNames
+import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, Renderer, Router, routes => mainRoutes}
+import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
@@ -33,6 +33,7 @@ import scala.concurrent.ExecutionContext
 class InitializeController @Inject() (
   sessionStateService: SessionStateService,
   renderer: Renderer,
+  router: Router,
   components: BaseControllerComponents,
   newJourneyCacheRepository: NewJourneyCacheRepository
 )(implicit ec: ExecutionContext)
@@ -48,15 +49,29 @@ class InitializeController @Inject() (
             val journeyConfig = FileUploadContext(payload.config, host)
             val previouslyUploadedFiles = payload.toFileUploads
             for {
-              _ <- newJourneyCacheRepository.put(currentJourneyId)(DataKeys.journeyConfigDataKey, journeyConfig)
+              _ <- newJourneyCacheRepository.put(currentJourneyId)(DataKeys.journeyContextDataKey, journeyConfig)
               _ <- newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, previouslyUploadedFiles)
-              session <- sessionStateService.updateSessionState(
-                           JourneyModel.initialize(host)(payload)
-                         ) // Parallel Session State for now
-            } yield renderer.initializationResponse(session)
+              // Store parallel Session State for now - until we can remove the session state service
+              session <- sessionStateService.updateSessionState(JourneyModel.initialize(host)(payload))
+            } yield initializationResponse(session)
           }
         }
       }
+    }
+
+  private def initializationResponse =
+    renderer.resultOf {
+      case State.Initialized(context, _) =>
+        Created.withHeaders(
+          HeaderNames.LOCATION ->
+            (
+              if (!context.config.features.showUploadMultiple)
+                router.showChooseSingleFile
+              else
+                mainRoutes.StartController.start
+            ).url
+        )
+      case _ => BadRequest
     }
 
 }

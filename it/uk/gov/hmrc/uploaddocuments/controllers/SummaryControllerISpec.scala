@@ -2,6 +2,7 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
 import uk.gov.hmrc.uploaddocuments.support.SHA256
 
@@ -181,12 +182,14 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
       "redirect to the continue_url when yes and files number limit has been reached" in {
 
+        val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = nFileUploads(FILES_LIMIT)
-        val state = State.Summary(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads
-        )
+        val state = State.Summary(context, fileUploads)
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url")
 
@@ -203,12 +206,14 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
       "redirect to the continue_url when no and files number below the limit" in {
 
+        val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files = for (i <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
-        val state = State.Summary(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads
-        )
+        val state = State.Summary(context, fileUploads)
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url")
 
@@ -224,12 +229,14 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
       }
 
       "redirect to the continue_url when no and files number above the limit" in {
+        val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = nFileUploads(FILES_LIMIT)
-        val state = State.Summary(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads
-        )
+        val state = State.Summary(context, fileUploads)
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url")
 

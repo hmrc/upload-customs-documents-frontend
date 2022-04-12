@@ -42,15 +42,16 @@ class ChooseMultipleFilesController @Inject() (
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          withJourneyConfig { journeyConfig =>
+          withJourneyContext { journeyConfig =>
             withUploadedFiles { files =>
               val sessionStateUpdate =
                 JourneyModel.toUploadMultipleFiles(router.preferUploadMultipleFiles)
               sessionStateService
                 .updateSessionState(sessionStateUpdate)
                 .map {
-                  case (_: State.UploadMultipleFiles, _) =>
-                    Ok(renderView(journeyConfig, files, YesNoChoiceForm))
+                  case (uploadMultipleFiles: State.UploadMultipleFiles, _) =>
+                    // TODO: Change this to use the files from 'withUploadedFiles' once that is actually updated
+                    Ok(renderView(journeyConfig, uploadMultipleFiles.fileUploads, YesNoChoiceForm))
 
                   case other =>
                     router.redirectTo(other)

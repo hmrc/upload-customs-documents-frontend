@@ -17,9 +17,12 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import akka.actor.ActorSystem
+import play.api.libs.json.Json
+import play.api.mvc.Results.{Forbidden, NotFound, Ok}
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
+import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
+import uk.gov.hmrc.uploaddocuments.models.UploadRequest
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
@@ -48,9 +51,29 @@ class InitiateUpscanController @Inject() (
               )
           sessionStateService
             .updateSessionState(sessionStateUpdate)
-            .map(renderer.renderUploadRequestJson(uploadId))
+            .map(renderUploadRequestJson(uploadId))
         }
       }
+    }
+
+  def renderUploadRequestJson(uploadId: String) =
+    renderer.resultOf {
+      case s: State.UploadMultipleFiles =>
+        s.fileUploads
+          .findReferenceAndUploadRequestForUploadId(uploadId) match {
+          case Some((reference, uploadRequest)) =>
+            val json =
+              Json.obj(
+                "upscanReference" -> reference,
+                "uploadId"        -> uploadId,
+                "uploadRequest"   -> UploadRequest.formats.writes(uploadRequest)
+              )
+            Ok(json)
+
+          case None => NotFound
+        }
+
+      case _ => Forbidden
     }
 
 }

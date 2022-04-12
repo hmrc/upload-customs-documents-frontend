@@ -90,10 +90,10 @@ abstract class BaseController(
       case _    => body
     }
 
-  final def withJourneyConfig(
+  final def withJourneyContext(
     body: FileUploadContext => Future[Result]
   )(implicit request: Request[_], ec: ExecutionContext): Future[Result] =
-    components.newJourneyCacheRepository.get(currentJourneyId)(DataKeys.journeyConfigDataKey) flatMap {
+    components.newJourneyCacheRepository.get(currentJourneyId)(DataKeys.journeyContextDataKey) flatMap {
       case Some(journey) => body(journey)
       case _             => Future.successful(Redirect(components.appConfig.govukStartUrl))
     }

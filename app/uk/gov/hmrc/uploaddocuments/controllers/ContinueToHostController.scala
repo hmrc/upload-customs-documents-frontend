@@ -17,8 +17,8 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
-import uk.gov.hmrc.uploaddocuments.journeys.State
+import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
@@ -28,7 +28,6 @@ import scala.concurrent.ExecutionContext
 class ContinueToHostController @Inject() (
   sessionStateService: SessionStateService,
   router: Router,
-  renderer: Renderer,
   components: BaseControllerComponents
 )(implicit ec: ExecutionContext)
     extends BaseController(components) {
@@ -38,21 +37,34 @@ class ContinueToHostController @Inject() (
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          val sessionStateUpdate =
-            JourneyModel.continueToHost
-          sessionStateService
-            .getCurrentOrUpdateSessionState[State.ContinueToHost](sessionStateUpdate)
-            .map {
-              case (continueToHost: State.ContinueToHost, breadcrumbs) =>
-                renderer.display(continueToHost, breadcrumbs, None)
+          withJourneyContext { journeyConfig =>
+            withUploadedFiles { files =>
+              val sessionStateUpdate =
+                JourneyModel.continueToHost
+              sessionStateService
+                .getCurrentOrUpdateSessionState[State.ContinueToHost](sessionStateUpdate)
+                .map {
+                  case (continueToHost: State.ContinueToHost, _) =>
+                    // TODO: Switch to use value from 'WithUploadedFiles' once this collection is actually updated in parallel
+                    Redirect(redirectRoute(continueToHost.fileUploads, journeyConfig))
 
-              case other =>
-                router.redirectTo(other)
+                  case other =>
+                    router.redirectTo(other)
+                }
+                .andThen { case _ => sessionStateService.cleanBreadcrumbs }
             }
-            .andThen { case _ => sessionStateService.cleanBreadcrumbs }
+          }
         }
       }
     }
+
+  private def redirectRoute(fileUploads: FileUploads, context: FileUploadContext) =
+    if (fileUploads.acceptedCount == 0)
+      context.config.getContinueWhenEmptyUrl
+    else if (fileUploads.acceptedCount >= context.config.maximumNumberOfFiles)
+      context.config.getContinueWhenFullUrl
+    else
+      context.config.continueUrl
 
   // POST /continue-to-host
   final val continueWithYesNo: Action[AnyContent] =

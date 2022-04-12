@@ -2,6 +2,7 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 
 import java.time.ZonedDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -9,21 +10,30 @@ import uk.gov.hmrc.uploaddocuments.support.SHA256
 
 class FileVerificationControllerISpec extends ControllerISpecBase {
 
+  val upscanRef1 = "11370e18-6e24-453e-b45a-76d3e32ea33d"
+  val upscanRef2 = "2b72fe99-8adf-4edb-865e-622ae710f77c"
+
   "FileVerificationController" when {
 
     "GET /file-verification" should {
       "display waiting for file verification page after the timeout the first time" in {
+
+        val context = FileUploadContext(fileUploadSessionConfig)
+        val fileUploads = FileUploads(files =
+          Seq(
+            FileUpload.Initiated(Nonce.Any, Timestamp.Any, upscanRef1),
+            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2)
+          )
+        )
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
         sessionStateService.setState(
           State.UploadSingleFile(
-            FileUploadContext(fileUploadSessionConfig),
-            "2b72fe99-8adf-4edb-865e-622ae710f77c",
+            context,
+            upscanRef2,
             UploadRequest(href = "https://s3.bucket", fields = Map("callbackUrl" -> "https://foo.bar/callback")),
-            FileUploads(files =
-              Seq(
-                FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
-                FileUpload.Posted(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-              )
-            )
+            fileUploads
           )
         )
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
@@ -34,34 +44,35 @@ class FileVerificationControllerISpec extends ControllerISpecBase {
         result.body should include(htmlEscapedPageTitle("view.upload-file.waiting"))
         result.body should include(htmlEscapedMessage("view.upload-file.waiting"))
 
-        sessionStateService.getState shouldBe (
+        sessionStateService.getState shouldBe
           State.WaitingForFileVerification(
-            FileUploadContext(fileUploadSessionConfig),
-            "2b72fe99-8adf-4edb-865e-622ae710f77c",
+            context,
+            upscanRef2,
             UploadRequest(href = "https://s3.bucket", fields = Map("callbackUrl" -> "https://foo.bar/callback")),
-            FileUpload.Posted(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c"),
-            FileUploads(files =
-              Seq(
-                FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
-                FileUpload.Posted(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-              )
-            )
+            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2),
+            fileUploads
           )
-        )
       }
 
       "display waiting for file verification page after the timeout the next time" in {
-        val state = State.WaitingForFileVerification(
-          FileUploadContext(fileUploadSessionConfig),
-          "2b72fe99-8adf-4edb-865e-622ae710f77c",
-          UploadRequest(href = "https://s3.bucket", fields = Map("callbackUrl" -> "https://foo.bar/callback")),
-          FileUpload.Posted(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c"),
-          FileUploads(files =
-            Seq(
-              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
-              FileUpload.Posted(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-            )
+
+        val context = FileUploadContext(fileUploadSessionConfig)
+        val fileUploads = FileUploads(files =
+          Seq(
+            FileUpload.Initiated(Nonce.Any, Timestamp.Any, upscanRef1),
+            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2)
           )
+        )
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
+
+        val state = State.WaitingForFileVerification(
+          context,
+          upscanRef2,
+          UploadRequest(href = "https://s3.bucket", fields = Map("callbackUrl" -> "https://foo.bar/callback")),
+          FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2),
+          fileUploads
         )
         sessionStateService.setState(state)
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
@@ -78,51 +89,58 @@ class FileVerificationControllerISpec extends ControllerISpecBase {
 
     "GET /file-verification/:reference/status" should {
       "return file verification status" in {
-        val state = State.Summary(
-          FileUploadContext(fileUploadSessionConfig),
-          FileUploads(files =
-            Seq(
-              FileUpload.Initiated(
-                Nonce.Any,
-                Timestamp.Any,
-                "11370e18-6e24-453e-b45a-76d3e32ea33d",
-                uploadRequest =
-                  Some(UploadRequest(href = "https://s3.amazonaws.com/bucket/123abc", fields = Map("foo1" -> "bar1")))
-              ),
-              FileUpload.Posted(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c"),
-              FileUpload.Accepted(
-                Nonce.Any,
-                Timestamp.Any,
-                "f029444f-415c-4dec-9cf2-36774ec63ab8",
-                "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
-                ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-                "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-                "test.pdf",
-                "application/pdf",
-                4567890
-              ),
-              FileUpload.Failed(
-                Nonce.Any,
-                Timestamp.Any,
-                "4b1e15a4-4152-4328-9448-4924d9aee6e2",
-                UpscanNotification.FailureDetails(UpscanNotification.QUARANTINE, "some reason")
-              ),
-              FileUpload.Rejected(
-                Nonce.Any,
-                Timestamp.Any,
-                "4b1e15a4-4152-4328-9448-4924d9aee6e3",
-                details = S3UploadError("key", "errorCode", "Invalid file type.")
-              ),
-              FileUpload.Duplicate(
-                Nonce.Any,
-                Timestamp.Any,
-                "4b1e15a4-4152-4328-9448-4924d9aee6e4",
-                checksum = "0" * 64,
-                existingFileName = "test.pdf",
-                duplicateFileName = "test1.png"
-              )
+
+        val context = FileUploadContext(fileUploadSessionConfig)
+        val fileUploads = FileUploads(files =
+          Seq(
+            FileUpload.Initiated(
+              Nonce.Any,
+              Timestamp.Any,
+              upscanRef1,
+              uploadRequest =
+                Some(UploadRequest(href = "https://s3.amazonaws.com/bucket/123abc", fields = Map("foo1" -> "bar1")))
+            ),
+            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2),
+            FileUpload.Accepted(
+              Nonce.Any,
+              Timestamp.Any,
+              "f029444f-415c-4dec-9cf2-36774ec63ab8",
+              "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
+              ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+              "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+              "test.pdf",
+              "application/pdf",
+              4567890
+            ),
+            FileUpload.Failed(
+              Nonce.Any,
+              Timestamp.Any,
+              "4b1e15a4-4152-4328-9448-4924d9aee6e2",
+              UpscanNotification.FailureDetails(UpscanNotification.QUARANTINE, "some reason")
+            ),
+            FileUpload.Rejected(
+              Nonce.Any,
+              Timestamp.Any,
+              "4b1e15a4-4152-4328-9448-4924d9aee6e3",
+              details = S3UploadError("key", "errorCode", "Invalid file type.")
+            ),
+            FileUpload.Duplicate(
+              Nonce.Any,
+              Timestamp.Any,
+              "4b1e15a4-4152-4328-9448-4924d9aee6e4",
+              checksum = "0" * 64,
+              existingFileName = "test.pdf",
+              duplicateFileName = "test1.png"
             )
-          ),
+          )
+        )
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
+
+        val state = State.Summary(
+          context,
+          fileUploads,
           acknowledged = false
         )
         sessionStateService.setState(state)
@@ -134,13 +152,13 @@ class FileVerificationControllerISpec extends ControllerISpecBase {
               .get()
           )
         result1.status shouldBe 200
-        result1.body shouldBe """{"reference":"11370e18-6e24-453e-b45a-76d3e32ea33d","fileStatus":"NOT_UPLOADED","uploadRequest":{"href":"https://s3.amazonaws.com/bucket/123abc","fields":{"foo1":"bar1"}}}"""
+        result1.body shouldBe s"""{"reference":"$upscanRef1","fileStatus":"NOT_UPLOADED","uploadRequest":{"href":"https://s3.amazonaws.com/bucket/123abc","fields":{"foo1":"bar1"}}}"""
         sessionStateService.getState shouldBe state
 
         val result2 =
           await(request("/file-verification/2b72fe99-8adf-4edb-865e-622ae710f77c/status").get())
         result2.status shouldBe 200
-        result2.body shouldBe """{"reference":"2b72fe99-8adf-4edb-865e-622ae710f77c","fileStatus":"WAITING"}"""
+        result2.body shouldBe s"""{"reference":"$upscanRef2","fileStatus":"WAITING"}"""
         sessionStateService.getState shouldBe state
 
         val result3 =
@@ -176,17 +194,24 @@ class FileVerificationControllerISpec extends ControllerISpecBase {
 
     "GET /journey/:journeyId/file-verification" should {
       "set current file upload status as posted and return 204 NoContent" in {
+
+        val context = FileUploadContext(fileUploadSessionConfig)
+        val fileUploads = FileUploads(files =
+          Seq(
+            FileUpload.Initiated(Nonce.Any, Timestamp.Any, upscanRef1),
+            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2)
+          )
+        )
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
+
         sessionStateService.setState(
           State.UploadSingleFile(
-            FileUploadContext(fileUploadSessionConfig),
-            "11370e18-6e24-453e-b45a-76d3e32ea33d",
+            context,
+            upscanRef1,
             UploadRequest(href = "https://s3.bucket", fields = Map("callbackUrl" -> "https://foo.bar/callback")),
-            FileUploads(files =
-              Seq(
-                FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
-                FileUpload.Posted(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-              )
-            )
+            fileUploads
           )
         )
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
@@ -196,20 +221,19 @@ class FileVerificationControllerISpec extends ControllerISpecBase {
 
         result1.status shouldBe 202
         result1.body.isEmpty shouldBe true
-        sessionStateService.getState shouldBe (
+        sessionStateService.getState shouldBe
           State.WaitingForFileVerification(
-            FileUploadContext(fileUploadSessionConfig),
-            "11370e18-6e24-453e-b45a-76d3e32ea33d",
+            context,
+            upscanRef1,
             UploadRequest(href = "https://s3.bucket", fields = Map("callbackUrl" -> "https://foo.bar/callback")),
-            FileUpload.Posted(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
+            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef1),
             FileUploads(files =
               Seq(
-                FileUpload.Posted(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
-                FileUpload.Posted(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
+                FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef1),
+                FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2)
               )
             )
           )
-        )
       }
     }
   }

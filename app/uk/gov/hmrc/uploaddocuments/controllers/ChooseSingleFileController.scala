@@ -16,12 +16,10 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.mvc.Results.Ok
 import play.api.mvc.{Action, AnyContent, Request}
-import uk.gov.hmrc.govukfrontend.views.viewmodels.breadcrumbs.Breadcrumbs
 import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
 import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploadInitializationRequest}
+import uk.gov.hmrc.uploaddocuments.models.FileUploadContext
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 import uk.gov.hmrc.uploaddocuments.views.html.UploadSingleFileView
 
@@ -44,7 +42,7 @@ class ChooseSingleFileController @Inject() (
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          withJourneyConfig { journeyConfig =>
+          withJourneyContext { journeyConfig =>
             val sessionStateUpdate =
               JourneyModel
                 .initiateFileUpload(upscanRequest(currentJourneyId))(upscanInitiateConnector.initiate(_, _))
@@ -52,6 +50,7 @@ class ChooseSingleFileController @Inject() (
               .updateSessionState(sessionStateUpdate)
               .map {
                 case (uploadSingleFile: State.UploadSingleFile, breadcrumbs) =>
+                  // TODO: Change in future to retrieve state from Mongo rather than SessionStateService
                   Ok(renderView(journeyConfig, uploadSingleFile, breadcrumbs))
 
                 case other =>

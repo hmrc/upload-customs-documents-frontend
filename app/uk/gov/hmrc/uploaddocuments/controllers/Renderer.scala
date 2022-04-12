@@ -50,32 +50,6 @@ class Renderer @Inject() (
     m: Messages
   ): Result =
     state match {
-      case State.Uninitialized =>
-        Redirect(appConfig.govukStartUrl)
-
-      case State.Initialized(config, fileUploads) =>
-        if (router.preferUploadMultipleFiles)
-          Redirect(router.showChooseMultipleFiles)
-        else
-          Redirect(router.showChooseSingleFile)
-
-      case State.ContinueToHost(context, fileUploads) =>
-        if (fileUploads.acceptedCount == 0)
-          Redirect(context.config.getContinueWhenEmptyUrl)
-        else if (fileUploads.acceptedCount >= context.config.maximumNumberOfFiles)
-          Redirect(context.config.getContinueWhenFullUrl)
-        else
-          Redirect(context.config.continueUrl)
-
-      case State.WaitingForFileVerification(context, reference, _, _, _) =>
-        Ok(
-          views.waitingForFileVerificationView(
-            successAction = router.showSummary,
-            failureAction = router.showChooseSingleFile,
-            checkStatusAction = router.checkFileVerificationStatus(reference),
-            backLink = backlink(breadcrumbs)
-          )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
-        )
 
       case State.Summary(context, fileUploads, _) =>
         Ok(
@@ -104,28 +78,6 @@ class Renderer @Inject() (
       case _ => NotImplemented
     }
 
-  final def renderUploadRequestJson(
-    uploadId: String
-  ) =
-    resultOf {
-      case s: State.UploadMultipleFiles =>
-        s.fileUploads
-          .findReferenceAndUploadRequestForUploadId(uploadId) match {
-          case Some((reference, uploadRequest)) =>
-            val json =
-              Json.obj(
-                "upscanReference" -> reference,
-                "uploadId"        -> uploadId,
-                "uploadRequest"   -> UploadRequest.formats.writes(uploadRequest)
-              )
-            Ok(json)
-
-          case None => NotFound
-        }
-
-      case _ => Forbidden
-    }
-
   final def renderFileVerificationStatus(
     reference: String
   )(implicit messages: Messages) =
@@ -149,27 +101,6 @@ class Renderer @Inject() (
           case None => NotFound
         }
       case _ => NotFound
-    }
-
-  final def initializationResponse =
-    resultOf {
-      case State.Initialized(context, _) =>
-        Created.withHeaders(
-          HeaderNames.LOCATION ->
-            (
-              if (!context.config.features.showUploadMultiple)
-                router.showChooseSingleFile
-              else
-                routes.StartController.start
-            ).url
-        )
-      case _ => BadRequest
-    }
-
-  final def renderFileRemovalStatus =
-    resultOf {
-      case s: State => NoContent
-      case _        => BadRequest
     }
 
   final def streamFileFromUspcan(
@@ -213,9 +144,7 @@ class Renderer @Inject() (
       .map(router.routeTo)
       .getOrElse(router.routeTo(State.Uninitialized))
 
-  private def resultOf(
-    f: PartialFunction[State, Result]
-  ): ((State, List[State])) => Result =
+  def resultOf(f: PartialFunction[State, Result]): ((State, List[State])) => Result =
     (stateAndBreadcrumbs: (State, List[State])) =>
       f.applyOrElse(stateAndBreadcrumbs._1, (_: State) => play.api.mvc.Results.NotImplemented)
 

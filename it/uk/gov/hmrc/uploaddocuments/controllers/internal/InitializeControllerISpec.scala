@@ -70,7 +70,7 @@ class InitializeControllerISpec extends ControllerISpecBase {
         )
 
         await(
-          newJourneyRepo.get(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyConfigDataKey)
+          newJourneyRepo.get(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey)
         ) shouldBe Some(
           FileUploadContext(
             fileUploadSessionConfig,
@@ -119,7 +119,7 @@ class InitializeControllerISpec extends ControllerISpecBase {
         )
 
         await(
-          newJourneyRepo.get(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyConfigDataKey)
+          newJourneyRepo.get(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey)
         ) shouldBe Some(
           FileUploadContext(
             fileUploadSessionConfig,

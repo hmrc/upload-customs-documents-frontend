@@ -2,6 +2,7 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -23,6 +24,10 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
           context,
           fileUploads = nonEmptyFileUploads
         )
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, nonEmptyFileUploads))
+
         sessionStateService.setState(state)
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url")
@@ -46,7 +51,11 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = FileUploads())
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, FileUploads()))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url")
 
@@ -67,6 +76,9 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = FileUploads())
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, FileUploads()))
         sessionStateService.setState(state)
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url-if-empty")
@@ -87,6 +99,14 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = nFileUploads(context.config.maximumNumberOfFiles))
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(
+          newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(
+            DataKeys.uploadedFiles,
+            nFileUploads(context.config.maximumNumberOfFiles)
+          )
+        )
         sessionStateService.setState(state)
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url")
@@ -111,7 +131,16 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = nFileUploads(context.config.maximumNumberOfFiles))
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(
+          newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(
+            DataKeys.uploadedFiles,
+            nFileUploads(context.config.maximumNumberOfFiles)
+          )
+        )
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url-if-full")
 
@@ -140,7 +169,11 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
           context,
           fileUploads = nonEmptyFileUploads
         )
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, nonEmptyFileUploads))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url")
 
@@ -163,7 +196,11 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = FileUploads())
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, FileUploads()))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url")
 
@@ -184,7 +221,11 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = FileUploads())
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, FileUploads()))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url-if-empty")
 
@@ -204,7 +245,16 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = nFileUploads(context.config.maximumNumberOfFiles))
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(
+          newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(
+            DataKeys.uploadedFiles,
+            nFileUploads(context.config.maximumNumberOfFiles)
+          )
+        )
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url")
 
@@ -228,7 +278,16 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = nFileUploads(context.config.maximumNumberOfFiles))
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(
+          newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(
+            DataKeys.uploadedFiles,
+            nFileUploads(context.config.maximumNumberOfFiles)
+          )
+        )
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url-if-full")
 
@@ -255,7 +314,11 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
           context,
           fileUploads = nonEmptyFileUploads
         )
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, nonEmptyFileUploads))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/backlink-url")
 
@@ -278,7 +341,11 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = FileUploads())
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, FileUploads()))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/backlink-url")
 
@@ -299,7 +366,11 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = FileUploads())
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, FileUploads()))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/backlink-url")
 
@@ -319,7 +390,16 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = nFileUploads(context.config.maximumNumberOfFiles))
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(
+          newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(
+            DataKeys.uploadedFiles,
+            nFileUploads(context.config.maximumNumberOfFiles)
+          )
+        )
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/backlink-url")
 
@@ -343,7 +423,16 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = nFileUploads(context.config.maximumNumberOfFiles))
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(
+          newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(
+            DataKeys.uploadedFiles,
+            nFileUploads(context.config.maximumNumberOfFiles)
+          )
+        )
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/backlink-url")
 
@@ -371,7 +460,11 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
           context,
           fileUploads = nonEmptyFileUploads
         )
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, nonEmptyFileUploads))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url-if-yes")
 
@@ -395,7 +488,11 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = FileUploads())
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, FileUploads()))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url-if-yes")
 
@@ -417,7 +514,11 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = FileUploads())
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, FileUploads()))
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url-if-yes")
 
@@ -438,7 +539,16 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = nFileUploads(context.config.maximumNumberOfFiles))
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(
+          newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(
+            DataKeys.uploadedFiles,
+            nFileUploads(context.config.maximumNumberOfFiles)
+          )
+        )
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url-if-yes")
 
@@ -463,7 +573,16 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
             )
         )
         val state = State.ContinueToHost(context, fileUploads = nFileUploads(context.config.maximumNumberOfFiles))
+
+        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
+        await(
+          newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(
+            DataKeys.uploadedFiles,
+            nFileUploads(context.config.maximumNumberOfFiles)
+          )
+        )
         sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url-if-yes")
 

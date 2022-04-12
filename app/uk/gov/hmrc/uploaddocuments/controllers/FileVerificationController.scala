@@ -17,7 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import akka.actor.Scheduler
-import play.api.mvc.{Action, AnyContent}
+import play.api.mvc.{Action, AnyContent, Request}
 import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
 import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
@@ -26,6 +26,11 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import akka.actor.ActorSystem
 import play.api.i18n.Messages
+import uk.gov.hmrc.govukfrontend.views.viewmodels.breadcrumbs.Breadcrumbs
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.uploaddocuments.journeys.State.WaitingForFileVerification
+import uk.gov.hmrc.uploaddocuments.models.FileUploadContext
+import uk.gov.hmrc.uploaddocuments.views.html.WaitingForFileVerificationView
 
 @Singleton
 class FileVerificationController @Inject() (
@@ -33,6 +38,7 @@ class FileVerificationController @Inject() (
   router: Router,
   renderer: Renderer,
   components: BaseControllerComponents,
+  waitingView: WaitingForFileVerificationView,
   actorSystem: ActorSystem
 )(implicit ec: ExecutionContext)
     extends BaseController(components) {
@@ -48,25 +54,37 @@ class FileVerificationController @Inject() (
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          val timeoutNanoTime: Long =
-            System.nanoTime() + INITIAL_CALLBACK_WAIT_TIME_SECONDS * 1000000000L
-          sessionStateService
-            .waitForSessionState[State.Summary](intervalInMiliseconds, timeoutNanoTime) {
-              val sessionStateUpdate =
-                JourneyModel.waitForFileVerification
-              sessionStateService
-                .updateSessionState(sessionStateUpdate)
-            }
-            .map {
-              case (waitingForFileVerification: State.WaitingForFileVerification, breadcrumbs) =>
-                renderer.display(waitingForFileVerification, breadcrumbs, None)
+          withJourneyContext { journeyContext =>
+            val timeoutNanoTime: Long =
+              System.nanoTime() + INITIAL_CALLBACK_WAIT_TIME_SECONDS * 1000000000L
+            sessionStateService
+              .waitForSessionState[State.Summary](intervalInMiliseconds, timeoutNanoTime) {
+                val sessionStateUpdate =
+                  JourneyModel.waitForFileVerification
+                sessionStateService
+                  .updateSessionState(sessionStateUpdate)
+              }
+              .map {
+                case (waitingForFileVerification: State.WaitingForFileVerification, breadcrumbs) =>
+                  Ok(renderWaitingView(journeyContext, breadcrumbs, waitingForFileVerification.reference))
 
-              case other =>
-                router.redirectTo(other)
-            }
+                case other =>
+                  router.redirectTo(other)
+              }
+          }
         }
       }
     }
+
+  private def renderWaitingView(context: FileUploadContext, breadcrumbs: List[State], reference: String)(implicit
+    request: Request[_]
+  ) =
+    waitingView(
+      successAction = router.showSummary,
+      failureAction = router.showChooseSingleFile,
+      checkStatusAction = router.checkFileVerificationStatus(reference),
+      backLink = renderer.backlink(breadcrumbs)
+    )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
 
   // GET /file-verification/:reference/status
   final def checkFileVerificationStatus(reference: String): Action[AnyContent] =
