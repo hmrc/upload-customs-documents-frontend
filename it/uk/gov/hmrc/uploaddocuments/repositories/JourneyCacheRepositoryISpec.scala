@@ -18,19 +18,19 @@ package uk.gov.hmrc.uploaddocuments.repositories
 
 import uk.gov.hmrc.mongo.cache.DataKey
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadSessionConfig, FileUploads}
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.support.UnitSpec
 
-class NewJourneyCacheRepositoryISpec extends UnitSpec {
+class JourneyCacheRepositoryISpec extends UnitSpec {
 
   "DataKeys" must {
 
     "have the correct key and model type" in {
 
-      NewJourneyCacheRepository.DataKeys.journeyContextDataKey shouldBe
+      JourneyCacheRepository.DataKeys.journeyContext shouldBe
         DataKey[FileUploadSessionConfig]("journeyConfig")
 
-      NewJourneyCacheRepository.DataKeys.uploadedFiles shouldBe
+      JourneyCacheRepository.DataKeys.uploadedFiles shouldBe
         DataKey[FileUploads]("uploadedFiles")
     }
   }

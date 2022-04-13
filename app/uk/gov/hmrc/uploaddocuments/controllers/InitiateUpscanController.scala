@@ -20,7 +20,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
 import uk.gov.hmrc.uploaddocuments.models.{FileUpload, Nonce, Timestamp, UploadRequest}
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext

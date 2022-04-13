@@ -6,8 +6,8 @@ import play.api.test.FakeRequest
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.{HeaderCarrier, SessionId, SessionKeys}
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.support.{SHA256, ServerISpec, TestData}
 
 import java.time.ZonedDateTime
@@ -20,7 +20,7 @@ trait ControllerISpecBase extends ServerISpec {
   implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(sessionId))
   def getJourneyId: String = SHA256.compute(journeyId)
 
-  lazy val newJourneyRepo = app.injector.instanceOf[NewJourneyCacheRepository]
+  lazy val newJourneyRepo = app.injector.instanceOf[JourneyCacheRepository]
 
   import play.api.i18n._
   implicit val messages: Messages = MessagesImpl(Lang("en"), app.injector.instanceOf[MessagesApi])
@@ -117,13 +117,13 @@ trait ControllerISpecBase extends ServerISpec {
   final def FILES_LIMIT = fileUploadSessionConfig.maximumNumberOfFiles
 
   final def setContext(context: FileUploadContext = FileUploadContext(fileUploadSessionConfig)) =
-    await(newJourneyRepo.put(getJourneyId)(DataKeys.journeyContextDataKey, context))
+    await(newJourneyRepo.put(getJourneyId)(DataKeys.journeyContext, context))
 
   final def setFileUploads(files: FileUploads = FileUploads()) =
     await(newJourneyRepo.put(getJourneyId)(DataKeys.uploadedFiles, files))
 
   final def getContext() =
-    await(newJourneyRepo.get(getJourneyId)(DataKeys.journeyContextDataKey))
+    await(newJourneyRepo.get(getJourneyId)(DataKeys.journeyContext))
 
   final def getFileUploads() =
     await(newJourneyRepo.get(getJourneyId)(DataKeys.uploadedFiles))

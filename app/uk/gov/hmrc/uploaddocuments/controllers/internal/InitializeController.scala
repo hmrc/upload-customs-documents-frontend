@@ -21,15 +21,15 @@ import play.api.mvc.Action
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, routes => mainRoutes}
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class InitializeController @Inject()(components: BaseControllerComponents,
-                                     newJourneyCacheRepository: NewJourneyCacheRepository)
+                                     newJourneyCacheRepository: JourneyCacheRepository)
                                     (implicit ec: ExecutionContext) extends BaseController(components) {
 
   // POST /internal/initialize
@@ -41,7 +41,7 @@ class InitializeController @Inject()(components: BaseControllerComponents,
             val host = HostService.from(request)
             val journeyContext = FileUploadContext(payload.config, host)
             for {
-              _ <- newJourneyCacheRepository.put(currentJourneyId)(DataKeys.journeyContextDataKey, journeyContext)
+              _ <- newJourneyCacheRepository.put(currentJourneyId)(DataKeys.journeyContext, journeyContext)
               _ <- newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, payload.toFileUploads)
             } yield {
               Created.withHeaders(HeaderNames.LOCATION -> (

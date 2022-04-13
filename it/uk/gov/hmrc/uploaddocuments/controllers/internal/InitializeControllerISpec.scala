@@ -3,7 +3,7 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 import play.api.libs.json.{JsString, Json}
 import uk.gov.hmrc.uploaddocuments.controllers.ControllerISpecBase
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 
 import java.time.ZonedDateTime
 

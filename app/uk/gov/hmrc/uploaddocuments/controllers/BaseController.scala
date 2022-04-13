@@ -26,8 +26,8 @@ import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody}
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.connectors.FrontendAuthConnector
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.support.SHA256
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
@@ -41,7 +41,7 @@ class BaseControllerComponents @Inject() (
   val environment: Environment,
   val configuration: Configuration,
   val messagesControllerComponents: MessagesControllerComponents,
-  val newJourneyCacheRepository: NewJourneyCacheRepository
+  val newJourneyCacheRepository: JourneyCacheRepository
 )
 
 abstract class BaseController(
@@ -94,7 +94,7 @@ abstract class BaseController(
   final def withJourneyContext(
     body: FileUploadContext => Future[Result]
   )(implicit request: Request[_], ec: ExecutionContext): Future[Result] =
-    components.newJourneyCacheRepository.get(currentJourneyId)(DataKeys.journeyContextDataKey) flatMap {
+    components.newJourneyCacheRepository.get(currentJourneyId)(DataKeys.journeyContext) flatMap {
       case Some(journey) => body(journey)
       case _             => Future.successful(Redirect(components.appConfig.govukStartUrl))
     }

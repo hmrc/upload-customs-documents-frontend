@@ -22,7 +22,7 @@ import play.api.mvc.{Action, AnyContent, Request}
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileVerificationStatus, Timestamp}
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.services.ScheduleAfter
 import uk.gov.hmrc.uploaddocuments.views.UploadFileViewHelper
 import uk.gov.hmrc.uploaddocuments.views.html.WaitingForFileVerificationView

@@ -20,7 +20,7 @@ import play.api.mvc.{Action, AnyContent}
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel.canOverwriteFileUploadStatus
 import uk.gov.hmrc.uploaddocuments.models.{FileUpload, Timestamp}
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
