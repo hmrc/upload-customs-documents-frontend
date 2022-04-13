@@ -17,7 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.data.Form
-import play.api.mvc.{Action, AnyContent, Call, Request, RequestHeader}
+import play.api.mvc.{Action, AnyContent, Call, Request}
 import uk.gov.hmrc.uploaddocuments.controllers.Forms.YesNoChoiceForm
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
 import uk.gov.hmrc.uploaddocuments.views.html.UploadMultipleFilesView
@@ -27,7 +27,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ChooseMultipleFilesController @Inject()(components: BaseControllerComponents,
-                                              router: Router,
                                               uploadMultipleFilesView: UploadMultipleFilesView)
                                              (implicit ec: ExecutionContext) extends BaseController(components) {
 
@@ -36,7 +35,7 @@ class ChooseMultipleFilesController @Inject()(components: BaseControllerComponen
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          if(!router.preferUploadMultipleFiles) {
+          if(!preferUploadMultipleFiles) {
             Future(Redirect(routes.ChooseSingleFileController.showChooseFile))
           } else {
             withJourneyContext { journeyConfig =>

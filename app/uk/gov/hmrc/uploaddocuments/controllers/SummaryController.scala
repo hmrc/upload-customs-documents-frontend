@@ -19,7 +19,6 @@ package uk.gov.hmrc.uploaddocuments.controllers
 import play.api.data.Form
 import play.api.mvc.{Action, AnyContent, Call, Request}
 import uk.gov.hmrc.uploaddocuments.controllers.Forms.YesNoChoiceForm
-import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
 import uk.gov.hmrc.uploaddocuments.views.html.{SummaryNoChoiceView, SummaryView}
 
@@ -27,14 +26,10 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SummaryController @Inject() (
-  val router: Router,
-  renderer: Renderer,
-  view: SummaryView,
-  viewNoChoice: SummaryNoChoiceView,
-  components: BaseControllerComponents
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) with UpscanRequestSupport {
+class SummaryController @Inject()(view: SummaryView,
+                                  viewNoChoice: SummaryNoChoiceView,
+                                  components: BaseControllerComponents)
+                                 (implicit ec: ExecutionContext) extends BaseController(components) with UpscanRequestSupport {
 
   // GET /summary
   final val showSummary: Action[AnyContent] =
@@ -43,19 +38,17 @@ class SummaryController @Inject() (
         whenAuthenticated {
           withJourneyContext { journeyConfig =>
             withUploadedFiles { files =>
-              Future(Ok(renderView(YesNoChoiceForm, journeyConfig, files, List())))
+              Future(Ok(renderView(YesNoChoiceForm, journeyConfig, files)))
             }
           }
         }
       }
     }
 
-  private def renderView(
-    form: Form[Boolean],
-    context: FileUploadContext,
-    fileUploads: FileUploads,
-    breadcrumbs: List[State]
-  )(implicit request: Request[_]) =
+  private def renderView(form: Form[Boolean],
+                         context: FileUploadContext,
+                         fileUploads: FileUploads)
+                        (implicit request: Request[_]) =
     if (fileUploads.acceptedCount < context.config.maximumNumberOfFiles)
       view(
         maxFileUploadsNumber = context.config.maximumNumberOfFiles,
@@ -65,7 +58,7 @@ class SummaryController @Inject() (
         postAction = routes.SummaryController.submitUploadAnotherFileChoice,
         previewFileCall = routes.PreviewController.previewFileUploadByReference,
         removeFileCall = routes.RemoveController.removeFileUploadByReference,
-        backLink = renderer.backlink(breadcrumbs)
+        backLink = routes.StartController.start //TODO: Back Linking needs fixing! Set to start by default for now!!!
       )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
     else
       viewNoChoice(
@@ -86,7 +79,7 @@ class SummaryController @Inject() (
             withUploadedFiles { files =>
               Forms.YesNoChoiceForm.bindFromRequest
                 .fold(
-                  formWithErrors => Future(BadRequest(renderView(formWithErrors, journeyContext, files, List()))),
+                  formWithErrors => Future(BadRequest(renderView(formWithErrors, journeyContext, files))),
                   {
                     case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
                       Future(Redirect(routes.ChooseSingleFileController.showChooseFile))

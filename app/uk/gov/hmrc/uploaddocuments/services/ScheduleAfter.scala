@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.uploaddocuments.controllers
+package uk.gov.hmrc.uploaddocuments.services
 
-import play.api.mvc._
-import uk.gov.hmrc.uploaddocuments.journeys.State
+import akka.actor.Scheduler
+import akka.pattern.FutureTimeoutSupport
 
-import javax.inject.{Inject, Singleton}
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ExecutionContext, Future}
 
-/** Component responsible for translating given session state into the action result. */
-@Singleton
-class Renderer @Inject() (router: Router) {
+object ScheduleAfter extends FutureTimeoutSupport {
 
-  //TODO: Refactor this away, implement alternative back link navigation
-  def backlink(breadcrumbs: List[State]): Call =
-    breadcrumbs.headOption
-      .map(router.routeTo)
-      .getOrElse(router.routeTo(State.Uninitialized))
-
+  /** Delay execution of the future by given miliseconds */
+  def apply[T](delayInMiliseconds: Long)(body: => Future[T])(implicit scheduler: Scheduler, ec: ExecutionContext): Future[T] =
+    after(duration = FiniteDuration(delayInMiliseconds, "ms"), using = scheduler)(body)
 }

@@ -20,7 +20,6 @@ import uk.gov.hmrc.uploaddocuments.models._
 import java.time._
 import scala.concurrent.Future
 import uk.gov.hmrc.uploaddocuments.connectors._
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel.UpscanInitiateApi
 
 trait TestData {
 
@@ -47,7 +46,7 @@ trait TestData {
     )
   )
 
-  val mockUpscanInitiate: UpscanInitiateApi = (serviceId, request) =>
+  val mockUpscanInitiate: (String, UpscanInitiateRequest) => Future[UpscanInitiateResponse] = (serviceId, request) =>
     Future.successful(
       UpscanInitiateResponse(
         reference = "foo-bar-ref",

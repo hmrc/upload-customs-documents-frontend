@@ -18,7 +18,6 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent, Request}
 import uk.gov.hmrc.uploaddocuments.connectors.{UpscanInitiateConnector, UpscanInitiateResponse}
-import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
@@ -29,8 +28,6 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class ChooseSingleFileController @Inject()(upscanInitiateConnector: UpscanInitiateConnector,
-                                           val router: Router,
-                                           renderer: Renderer,
                                            components: BaseControllerComponents,
                                            view: UploadSingleFileView)
                                           (implicit ec: ExecutionContext) extends BaseController(components) with UpscanRequestSupport with LoggerUtil {
@@ -41,32 +38,32 @@ class ChooseSingleFileController @Inject()(upscanInitiateConnector: UpscanInitia
   //      Upscan details - this will mean changing models to store the initiate response on rejected status
   //      However. Given this is the NonJS version - it may not be a problem re-initiating as volumes will be significantly lower (if any)
   final val showChooseFile: Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession {
-        whenAuthenticated {
-          withJourneyContext { journeyContext =>
-            withUploadedFiles { files =>
-              val nonce = Nonce.random
+  Action.async { implicit request =>
+    whenInSession {
+      whenAuthenticated {
+        withJourneyContext { journeyContext =>
+          withUploadedFiles { files =>
+            val nonce = Nonce.random
 
-              val oFailedFile = files.erroredFileUpload
-              val oError = oFailedFile.flatMap(FileUploadError(_))
+            val oFailedFile = files.erroredFileUpload
+            val oError = oFailedFile.flatMap(FileUploadError(_))
 
-              val initiateRequest = upscanRequest(currentJourneyId)(
-                nonce.toString,
-                journeyContext.config.maximumFileSizeBytes
-              )
+            val initiateRequest = upscanRequest(currentJourneyId)(
+              nonce.toString,
+              journeyContext.config.maximumFileSizeBytes
+            )
 
-              for {
-                upscanResponse <-
-                  upscanInitiateConnector.initiate(journeyContext.hostService.userAgent, initiateRequest)
-                updatedFiles = updateFileUploads(nonce, upscanResponse, files)
-                _ <- components.newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, updatedFiles)
-              } yield Ok(renderView(journeyContext, upscanResponse, updatedFiles, oError, List()))
-            }
+            for {
+              upscanResponse <-
+                upscanInitiateConnector.initiate(journeyContext.hostService.userAgent, initiateRequest)
+              updatedFiles = updateFileUploads(nonce, upscanResponse, files)
+              _ <- components.newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, updatedFiles)
+            } yield Ok(renderView(journeyContext, upscanResponse, updatedFiles, oError))
           }
         }
       }
     }
+  }
 
   private def updateFileUploads(nonce: Nonce, initiateResponse: UpscanInitiateResponse, files: FileUploads) =
     files.onlyAccepted + FileUpload.Initiated(
@@ -77,13 +74,11 @@ class ChooseSingleFileController @Inject()(upscanInitiateConnector: UpscanInitia
       uploadId = None
     )
 
-  def renderView(
-                  journeyConfig: FileUploadContext,
-                  initiateResponse: UpscanInitiateResponse,
-                  files: FileUploads,
-                  maybeUploadError: Option[FileUploadError],
-                  breadcrumbs: List[State]
-                )(implicit request: Request[_]) =
+  def renderView(journeyConfig: FileUploadContext,
+                 initiateResponse: UpscanInitiateResponse,
+                 files: FileUploads,
+                 maybeUploadError: Option[FileUploadError])
+                (implicit request: Request[_]) =
     view(
       maxFileUploadsNumber = journeyConfig.config.maximumNumberOfFiles,
       maximumFileSizeBytes = journeyConfig.config.maximumFileSizeBytes,
@@ -98,6 +93,6 @@ class ChooseSingleFileController @Inject()(upscanInitiateConnector: UpscanInitia
       successAction = routes.SummaryController.showSummary,
       failureAction = routes.ChooseSingleFileController.showChooseFile,
       checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(initiateResponse.reference),
-      backLink = renderer.backlink(breadcrumbs) //TODO: Back Linking needs fixing!
+      backLink = routes.StartController.start //TODO: Back Linking needs fixing! Set to start by default for now!!!
     )(implicitly[Request[_]], journeyConfig.messages, journeyConfig.config.features, journeyConfig.config.content)
 }

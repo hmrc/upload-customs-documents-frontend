@@ -23,14 +23,12 @@ import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerCo
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class InitializeController @Inject()(sessionStateService: SessionStateService,
-                                     components: BaseControllerComponents,
+class InitializeController @Inject()(components: BaseControllerComponents,
                                      newJourneyCacheRepository: NewJourneyCacheRepository)
                                     (implicit ec: ExecutionContext) extends BaseController(components) {
 

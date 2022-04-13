@@ -28,7 +28,5 @@ class FrontendModule(val environment: Environment, val configuration: Configurat
     bind(classOf[HttpGet]).to(classOf[UploadHttpClient])
     bind(classOf[HttpPost]).to(classOf[UploadHttpClient])
     bind(classOf[AuthConnector]).to(classOf[FrontendAuthConnector])
-    bind(classOf[CacheRepository]).to(classOf[JourneyCacheRepository])
-    bind(classOf[SessionStateService]).to(classOf[MongoDBCachedSessionStateService])
   }
 }

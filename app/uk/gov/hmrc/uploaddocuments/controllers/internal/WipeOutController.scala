@@ -18,8 +18,6 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents}
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext

@@ -18,22 +18,18 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.Response
-import uk.gov.hmrc.uploaddocuments.connectors.{FileUploadResultPushConnector, UpscanInitiateConnector}
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class RemoveController @Inject() (
-  fileUploadResultPushConnector: FileUploadResultPushConnector,
-  val router: Router,
-  components: BaseControllerComponents
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) with UpscanRequestSupport {
+class RemoveController @Inject()(fileUploadResultPushConnector: FileUploadResultPushConnector,
+                                 components: BaseControllerComponents)
+                                (implicit ec: ExecutionContext) extends BaseController(components) with UpscanRequestSupport {
 
   // GET /uploaded/:reference/remove
   final def removeFileUploadByReference(reference: String): Action[AnyContent] =
@@ -73,9 +69,8 @@ class RemoveController @Inject() (
       }
     }
 
-  def removeFile(files: FileUploads, reference: String, journeyId: String, journeyContext: FileUploadContext)(implicit
-    hc: HeaderCarrier
-  ): Future[(Response, FileUploads)] = {
+  def removeFile(files: FileUploads, reference: String, journeyId: String, journeyContext: FileUploadContext)
+                (implicit hc: HeaderCarrier): Future[(Response, FileUploads)] = {
     val updatedFiles = files.copy(files = files.files.filterNot(_.reference == reference))
     for {
       _ <- components.newJourneyCacheRepository.put(journeyId)(DataKeys.uploadedFiles, updatedFiles)

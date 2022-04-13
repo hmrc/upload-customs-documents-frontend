@@ -25,10 +25,9 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody}
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.connectors.FrontendAuthConnector
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploadInitializationRequest, FileUploads}
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 import uk.gov.hmrc.uploaddocuments.support.SHA256
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
@@ -37,7 +36,6 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class BaseControllerComponents @Inject() (
-  val sessionStateService: SessionStateService,
   val appConfig: AppConfig,
   val authConnector: FrontendAuthConnector,
   val environment: Environment,
@@ -47,8 +45,10 @@ class BaseControllerComponents @Inject() (
 )
 
 abstract class BaseController(
-  components: BaseControllerComponents
+  val components: BaseControllerComponents
 ) extends MessagesBaseController with Utf8MimeTypes with WithJsonBody with I18nSupport with AuthActions {
+
+  final val COOKIE_JSENABLED = "jsenabled"
 
   final def config: Configuration = components.configuration
   final def env: Environment = components.environment
@@ -76,7 +76,7 @@ abstract class BaseController(
   final implicit def context(implicit rh: RequestHeader): HeaderCarrier = {
     val hc = decodeHeaderCarrier(rh)
     journeyId(hc, rh)
-      .map(jid => hc.withExtraHeaders(components.sessionStateService.journeyKey -> jid))
+      .map(jid => hc.withExtraHeaders("FileUploadJourney" -> jid))
       .getOrElse(hc)
   }
 
@@ -116,5 +116,8 @@ abstract class BaseController(
       if (data.isEmpty) Map("dummy" -> "") else data
     })
   }
+
+  final def preferUploadMultipleFiles(implicit rh: RequestHeader): Boolean =
+    rh.cookies.get(COOKIE_JSENABLED).isDefined
 
 }

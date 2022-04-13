@@ -1,11 +1,7 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
-
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApiStubs {
 

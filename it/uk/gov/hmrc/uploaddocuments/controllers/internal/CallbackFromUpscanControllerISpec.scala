@@ -1,19 +1,14 @@
 package uk.gov.hmrc.uploaddocuments.controllers.internal
 
-import play.api.libs.json.{JsString, Json}
+import play.api.http.{HeaderNames, MimeTypes}
+import play.api.libs.json.{JsNumber, JsString, Json}
+import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
 import uk.gov.hmrc.uploaddocuments.controllers.ControllerISpecBase
-import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
 
 import java.time.ZonedDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
-import play.api.http.HeaderNames
-import play.api.http.MimeTypes
-import uk.gov.hmrc.uploaddocuments.support.SHA256
-import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
-import play.api.libs.json.JsNumber
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 
 class CallbackFromUpscanControllerISpec extends ControllerISpecBase with ExternalApiStubs {
 

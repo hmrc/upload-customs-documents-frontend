@@ -1,15 +1,11 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
-import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
-import uk.gov.hmrc.uploaddocuments.support.SHA256
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import java.time.ZonedDateTime
+import uk.gov.hmrc.uploaddocuments.stubs.{ExternalApiStubs, UpscanInitiateStubs}
 import uk.gov.hmrc.uploaddocuments.support.TestData
-import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
+
+import java.time.ZonedDateTime
+import scala.concurrent.ExecutionContext.Implicits.global
 
 class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStubs with ExternalApiStubs {
 

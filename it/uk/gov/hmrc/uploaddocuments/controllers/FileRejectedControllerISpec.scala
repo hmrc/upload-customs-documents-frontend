@@ -1,12 +1,8 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.libs.json.Json
-import uk.gov.hmrc.uploaddocuments.journeys.State
-import uk.gov.hmrc.uploaddocuments.models._
-
-import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.uploaddocuments.support.SHA256
 import play.api.http.HeaderNames
+import play.api.libs.json.Json
+import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
 
 import java.time.ZonedDateTime

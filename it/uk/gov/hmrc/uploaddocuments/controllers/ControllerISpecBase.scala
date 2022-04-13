@@ -1,22 +1,18 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import akka.actor.ActorSystem
-import com.typesafe.config.Config
 import play.api.libs.ws.{DefaultWSCookie, StandaloneWSRequest}
-import play.api.mvc.{AnyContent, Call, Cookie, Request, Session}
+import play.api.mvc._
 import play.api.test.FakeRequest
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.{HeaderCarrier, SessionId, SessionKeys}
-import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
-import uk.gov.hmrc.uploaddocuments.repository.{CacheRepository, NewJourneyCacheRepository}
-import uk.gov.hmrc.uploaddocuments.services.{EncryptedSessionCache, KeyProvider, SessionStateService}
-import uk.gov.hmrc.uploaddocuments.support.{SHA256, ServerISpec, StateMatchers, TestData, TestSessionStateService}
+import uk.gov.hmrc.uploaddocuments.support.{SHA256, ServerISpec, TestData}
 
 import java.time.ZonedDateTime
 
-trait ControllerISpecBase extends ServerISpec with StateMatchers {
+trait ControllerISpecBase extends ServerISpec {
 
   val journeyId = "sadasdjkasdhuqyhwa326176318346674e764764"
   val sessionId = SessionId(journeyId)
@@ -28,21 +24,6 @@ trait ControllerISpecBase extends ServerISpec with StateMatchers {
 
   import play.api.i18n._
   implicit val messages: Messages = MessagesImpl(Lang("en"), app.injector.instanceOf[MessagesApi])
-
-  lazy val sessionStateService = new TestSessionStateService
-    with SessionStateService with EncryptedSessionCache[State, HeaderCarrier] {
-
-    override lazy val actorSystem: ActorSystem = app.injector.instanceOf[ActorSystem]
-    override lazy val cacheRepository = app.injector.instanceOf[CacheRepository]
-    lazy val keyProvider: KeyProvider = KeyProvider(app.injector.instanceOf[Config])
-
-    override lazy val keyProviderFromContext: HeaderCarrier => KeyProvider =
-      hc => KeyProvider(keyProvider, None)
-
-    override def getJourneyId(hc: HeaderCarrier): Option[String] =
-      hc.sessionId.map(_.value).map(SHA256.compute)
-
-  }
 
   final def fakeRequest(cookies: Cookie*)(implicit
                                           hc: HeaderCarrier

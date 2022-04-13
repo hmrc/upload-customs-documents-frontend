@@ -21,7 +21,6 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, Request}
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileVerificationStatus, Timestamp}
 import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.services.ScheduleAfter
@@ -32,8 +31,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FileVerificationController @Inject()(renderer: Renderer,
-                                           components: BaseControllerComponents,
+class FileVerificationController @Inject()(components: BaseControllerComponents,
                                            waitingView: WaitingForFileVerificationView,
                                            uploadFileViewHelper: UploadFileViewHelper,
                                            actorSystem: ActorSystem)
@@ -61,7 +59,7 @@ class FileVerificationController @Inject()(renderer: Renderer,
                     case _: FileUpload.Accepted => Future(Redirect(routes.SummaryController.showSummary))
                     case _ => Future(Redirect(routes.ChooseSingleFileController.showChooseFile))
                   },
-                  Future(Ok(renderWaitingView(journeyContext, List(), upscanReference)))
+                  Future(Ok(renderWaitingView(journeyContext, upscanReference)))
                 )
               }
             }
@@ -98,15 +96,13 @@ class FileVerificationController @Inject()(renderer: Renderer,
         throw new Exception("err")
     }
 
-  private def renderWaitingView(context: FileUploadContext,
-                                breadcrumbs: List[State],
-                                reference: String)
+  private def renderWaitingView(context: FileUploadContext, reference: String)
                                (implicit request: Request[_]) =
     waitingView(
       successAction = routes.SummaryController.showSummary,
       failureAction = routes.ChooseSingleFileController.showChooseFile,
       checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(reference),
-      backLink = renderer.backlink(breadcrumbs)
+      backLink = routes.StartController.start //TODO: Back Linking needs fixing! Set to start by default for now!!!
     )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
 
   // GET /file-verification/:reference/status

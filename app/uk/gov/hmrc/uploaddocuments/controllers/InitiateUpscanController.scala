@@ -27,8 +27,8 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class InitiateUpscanController @Inject()(upscanInitiateConnector: UpscanInitiateConnector,
-                                         val router: Router,
-                                         components: BaseControllerComponents)(implicit ec: ExecutionContext) extends BaseController(components) with UpscanRequestSupport {
+                                         components: BaseControllerComponents)
+                                        (implicit ec: ExecutionContext) extends BaseController(components) with UpscanRequestSupport {
 
   // POST /new/initiate-upscan/:uploadId
   final def initiateNextFileUpload(uploadId: String): Action[AnyContent] =

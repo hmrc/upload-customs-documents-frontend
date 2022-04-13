@@ -21,7 +21,6 @@ import play.api.mvc.{Action, AnyContent}
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.connectors.FileStream
 import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploads, RFC3986Encoder}
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}

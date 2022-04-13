@@ -1,11 +1,9 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
 
 import java.time.ZonedDateTime
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.util.Random
 
 class PreviewControllerISpec extends ControllerISpecBase with ExternalApiStubs {

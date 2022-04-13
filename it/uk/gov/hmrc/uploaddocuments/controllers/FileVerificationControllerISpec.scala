@@ -1,12 +1,9 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 
 import java.time.ZonedDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
-import uk.gov.hmrc.uploaddocuments.support.SHA256
 
 class FileVerificationControllerISpec extends ControllerISpecBase {
 

@@ -1,9 +1,7 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.http.HeaderNames
-import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.support.SHA256
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
