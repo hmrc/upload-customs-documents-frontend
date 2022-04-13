@@ -16,80 +16,81 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.http.HeaderNames
-import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
+import play.api.mvc.{Action, AnyContent, Result}
+import play.mvc.Http.HeaderNames
+import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel.canOverwriteFileUploadStatus
+import uk.gov.hmrc.uploaddocuments.models.{FileUpload, Timestamp}
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.support.UploadLog
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FileRejectedController @Inject() (
-  sessionStateService: SessionStateService,
-  router: Router,
-  renderer: Renderer,
-  components: BaseControllerComponents
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+class FileRejectedController @Inject()(components: BaseControllerComponents)
+                                      (implicit ec: ExecutionContext) extends BaseController(components) {
 
   // GET /file-rejected
   final val markFileUploadAsRejected: Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          Forms.UpscanUploadErrorForm.bindFromRequest
-            .fold(
-              formWithErrors => sessionStateService.currentSessionState.map(router.redirectWithForm(formWithErrors)),
-              s3UploadError => {
-                val sessionStateUpdate =
-                  JourneyModel.markUploadAsRejected(s3UploadError)
-                sessionStateService
-                  .updateSessionState(sessionStateUpdate)
-                  .map(router.redirectTo)
-              }
-            )
+          withJourneyContext { journeyContext =>
+            withUploadedFiles { files =>
+              Forms.UpscanUploadErrorForm.bindFromRequest
+                .fold(
+                  formWithErrors => Future(Redirect(routes.ChooseSingleFileController.showChooseFile).withFormError(formWithErrors)),
+                  s3UploadError => {
+                    UploadLog.failure(journeyContext, s3UploadError)
+                    val now = Timestamp.now
+                    val updatedFileUploads = files.copy(files = files.files.map {
+                      case fu@FileUpload.Initiated(nonce, _, ref, _, _)
+                        if ref == s3UploadError.key && canOverwriteFileUploadStatus(fu, true, now) =>
+                        FileUpload.Rejected(nonce, Timestamp.now, ref, s3UploadError)
+                      case u => u
+                    })
+                    components.newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, updatedFileUploads).map { _ =>
+                      Redirect(routes.ChooseSingleFileController.showChooseFile)
+                    }
+                  }
+                )
+            }
+          }
         }
       }
     }
 
   // POST /file-rejected
-  final val markFileUploadAsRejectedAsync: Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession {
-        whenAuthenticated {
-          Forms.UpscanUploadErrorForm.bindFromRequest
-            .fold(
-              formWithErrors => sessionStateService.currentSessionState.map(router.redirectWithForm(formWithErrors)),
-              s3UploadError => {
-                val sessionStateUpdate =
-                  JourneyModel.markUploadAsRejected(s3UploadError)
-                sessionStateService
-                  .updateSessionState(sessionStateUpdate)
-                  .map(renderer.acknowledgeFileUploadRedirect)
-              }
-            )
+  final val markFileUploadAsRejectedAsync: Action[AnyContent] = rejectedAsynLogicWithStatus(Created)
+
+  // GET /journey/:journeyId/file-rejected
+  final def asyncMarkFileUploadAsRejected(journeyId: String): Action[AnyContent] = rejectedAsynLogicWithStatus(NoContent)
+
+  private def rejectedAsynLogicWithStatus(status: Result) = Action.async { implicit request =>
+    whenInSession {
+      whenAuthenticated {
+        withJourneyContext { journeyContext =>
+          withUploadedFiles { files =>
+            Forms.UpscanUploadErrorForm.bindFromRequest
+              .fold(
+                formWithErrors => Future(Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles).withFormError(formWithErrors)),
+                s3UploadError => {
+                  UploadLog.failure(journeyContext, s3UploadError)
+                  val updatedFileUploads = files.copy(files = files.files.map {
+                    case FileUpload(nonce, ref, _) if ref == s3UploadError.key =>
+                      FileUpload.Rejected(nonce, Timestamp.now, ref, s3UploadError)
+                    case u => u
+                  })
+                  components.newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, updatedFileUploads).map { _ =>
+                    status.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
+                  }
+                }
+              )
+          }
         }
       }
     }
-
-  // GET /journey/:journeyId/file-rejected
-  final def asyncMarkFileUploadAsRejected(journeyId: String): Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession {
-        Forms.UpscanUploadErrorForm.bindFromRequest
-          .fold(
-            formWithErrors => sessionStateService.currentSessionState.map(router.redirectWithForm(formWithErrors)),
-            s3UploadError => {
-              val sessionStateUpdate =
-                JourneyModel.markUploadAsRejected(s3UploadError)
-              sessionStateService
-                .updateSessionState(sessionStateUpdate)
-                .map(renderer.acknowledgeFileUploadRedirect)
-            }
-          )
-      }
-    }
+  }
 
   // OPTIONS /journey/:journeyId/file-rejected
   final def preflightUpload(journeyId: String): Action[AnyContent] =

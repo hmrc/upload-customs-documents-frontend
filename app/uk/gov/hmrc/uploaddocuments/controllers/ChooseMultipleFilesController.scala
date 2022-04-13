@@ -17,53 +17,67 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.data.Form
-import play.api.mvc.{Action, AnyContent, Call, Request}
+import play.api.mvc.{Action, AnyContent, Call, Request, RequestHeader}
 import uk.gov.hmrc.uploaddocuments.controllers.Forms.YesNoChoiceForm
-import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 import uk.gov.hmrc.uploaddocuments.views.html.UploadMultipleFilesView
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ChooseMultipleFilesController @Inject() (
-  sessionStateService: SessionStateService,
-  router: Router,
-  components: BaseControllerComponents,
-  uploadMultipleFilesView: UploadMultipleFilesView
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+class ChooseMultipleFilesController @Inject()(components: BaseControllerComponents,
+                                              router: Router,
+                                              uploadMultipleFilesView: UploadMultipleFilesView)
+                                             (implicit ec: ExecutionContext) extends BaseController(components) {
 
   // GET /choose-files
   final val showChooseMultipleFiles: Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          withJourneyContext { journeyConfig =>
-            withUploadedFiles { files =>
-              val sessionStateUpdate =
-                JourneyModel.toUploadMultipleFiles(router.preferUploadMultipleFiles)
-              sessionStateService
-                .updateSessionState(sessionStateUpdate)
-                .map {
-                  case (uploadMultipleFiles: State.UploadMultipleFiles, _) =>
-                    // TODO: Change this to use the files from 'withUploadedFiles' once that is actually updated
-                    Ok(renderView(journeyConfig, uploadMultipleFiles.fileUploads, YesNoChoiceForm))
-
-                  case other =>
-                    router.redirectTo(other)
-                }
+          if(!router.preferUploadMultipleFiles) {
+            Future(Redirect(routes.ChooseSingleFileController.showChooseFile))
+          } else {
+            withJourneyContext { journeyConfig =>
+              withUploadedFiles { files =>
+                Future(Ok(renderView(journeyConfig, files, YesNoChoiceForm)))
+              }
             }
           }
         }
       }
     }
 
-  private def renderView(context: FileUploadContext, files: FileUploads, form: Form[Boolean])(implicit
-    request: Request[_]
-  ) =
+  // POST /choose-files
+  final val continueWithYesNo: Action[AnyContent] =
+    Action.async { implicit request =>
+      whenInSession {
+        whenAuthenticated {
+          withJourneyContext { journeyConfig =>
+            withUploadedFiles { files =>
+              Forms.YesNoChoiceForm.bindFromRequest
+                .fold(
+                  formWithErrors => Future(Ok(renderView(journeyConfig, files, formWithErrors))),
+                  {
+                    case true  =>
+                      Future(Redirect(
+                        journeyConfig.config.continueAfterYesAnswerUrl match {
+                          case Some(url) => url
+                          case None => journeyConfig.config.backlinkUrl
+                        }
+                      ))
+                    case false => Future(Redirect(routes.ContinueToHostController.continueToHost))
+                  }
+                )
+            }
+          }
+        }
+      }
+    }
+
+  private def renderView(context: FileUploadContext, files: FileUploads, form: Form[Boolean])
+                        (implicit request: Request[_]) =
     uploadMultipleFilesView(
       minimumNumberOfFiles = context.config.minimumNumberOfFiles,
       maximumNumberOfFiles = context.config.maximumNumberOfFiles,
@@ -81,7 +95,7 @@ class ChooseMultipleFilesController @Inject() (
       previewFile = routes.PreviewController.previewFileUploadByReference,
       markFileRejected = routes.FileRejectedController.markFileUploadAsRejectedAsync,
       continueAction = if (context.config.features.showYesNoQuestionBeforeContinue) {
-        routes.ContinueToHostController.continueWithYesNo
+        routes.ChooseMultipleFilesController.continueWithYesNo
       } else {
         routes.ContinueToHostController.continueToHost
       },

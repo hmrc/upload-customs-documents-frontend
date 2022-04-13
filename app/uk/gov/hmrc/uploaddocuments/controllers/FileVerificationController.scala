@@ -17,12 +17,14 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import akka.actor.{ActorSystem, Scheduler}
-import play.api.i18n.Messages
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, Request}
-import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileVerificationStatus}
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
+import play.mvc.Http.HeaderNames
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.uploaddocuments.journeys.State
+import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileVerificationStatus, Timestamp}
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.services.ScheduleAfter
 import uk.gov.hmrc.uploaddocuments.views.UploadFileViewHelper
 import uk.gov.hmrc.uploaddocuments.views.html.WaitingForFileVerificationView
 
@@ -30,99 +32,82 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FileVerificationController @Inject() (
-  sessionStateService: SessionStateService,
-  router: Router,
-  renderer: Renderer,
-  components: BaseControllerComponents,
-  waitingView: WaitingForFileVerificationView,
-  uploadFileViewHelper: UploadFileViewHelper,
-  actorSystem: ActorSystem
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+class FileVerificationController @Inject()(renderer: Renderer,
+                                           components: BaseControllerComponents,
+                                           waitingView: WaitingForFileVerificationView,
+                                           uploadFileViewHelper: UploadFileViewHelper,
+                                           actorSystem: ActorSystem)
+                                          (implicit ec: ExecutionContext) extends BaseController(components) {
 
   implicit val scheduler: Scheduler = actorSystem.scheduler
 
+  //TODO: This should be refactored into AppConf so that it can be changed on the fly
   /** Initial time to wait for callback arrival. */
   final val INITIAL_CALLBACK_WAIT_TIME_SECONDS = 2
   final val intervalInMiliseconds: Long = 500
 
-  // GET /file-verification
-  final val showWaitingForFileVerification: Action[AnyContent] =
+  // GET /file-verification?key
+  def showWaitingForFileVerification(key: Option[String]): Action[AnyContent] =
     Action.async { implicit request =>
-      whenInSession {
-        whenAuthenticated {
-          withJourneyContext { journeyContext =>
-            val timeoutNanoTime: Long =
-              System.nanoTime() + INITIAL_CALLBACK_WAIT_TIME_SECONDS * 1000000000L
-            sessionStateService
-              .waitForSessionState[State.Summary](intervalInMiliseconds, timeoutNanoTime) {
-                val sessionStateUpdate =
-                  JourneyModel.waitForFileVerification
-                sessionStateService
-                  .updateSessionState(sessionStateUpdate)
+      key match {
+        case None => Future(BadRequest)
+        case Some(upscanReference) => {
+          whenInSession {
+            whenAuthenticated {
+              withJourneyContext { journeyContext =>
+                val timeoutNanoTime: Long = System.nanoTime() + INITIAL_CALLBACK_WAIT_TIME_SECONDS * 1000000000L
+                waitForUpscanResponse(upscanReference, currentJourneyId, intervalInMiliseconds, timeoutNanoTime)(
+                  {
+                    case _: FileUpload.Accepted => Future(Redirect(routes.SummaryController.showSummary))
+                    case _ => Future(Redirect(routes.ChooseSingleFileController.showChooseFile))
+                  },
+                  Future(Ok(renderWaitingView(journeyContext, List(), upscanReference)))
+                )
               }
-              .map {
-                case (waitingForFileVerification: State.WaitingForFileVerification, breadcrumbs) =>
-                  Ok(renderWaitingView(journeyContext, breadcrumbs, waitingForFileVerification.reference))
-
-                case other =>
-                  router.redirectTo(other)
-              }
+            }
           }
         }
       }
     }
 
-  private def renderWaitingView(context: FileUploadContext, breadcrumbs: List[State], reference: String)(implicit
-    request: Request[_]
-  ) =
+  /** Wait for Upscan Response until timeout. */
+  final def waitForUpscanResponse[T](upscanReference: String,
+                                     journeyId: String,
+                                     intervalInMiliseconds: Long,
+                                     timeoutNanoTime: Long)
+                                    (readyResult: FileUpload => Future[T],
+                                     ifTimeout: => Future[T])
+                                    (implicit rc: HeaderCarrier, scheduler: Scheduler, ec: ExecutionContext): Future[T] =
+    components.newJourneyCacheRepository.get(journeyId)(DataKeys.uploadedFiles) flatMap {
+      case Some(files) =>
+        files.files.find(_.reference == upscanReference) match {
+          case Some(file) if file.isReady => readyResult(file)
+          case Some(_) =>
+            if (System.nanoTime() > timeoutNanoTime) {
+              ifTimeout
+            } else {
+              ScheduleAfter(intervalInMiliseconds) {
+                waitForUpscanResponse(upscanReference, journeyId, intervalInMiliseconds * 2, timeoutNanoTime)(
+                  readyResult,
+                  ifTimeout
+                )
+              }
+            }
+        }
+      case _ =>
+        throw new Exception("err")
+    }
+
+  private def renderWaitingView(context: FileUploadContext,
+                                breadcrumbs: List[State],
+                                reference: String)
+                               (implicit request: Request[_]) =
     waitingView(
       successAction = routes.SummaryController.showSummary,
       failureAction = routes.ChooseSingleFileController.showChooseFile,
       checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(reference),
       backLink = renderer.backlink(breadcrumbs)
     )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
-
-//  // GET /file-verification/:reference/status
-//  final def oldCheckFileVerificationStatus(reference: String): Action[AnyContent] =
-//    Action.async { implicit request =>
-//      whenInSession {
-//        whenAuthenticated {
-//          sessionStateService.currentSessionState.map {
-//            case Some(sab) =>
-//              val messages = implicitly[Messages]
-//              renderFileVerificationStatus(reference)(messages)(sab)
-//
-//            case None =>
-//              NotFound
-//          }
-//        }
-//      }
-//    }
-//
-//  private def renderFileVerificationStatus(reference: String)(implicit messages: Messages) =
-//    renderer.resultOf {
-//      case s: State.FileUploadState =>
-//        s.fileUploads.files.find(_.reference == reference) match {
-//          case Some(file) =>
-//            Ok(
-//              Json.toJson(
-//                FileVerificationStatus(
-//                  file,
-//                  uploadFileViewHelper,
-//                  routes.PreviewController.previewFileUploadByReference(_, _),
-//                  s.context.config.maximumFileSizeBytes.toInt,
-//                  s.context.config.content.allowedFilesTypesHint
-//                    .orElse(s.context.config.allowedFileExtensions)
-//                    .getOrElse(s.context.config.allowedContentTypes)
-//                )
-//              )
-//            )
-//          case None => NotFound
-//        }
-//      case _ => NotFound
-//    }
 
   // GET /file-verification/:reference/status
   final def checkFileVerificationStatus(reference: String): Action[AnyContent] =
@@ -156,21 +141,30 @@ class FileVerificationController @Inject() (
       }
     }
 
-  // GET /journey/:journeyId/file-verification
-  final def asyncWaitingForFileVerification(journeyId: String): Action[AnyContent] =
+  // GET /journey/:journeyId/file-verification?key
+  final def asyncWaitingForFileVerification(journeyId: String, key: Option[String]): Action[AnyContent] =
     Action.async { implicit request =>
-      whenInSession {
-        val timeoutNanoTime: Long =
-          System.nanoTime() + INITIAL_CALLBACK_WAIT_TIME_SECONDS * 1000000000L
-        sessionStateService
-          .waitForSessionState[State.Summary](intervalInMiliseconds, timeoutNanoTime) {
-            val sessionStateUpdate =
-              JourneyModel.waitForFileVerification
-            sessionStateService
-              .updateSessionState(sessionStateUpdate)
+      key match {
+        case None => Future(BadRequest)
+        case Some(upscanReference) => {
+          whenInSession {
+            withUploadedFiles { files =>
+              val updatedFileUploads = files.copy(files = files.files.map {
+                case FileUpload.Initiated(nonce, _, ref, _, _) if ref == upscanReference =>
+                  FileUpload.Posted(nonce, Timestamp.now, upscanReference)
+                case other => other
+              })
+              components.newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, updatedFileUploads).flatMap { _ =>
+                val timeoutNanoTime: Long =
+                  System.nanoTime() + INITIAL_CALLBACK_WAIT_TIME_SECONDS * 1000000000L
+                waitForUpscanResponse(upscanReference, journeyId, intervalInMiliseconds, timeoutNanoTime)(
+                  _ => Future(Created),
+                  Future(Accepted)
+                ).map(_.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*"))
+              }
+            }
           }
-          .map(renderer.acknowledgeFileUploadRedirect)
+        }
       }
     }
-
 }

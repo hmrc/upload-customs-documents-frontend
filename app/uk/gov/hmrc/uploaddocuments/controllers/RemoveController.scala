@@ -17,17 +17,18 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent}
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.Response
 import uk.gov.hmrc.uploaddocuments.connectors.{FileUploadResultPushConnector, UpscanInitiateConnector}
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class RemoveController @Inject() (
-  sessionStateService: SessionStateService,
-  upscanInitiateConnector: UpscanInitiateConnector,
   fileUploadResultPushConnector: FileUploadResultPushConnector,
   val router: Router,
   components: BaseControllerComponents
@@ -39,13 +40,19 @@ class RemoveController @Inject() (
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          val sessionStateUpdate =
-            JourneyModel.removeFileUploadByReference(reference)(upscanRequest(currentJourneyId))(
-              upscanInitiateConnector.initiate(_, _)
-            )(fileUploadResultPushConnector.push(_))
-          sessionStateService
-            .updateSessionState(sessionStateUpdate)
-            .map(router.redirectTo)
+          withJourneyContext { journeyContext =>
+            withUploadedFiles { files =>
+              removeFile(files, reference, currentJourneyId, journeyContext).map {
+                case (Left(_), _) => InternalServerError
+                case (Right(_), updatedFilesWithFileRemoved) =>
+                  if (updatedFilesWithFileRemoved.isEmpty) {
+                    Redirect(routes.ChooseSingleFileController.showChooseFile)
+                  } else {
+                    Redirect(routes.SummaryController.showSummary)
+                  }
+              }
+            }
+          }
         }
       }
     }
@@ -55,14 +62,25 @@ class RemoveController @Inject() (
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          val sessionStateUpdate =
-            JourneyModel.removeFileUploadByReference(reference)(upscanRequest(currentJourneyId))(
-              upscanInitiateConnector.initiate(_, _)
-            )(fileUploadResultPushConnector.push(_))
-          sessionStateService
-            .updateSessionState(sessionStateUpdate)
-            .map { case _ => NoContent }
+          withJourneyContext { journeyContext =>
+            withUploadedFiles { files =>
+              removeFile(files, reference, currentJourneyId, journeyContext).map { _ =>
+                NoContent
+              }
+            }
+          }
         }
       }
     }
+
+  def removeFile(files: FileUploads, reference: String, journeyId: String, journeyContext: FileUploadContext)(implicit
+    hc: HeaderCarrier
+  ): Future[(Response, FileUploads)] = {
+    val updatedFiles = files.copy(files = files.files.filterNot(_.reference == reference))
+    for {
+      _ <- components.newJourneyCacheRepository.put(journeyId)(DataKeys.uploadedFiles, updatedFiles)
+      result <-
+        fileUploadResultPushConnector.push(FileUploadResultPushConnector.Request.from(journeyContext, updatedFiles))
+    } yield (result, updatedFiles)
+  }
 }

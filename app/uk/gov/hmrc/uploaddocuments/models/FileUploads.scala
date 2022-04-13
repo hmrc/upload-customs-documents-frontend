@@ -35,6 +35,13 @@ case class FileUploads(
     files
       .count { case _: FileUpload.Accepted => true; case _ => false }
 
+  def initiatedCount: Int =
+    files
+      .count {
+        case _: FileUpload.Initiated => true
+        case _                       => false
+      }
+
   def initiatedOrAcceptedCount: Int =
     files
       .count {
@@ -93,6 +100,10 @@ case class FileUploads(
       case _                      => false
     }
 
+  def erroredFileUpload: Option[FileUpload] = files.find {
+    case _: ErroredFileUpload => true; case _ => false
+  }
+
 }
 
 object FileUploads {
@@ -108,6 +119,7 @@ sealed trait FileUpload {
   final def isNotReady: Boolean = !isReady
   def checksumOpt: Option[String] = None
 }
+sealed trait ErroredFileUpload extends FileUpload
 
 object FileUpload extends SealedTraitFormats[FileUpload] {
 
@@ -150,7 +162,7 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
     timestamp: Timestamp,
     reference: String,
     details: S3UploadError
-  ) extends FileUpload {
+  ) extends ErroredFileUpload {
     override def isReady: Boolean = true
   }
 
@@ -182,7 +194,7 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
     timestamp: Timestamp,
     reference: String,
     details: UpscanNotification.FailureDetails
-  ) extends FileUpload {
+  ) extends ErroredFileUpload {
     override def isReady: Boolean = true
   }
 
@@ -194,7 +206,7 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
     checksum: String,
     existingFileName: String,
     duplicateFileName: String
-  ) extends FileUpload {
+  ) extends ErroredFileUpload {
     override def isReady: Boolean = true
   }
 

@@ -13,7 +13,9 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
   "RemoveController" when {
 
     "GET /uploaded/:reference/remove" should {
+
       "remove file from upload list by reference" in {
+
         givenResultPushEndpoint(
           "/result-post-url",
           FileUploadResultPushConnector.Payload.from(
@@ -37,36 +39,35 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
           ),
           204
         )
-        val state = State.Summary(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads = FileUploads(files =
-            Seq(
-              FileUpload.Accepted(
-                Nonce.Any,
-                Timestamp.Any,
-                "11370e18-6e24-453e-b45a-76d3e32ea33d",
-                "https://s3.amazonaws.com/bucket/123",
-                ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-                "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-                "test2.pdf",
-                "application/pdf",
-                5234567
-              ),
-              FileUpload.Accepted(
-                Nonce.Any,
-                Timestamp.Any,
-                "22370e18-6e24-453e-b45a-76d3e32ea33d",
-                "https://s3.amazonaws.com/bucket/123",
-                ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-                "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-                "test1.png",
-                "image/png",
-                4567890
-              )
+
+        setContext()
+        setFileUploads(FileUploads(files =
+          Seq(
+            FileUpload.Accepted(
+              Nonce.Any,
+              Timestamp.Any,
+              "11370e18-6e24-453e-b45a-76d3e32ea33d",
+              "https://s3.amazonaws.com/bucket/123",
+              ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+              "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+              "test2.pdf",
+              "application/pdf",
+              5234567
+            ),
+            FileUpload.Accepted(
+              Nonce.Any,
+              Timestamp.Any,
+              "22370e18-6e24-453e-b45a-76d3e32ea33d",
+              "https://s3.amazonaws.com/bucket/123",
+              ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+              "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+              "test1.png",
+              "image/png",
+              4567890
             )
           )
-        )
-        sessionStateService.setState(state)
+        ))
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val result = await(request("/uploaded/11370e18-6e24-453e-b45a-76d3e32ea33d/remove").get())
@@ -74,9 +75,9 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
         result.status shouldBe 200
         result.body should include(htmlEscapedPageTitle("view.summary.singular.title", "1"))
         result.body should include(htmlEscapedMessage("view.summary.singular.heading", "1"))
-        sessionStateService.getState shouldBe State.Summary(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads = FileUploads(files =
+
+        getFileUploads() shouldBe Some(
+          FileUploads(files =
             Seq(
               FileUpload.Accepted(
                 Nonce.Any,
@@ -92,6 +93,7 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
             )
           )
         )
+
         eventually(
           verifyResultPushHasHappened("/result-post-url", 1)
         )
@@ -99,7 +101,9 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
     }
 
     "POST /uploaded/:reference/remove" should {
+
       "remove file from upload list by reference" in {
+
         givenResultPushEndpoint(
           "/result-post-url",
           FileUploadResultPushConnector.Payload.from(
@@ -123,9 +127,10 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
           ),
           204
         )
-        val state = State.UploadMultipleFiles(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads = FileUploads(files =
+
+        setContext()
+        setFileUploads(
+          FileUploads(files =
             Seq(
               FileUpload.Accepted(
                 Nonce.Any,
@@ -152,16 +157,15 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
             )
           )
         )
-        sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val result = await(request("/uploaded/11370e18-6e24-453e-b45a-76d3e32ea33d/remove").post(""))
 
         result.status shouldBe 204
 
-        sessionStateService.getState shouldBe State.UploadMultipleFiles(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads = FileUploads(files =
+        getFileUploads() shouldBe Some(
+          FileUploads(files =
             Seq(
               FileUpload.Accepted(
                 Nonce.Any,
@@ -177,6 +181,7 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
             )
           )
         )
+
         eventually(
           verifyResultPushHasHappened("/result-post-url", 1)
         )

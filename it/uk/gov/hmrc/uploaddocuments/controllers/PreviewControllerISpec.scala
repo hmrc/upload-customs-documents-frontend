@@ -13,13 +13,15 @@ class PreviewControllerISpec extends ControllerISpecBase with ExternalApiStubs {
   "PreviewController" when {
 
     "GET /preview/:reference/:fileName" should {
+
       "stream the uploaded file content back if it exists" in {
+
         val bytes = Array.ofDim[Byte](1024 * 1024)
         Random.nextBytes(bytes)
         val upscanUrl = stubForFileDownload(200, bytes, "test.pdf")
 
-        val state = State.Summary(
-          FileUploadContext(fileUploadSessionConfig),
+        setContext()
+        setFileUploads(
           FileUploads(files =
             Seq(
               FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
@@ -42,10 +44,9 @@ class PreviewControllerISpec extends ControllerISpecBase with ExternalApiStubs {
                 UpscanNotification.FailureDetails(UpscanNotification.QUARANTINE, "some reason")
               )
             )
-          ),
-          acknowledged = false
+          )
         )
-        sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val result =
@@ -58,14 +59,13 @@ class PreviewControllerISpec extends ControllerISpecBase with ExternalApiStubs {
         result.header("Content-Length") shouldBe Some(s"${bytes.length}")
         result.header("Content-Disposition") shouldBe Some("""inline; filename="test.pdf"; filename*=utf-8''test.pdf""")
         result.bodyAsBytes.toArray[Byte] shouldBe bytes
-        sessionStateService.getState shouldBe state
       }
 
       "return error page if file does not exist" in {
         val upscanUrl = stubForFileDownloadFailure(404, "test.pdf")
 
-        val state = State.Summary(
-          FileUploadContext(fileUploadSessionConfig),
+        setContext()
+        setFileUploads(
           FileUploads(files =
             Seq(
               FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
@@ -88,10 +88,9 @@ class PreviewControllerISpec extends ControllerISpecBase with ExternalApiStubs {
                 UpscanNotification.FailureDetails(UpscanNotification.QUARANTINE, "some reason")
               )
             )
-          ),
-          acknowledged = false
+          )
         )
-        sessionStateService.setState(state)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val result =
@@ -102,7 +101,6 @@ class PreviewControllerISpec extends ControllerISpecBase with ExternalApiStubs {
         result.status shouldBe 200
         result.body should include(htmlEscapedPageTitle("global.error.500.title"))
         result.body should include(htmlEscapedMessage("global.error.500.heading"))
-        sessionStateService.getState shouldBe state
       }
     }
   }

@@ -17,20 +17,14 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ContinueToHostController @Inject() (
-  sessionStateService: SessionStateService,
-  router: Router,
-  components: BaseControllerComponents
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+class ContinueToHostController @Inject()(components: BaseControllerComponents)
+                                        (implicit ec: ExecutionContext) extends BaseController(components) {
 
   // GET /continue-to-host
   final val continueToHost: Action[AnyContent] =
@@ -39,19 +33,7 @@ class ContinueToHostController @Inject() (
         whenAuthenticated {
           withJourneyContext { journeyConfig =>
             withUploadedFiles { files =>
-              val sessionStateUpdate =
-                JourneyModel.continueToHost
-              sessionStateService
-                .getCurrentOrUpdateSessionState[State.ContinueToHost](sessionStateUpdate)
-                .map {
-                  case (continueToHost: State.ContinueToHost, _) =>
-                    // TODO: Switch to use value from 'WithUploadedFiles' once this collection is actually updated in parallel
-                    Redirect(redirectRoute(continueToHost.fileUploads, journeyConfig))
-
-                  case other =>
-                    router.redirectTo(other)
-                }
-                .andThen { case _ => sessionStateService.cleanBreadcrumbs }
+              Future(Redirect(redirectRoute(files, journeyConfig)))
             }
           }
         }
@@ -65,24 +47,4 @@ class ContinueToHostController @Inject() (
       context.config.getContinueWhenFullUrl
     else
       context.config.continueUrl
-
-  // POST /continue-to-host
-  final val continueWithYesNo: Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession {
-        whenAuthenticated {
-          Forms.YesNoChoiceForm.bindFromRequest
-            .fold(
-              formWithErrors => sessionStateService.currentSessionState.map(router.redirectWithForm(formWithErrors)),
-              choice => {
-                val sessionStateUpdate =
-                  JourneyModel.continueWithYesNo(choice)
-                sessionStateService
-                  .updateSessionState(sessionStateUpdate)
-                  .map(router.redirectTo)
-              }
-            )
-        }
-      }
-    }
 }

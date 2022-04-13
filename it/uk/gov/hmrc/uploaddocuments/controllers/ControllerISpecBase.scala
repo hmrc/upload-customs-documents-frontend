@@ -9,6 +9,7 @@ import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.{HeaderCarrier, SessionId, SessionKeys}
 import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.repository.{CacheRepository, NewJourneyCacheRepository}
 import uk.gov.hmrc.uploaddocuments.services.{EncryptedSessionCache, KeyProvider, SessionStateService}
 import uk.gov.hmrc.uploaddocuments.support.{SHA256, ServerISpec, StateMatchers, TestData, TestSessionStateService}
@@ -18,8 +19,10 @@ import java.time.ZonedDateTime
 trait ControllerISpecBase extends ServerISpec with StateMatchers {
 
   val journeyId = "sadasdjkasdhuqyhwa326176318346674e764764"
+  val sessionId = SessionId(journeyId)
 
-  implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(journeyId)))
+  implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(sessionId))
+  def getJourneyId: String = SHA256.compute(journeyId)
 
   lazy val newJourneyRepo = app.injector.instanceOf[NewJourneyCacheRepository]
 
@@ -42,12 +45,12 @@ trait ControllerISpecBase extends ServerISpec with StateMatchers {
   }
 
   final def fakeRequest(cookies: Cookie*)(implicit
-    hc: HeaderCarrier
+                                          hc: HeaderCarrier
   ): Request[AnyContent] =
     fakeRequest("GET", "/", cookies: _*)
 
   final def fakeRequest(method: String, path: String, cookies: Cookie*)(implicit
-    hc: HeaderCarrier
+                                                                        hc: HeaderCarrier
   ): Request[AnyContent] =
     FakeRequest(Call(method, path))
       .withCookies(cookies: _*)
@@ -84,7 +87,7 @@ trait ControllerISpecBase extends ServerISpec with StateMatchers {
   }
 
   final def requestWithCookies(path: String, cookies: (String, String)*)(implicit
-    hc: HeaderCarrier
+                                                                         hc: HeaderCarrier
   ): StandaloneWSRequest = {
     val sessionCookie =
       sessionCookieBaker
@@ -131,5 +134,17 @@ trait ControllerISpecBase extends ServerISpec with StateMatchers {
     )
 
   final def FILES_LIMIT = fileUploadSessionConfig.maximumNumberOfFiles
+
+  final def setContext(context: FileUploadContext = FileUploadContext(fileUploadSessionConfig)) =
+    await(newJourneyRepo.put(getJourneyId)(DataKeys.journeyContextDataKey, context))
+
+  final def setFileUploads(files: FileUploads = FileUploads()) =
+    await(newJourneyRepo.put(getJourneyId)(DataKeys.uploadedFiles, files))
+
+  final def getContext() =
+    await(newJourneyRepo.get(getJourneyId)(DataKeys.journeyContextDataKey))
+
+  final def getFileUploads() =
+    await(newJourneyRepo.get(getJourneyId)(DataKeys.uploadedFiles))
 
 }

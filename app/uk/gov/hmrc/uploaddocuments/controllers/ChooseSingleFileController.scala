@@ -17,53 +17,73 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent, Request}
-import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
-import uk.gov.hmrc.uploaddocuments.journeys.{JourneyModel, State}
-import uk.gov.hmrc.uploaddocuments.models.FileUploadContext
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
+import uk.gov.hmrc.uploaddocuments.connectors.{UpscanInitiateConnector, UpscanInitiateResponse}
+import uk.gov.hmrc.uploaddocuments.journeys.State
+import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.repository.NewJourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import uk.gov.hmrc.uploaddocuments.views.html.UploadSingleFileView
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class ChooseSingleFileController @Inject() (
-  sessionStateService: SessionStateService,
-  upscanInitiateConnector: UpscanInitiateConnector,
-  val router: Router,
-  renderer: Renderer,
-  components: BaseControllerComponents,
-  view: UploadSingleFileView
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) with UpscanRequestSupport {
+class ChooseSingleFileController @Inject()(upscanInitiateConnector: UpscanInitiateConnector,
+                                           val router: Router,
+                                           renderer: Renderer,
+                                           components: BaseControllerComponents,
+                                           view: UploadSingleFileView)
+                                          (implicit ec: ExecutionContext) extends BaseController(components) with UpscanRequestSupport with LoggerUtil {
 
   // GET /choose-file
+  //TODO: The way this works now is it renders the Rejection message but then wipes the state and re-initiates an upload
+  //      This is probably un-desirable, it would be better if it kept knowledge of the rejected file and re-used the same
+  //      Upscan details - this will mean changing models to store the initiate response on rejected status
+  //      However. Given this is the NonJS version - it may not be a problem re-initiating as volumes will be significantly lower (if any)
   final val showChooseFile: Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          withJourneyContext { journeyConfig =>
-            val sessionStateUpdate =
-              JourneyModel
-                .initiateFileUpload(upscanRequest(currentJourneyId))(upscanInitiateConnector.initiate(_, _))
-            sessionStateService
-              .updateSessionState(sessionStateUpdate)
-              .map {
-                case (uploadSingleFile: State.UploadSingleFile, breadcrumbs) =>
-                  // TODO: Change in future to retrieve state from Mongo rather than SessionStateService
-                  Ok(renderView(journeyConfig, uploadSingleFile, breadcrumbs))
+          withJourneyContext { journeyContext =>
+            withUploadedFiles { files =>
+              val nonce = Nonce.random
 
-                case other =>
-                  router.redirectTo(other)
-              }
+              val oFailedFile = files.erroredFileUpload
+              val oError = oFailedFile.flatMap(FileUploadError(_))
+
+              val initiateRequest = upscanRequest(currentJourneyId)(
+                nonce.toString,
+                journeyContext.config.maximumFileSizeBytes
+              )
+
+              for {
+                upscanResponse <-
+                  upscanInitiateConnector.initiate(journeyContext.hostService.userAgent, initiateRequest)
+                updatedFiles = updateFileUploads(nonce, upscanResponse, files)
+                _ <- components.newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, updatedFiles)
+              } yield Ok(renderView(journeyContext, upscanResponse, updatedFiles, oError, List()))
+            }
           }
         }
       }
     }
 
-  def renderView(journeyConfig: FileUploadContext, uploadSingleFile: State.UploadSingleFile, breadcrumbs: List[State])(
-    implicit request: Request[_]
-  ) =
+  private def updateFileUploads(nonce: Nonce, initiateResponse: UpscanInitiateResponse, files: FileUploads) =
+    files.onlyAccepted + FileUpload.Initiated(
+      nonce = nonce,
+      timestamp = Timestamp.now,
+      reference = initiateResponse.reference,
+      uploadRequest = Some(initiateResponse.uploadRequest),
+      uploadId = None
+    )
+
+  def renderView(
+                  journeyConfig: FileUploadContext,
+                  initiateResponse: UpscanInitiateResponse,
+                  files: FileUploads,
+                  maybeUploadError: Option[FileUploadError],
+                  breadcrumbs: List[State]
+                )(implicit request: Request[_]) =
     view(
       maxFileUploadsNumber = journeyConfig.config.maximumNumberOfFiles,
       maximumFileSizeBytes = journeyConfig.config.maximumFileSizeBytes,
@@ -72,12 +92,12 @@ class ChooseSingleFileController @Inject() (
         .orElse(journeyConfig.config.allowedFileExtensions)
         .getOrElse(journeyConfig.config.allowedContentTypes),
       journeyConfig.config.newFileDescription,
-      uploadRequest = uploadSingleFile.uploadRequest,
-      fileUploads = uploadSingleFile.fileUploads,
-      maybeUploadError = uploadSingleFile.maybeUploadError,
+      uploadRequest = initiateResponse.uploadRequest,
+      fileUploads = files,
+      maybeUploadError = maybeUploadError,
       successAction = routes.SummaryController.showSummary,
       failureAction = routes.ChooseSingleFileController.showChooseFile,
-      checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(uploadSingleFile.reference),
-      backLink = renderer.backlink(breadcrumbs)
+      checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(initiateResponse.reference),
+      backLink = renderer.backlink(breadcrumbs) //TODO: Back Linking needs fixing!
     )(implicitly[Request[_]], journeyConfig.messages, journeyConfig.config.features, journeyConfig.config.content)
 }

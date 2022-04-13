@@ -26,10 +26,12 @@ class NewJourneyCacheRepositoryISpec extends UnitSpec {
   "DataKeys" must {
 
     "have the correct key and model type" in {
-      NewJourneyCacheRepository.DataKeys.journeyContextDataKey shouldBe DataKey[FileUploadSessionConfig](
-        "journeyConfig"
-      )
-      NewJourneyCacheRepository.DataKeys.uploadedFiles shouldBe DataKey[FileUploads]("uploadedFiles")
+
+      NewJourneyCacheRepository.DataKeys.journeyContextDataKey shouldBe
+        DataKey[FileUploadSessionConfig]("journeyConfig")
+
+      NewJourneyCacheRepository.DataKeys.uploadedFiles shouldBe
+        DataKey[FileUploads]("uploadedFiles")
     }
   }
 }

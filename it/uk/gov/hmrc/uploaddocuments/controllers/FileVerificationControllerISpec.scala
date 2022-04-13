@@ -26,32 +26,18 @@ class FileVerificationControllerISpec extends ControllerISpecBase {
           )
         )
 
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
-        sessionStateService.setState(
-          State.UploadSingleFile(
-            context,
-            upscanRef2,
-            UploadRequest(href = "https://s3.bucket", fields = Map("callbackUrl" -> "https://foo.bar/callback")),
-            fileUploads
-          )
-        )
+        setContext(context)
+        setFileUploads(fileUploads)
+
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
-        val result = await(request("/file-verification").get())
+        val result = await(request(s"/file-verification?key=${upscanRef2}").get())
 
         result.status shouldBe 200
         result.body should include(htmlEscapedPageTitle("view.upload-file.waiting"))
         result.body should include(htmlEscapedMessage("view.upload-file.waiting"))
 
-        sessionStateService.getState shouldBe
-          State.WaitingForFileVerification(
-            context,
-            upscanRef2,
-            UploadRequest(href = "https://s3.bucket", fields = Map("callbackUrl" -> "https://foo.bar/callback")),
-            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2),
-            fileUploads
-          )
+        getFileUploads() shouldBe Some(fileUploads)
       }
 
       "display waiting for file verification page after the timeout the next time" in {
@@ -64,26 +50,18 @@ class FileVerificationControllerISpec extends ControllerISpecBase {
           )
         )
 
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
+        setContext(context)
+        setFileUploads(fileUploads)
 
-        val state = State.WaitingForFileVerification(
-          context,
-          upscanRef2,
-          UploadRequest(href = "https://s3.bucket", fields = Map("callbackUrl" -> "https://foo.bar/callback")),
-          FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2),
-          fileUploads
-        )
-        sessionStateService.setState(state)
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
-        val result = await(request("/file-verification").get())
+        val result = await(request(s"/file-verification?key=$upscanRef2").get())
 
         result.status shouldBe 200
         result.body should include(htmlEscapedPageTitle("view.upload-file.waiting"))
         result.body should include(htmlEscapedMessage("view.upload-file.waiting"))
 
-        sessionStateService.getState shouldBe state
+        getFileUploads() shouldBe Some(fileUploads)
       }
     }
 
@@ -135,15 +113,9 @@ class FileVerificationControllerISpec extends ControllerISpecBase {
           )
         )
 
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
+        setContext(context)
+        setFileUploads(fileUploads)
 
-        val state = State.Summary(
-          context,
-          fileUploads,
-          acknowledged = false
-        )
-        sessionStateService.setState(state)
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val result1 =
@@ -151,49 +123,43 @@ class FileVerificationControllerISpec extends ControllerISpecBase {
             request("/file-verification/11370e18-6e24-453e-b45a-76d3e32ea33d/status")
               .get()
           )
+
         result1.status shouldBe 200
         result1.body shouldBe s"""{"reference":"$upscanRef1","fileStatus":"NOT_UPLOADED","uploadRequest":{"href":"https://s3.amazonaws.com/bucket/123abc","fields":{"foo1":"bar1"}}}"""
-        sessionStateService.getState shouldBe state
 
         val result2 =
           await(request("/file-verification/2b72fe99-8adf-4edb-865e-622ae710f77c/status").get())
         result2.status shouldBe 200
         result2.body shouldBe s"""{"reference":"$upscanRef2","fileStatus":"WAITING"}"""
-        sessionStateService.getState shouldBe state
 
         val result3 =
           await(request("/file-verification/f029444f-415c-4dec-9cf2-36774ec63ab8/status").get())
         result3.status shouldBe 200
         result3.body shouldBe """{"reference":"f029444f-415c-4dec-9cf2-36774ec63ab8","fileStatus":"ACCEPTED","fileMimeType":"application/pdf","fileName":"test.pdf","fileSize":4567890,"previewUrl":"/upload-customs-documents/preview/f029444f-415c-4dec-9cf2-36774ec63ab8/test.pdf"}"""
-        sessionStateService.getState shouldBe state
 
         val result4 =
           await(request("/file-verification/4b1e15a4-4152-4328-9448-4924d9aee6e2/status").get())
         result4.status shouldBe 200
         result4.body shouldBe """{"reference":"4b1e15a4-4152-4328-9448-4924d9aee6e2","fileStatus":"FAILED","errorMessage":"The selected file contains a virus - upload a different one"}"""
-        sessionStateService.getState shouldBe state
 
         val result5 =
           await(request("/file-verification/f0e317f5-d394-42cc-93f8-e89f4fc0114c/status").get())
         result5.status shouldBe 404
-        sessionStateService.getState shouldBe state
 
         val result6 =
           await(request("/file-verification/4b1e15a4-4152-4328-9448-4924d9aee6e3/status").get())
         result6.status shouldBe 200
         result6.body shouldBe """{"reference":"4b1e15a4-4152-4328-9448-4924d9aee6e3","fileStatus":"REJECTED","errorMessage":"The selected file could not be uploaded"}"""
-        sessionStateService.getState shouldBe state
 
         val result7 =
           await(request("/file-verification/4b1e15a4-4152-4328-9448-4924d9aee6e4/status").get())
         result7.status shouldBe 200
         result7.body shouldBe """{"reference":"4b1e15a4-4152-4328-9448-4924d9aee6e4","fileStatus":"DUPLICATE","errorMessage":"The selected file has already been uploaded"}"""
-        sessionStateService.getState shouldBe state
       }
     }
 
     "GET /journey/:journeyId/file-verification" should {
-      "set current file upload status as posted and return 204 NoContent" in {
+      "set current file upload status as posted and return 202 NoContent" in {
 
         val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files =
@@ -203,37 +169,26 @@ class FileVerificationControllerISpec extends ControllerISpecBase {
           )
         )
 
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
+        setContext(context)
+        setFileUploads(fileUploads)
 
-        sessionStateService.setState(
-          State.UploadSingleFile(
-            context,
-            upscanRef1,
-            UploadRequest(href = "https://s3.bucket", fields = Map("callbackUrl" -> "https://foo.bar/callback")),
-            fileUploads
-          )
-        )
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val result1 =
-          await(requestWithoutSessionId(s"/journey/${SHA256.compute(journeyId)}/file-verification").get())
+          await(requestWithoutSessionId(s"/journey/$getJourneyId/file-verification?key=$upscanRef1").get())
 
         result1.status shouldBe 202
         result1.body.isEmpty shouldBe true
-        sessionStateService.getState shouldBe
-          State.WaitingForFileVerification(
-            context,
-            upscanRef1,
-            UploadRequest(href = "https://s3.bucket", fields = Map("callbackUrl" -> "https://foo.bar/callback")),
-            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef1),
-            FileUploads(files =
-              Seq(
-                FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef1),
-                FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2)
-              )
+
+
+        getFileUploads() shouldBe Some(
+          FileUploads(files =
+            Seq(
+              FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef1),
+              FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2)
             )
           )
+        )
       }
     }
   }

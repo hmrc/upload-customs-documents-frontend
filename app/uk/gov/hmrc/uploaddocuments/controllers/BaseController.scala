@@ -16,6 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
+import play.api.data.Form
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import play.api.{Configuration, Environment}
@@ -105,5 +106,15 @@ abstract class BaseController(
       case Some(files) => body(files)
       case _           => Future.successful(Redirect(components.appConfig.govukStartUrl))
     }
+
+  implicit class ResultExtensions(r: Result) {
+
+    //TODO: Not really sure what the flashing does - this was lifted from the Router class...
+    def withFormError(formWithErrors: Form[_]) = r.flashing(Flash {
+      val data = formWithErrors.data
+      // dummy parameter required if empty data
+      if (data.isEmpty) Map("dummy" -> "") else data
+    })
+  }
 
 }

@@ -5,6 +5,7 @@
 GET        /                                                        @uk.gov.hmrc.uploaddocuments.controllers.StartController.start
 
 GET        /choose-files                                            @uk.gov.hmrc.uploaddocuments.controllers.ChooseMultipleFilesController.showChooseMultipleFiles
+POST       /choose-files                                            @uk.gov.hmrc.uploaddocuments.controllers.ChooseMultipleFilesController.continueWithYesNo
 GET        /choose-file                                             @uk.gov.hmrc.uploaddocuments.controllers.ChooseSingleFileController.showChooseFile
 
 + nocsrf
@@ -20,9 +21,9 @@ OPTIONS    /journey/:journeyId/file-posted                          @uk.gov.hmrc
 GET        /journey/:journeyId/file-rejected                        @uk.gov.hmrc.uploaddocuments.controllers.FileRejectedController.asyncMarkFileUploadAsRejected(journeyId: String)
 OPTIONS    /journey/:journeyId/file-rejected                        @uk.gov.hmrc.uploaddocuments.controllers.FileRejectedController.preflightUpload(journeyId: String)
 
-GET        /journey/:journeyId/file-verification                    @uk.gov.hmrc.uploaddocuments.controllers.FileVerificationController.asyncWaitingForFileVerification(journeyId: String)
+GET        /journey/:journeyId/file-verification                    @uk.gov.hmrc.uploaddocuments.controllers.FileVerificationController.asyncWaitingForFileVerification(journeyId: String, key: Option[String] ?= None)
 
-GET        /file-verification                                       @uk.gov.hmrc.uploaddocuments.controllers.FileVerificationController.showWaitingForFileVerification
+GET        /file-verification                                       @uk.gov.hmrc.uploaddocuments.controllers.FileVerificationController.showWaitingForFileVerification(key: Option[String] ?= None)
 GET        /file-verification/:reference/status                     @uk.gov.hmrc.uploaddocuments.controllers.FileVerificationController.checkFileVerificationStatus(reference: String)
 
 GET        /summary                                                 @uk.gov.hmrc.uploaddocuments.controllers.SummaryController.showSummary
@@ -35,7 +36,6 @@ POST       /uploaded/:reference/remove                              @uk.gov.hmrc
 GET        /preview/:reference/:fileName                            @uk.gov.hmrc.uploaddocuments.controllers.PreviewController.previewFileUploadByReference(reference: String, fileName: String)
 
 GET        /continue-to-host                                        @uk.gov.hmrc.uploaddocuments.controllers.ContinueToHostController.continueToHost
-POST       /continue-to-host                                        @uk.gov.hmrc.uploaddocuments.controllers.ContinueToHostController.continueWithYesNo
 
 GET        /timedout                                                @uk.gov.hmrc.uploaddocuments.controllers.SessionController.showTimeoutPage
 GET        /keep-alive                                              @uk.gov.hmrc.uploaddocuments.controllers.SessionController.keepAlive(continueUrl: Option[String] ?= None)

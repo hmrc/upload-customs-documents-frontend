@@ -20,11 +20,9 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
         val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files = Seq(TestData.acceptedFileUpload))
-        val state = State.Summary(context, fileUploads)
 
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
-        sessionStateService.setState(state)
+        setContext(context)
+        setFileUploads(fileUploads)
 
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
@@ -33,7 +31,6 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
         result.status shouldBe 200
         result.body should include(htmlEscapedPageTitle("view.summary.singular.title", "1"))
         result.body should include(htmlEscapedMessage("view.summary.singular.heading", "1"))
-        sessionStateService.getState shouldBe state
       }
 
       "show uploaded plural file view" in {
@@ -65,11 +62,9 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
             )
           )
         )
-        val state = State.Summary(context, fileUploads)
 
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
-        sessionStateService.setState(state)
+        setContext(context)
+        setFileUploads(fileUploads)
 
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
@@ -78,18 +73,15 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
         result.status shouldBe 200
         result.body should include(htmlEscapedPageTitle("view.summary.plural.title", "2"))
         result.body should include(htmlEscapedMessage("view.summary.plural.heading", "2"))
-        sessionStateService.getState shouldBe state
       }
 
       "show file upload summary view" in {
 
         val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = nFileUploads(FILES_LIMIT)
-        val state = State.Summary(context, fileUploads)
 
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
-        sessionStateService.setState(state)
+        setContext(context)
+        setFileUploads(fileUploads)
 
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
@@ -98,7 +90,6 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
         result.status shouldBe 200
         result.body should include(htmlEscapedPageTitle("view.summary.plural.title", FILES_LIMIT.toString))
         result.body should include(htmlEscapedMessage("view.summary.plural.heading", FILES_LIMIT.toString))
-        sessionStateService.getState shouldBe state
       }
     }
 
@@ -108,15 +99,13 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
         val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files = for (i <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
-        val state = State.Summary(context, fileUploads)
 
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
-        sessionStateService.setState(state)
+        setContext(context)
+        setFileUploads(fileUploads)
 
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val callbackUrl =
-          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/${SHA256.compute(journeyId)}"
+          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
         givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
         val result = await(request("/summary").post(Map("choice" -> "yes")))
@@ -124,28 +113,28 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
         result.status shouldBe 200
         result.body should include(htmlEscapedPageTitle("view.upload-file.next.title"))
         result.body should include(htmlEscapedMessage("view.upload-file.next.heading"))
-        sessionStateService.getState shouldBe State.UploadSingleFile(
-          FileUploadContext(fileUploadSessionConfig),
-          reference = "11370e18-6e24-453e-b45a-76d3e32ea33d",
-          uploadRequest = UploadRequest(
-            href = "https://bucketName.s3.eu-west-2.amazonaws.com",
-            fields = Map(
-              "Content-Type"            -> "application/xml",
-              "acl"                     -> "private",
-              "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-              "policy"                  -> "xxxxxxxx==",
-              "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
-              "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
-              "x-amz-date"              -> "yyyyMMddThhmmssZ",
-              "x-amz-meta-callback-url" -> callbackUrl,
-              "x-amz-signature"         -> "xxxx",
-              "success_action_redirect" -> "https://myservice.com/nextPage",
-              "error_action_redirect"   -> "https://myservice.com/errorPage"
-            )
-          ),
-          fileUploads = FileUploads(files =
+
+        getFileUploads() shouldBe Some(
+          FileUploads(files =
             fileUploads.files ++
-              Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"))
+              Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d", Some(
+                UploadRequest(
+                  href = "https://bucketName.s3.eu-west-2.amazonaws.com",
+                  fields = Map(
+                    "Content-Type"            -> "application/xml",
+                    "acl"                     -> "private",
+                    "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "policy"                  -> "xxxxxxxx==",
+                    "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
+                    "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
+                    "x-amz-date"              -> "yyyyMMddThhmmssZ",
+                    "x-amz-meta-callback-url" -> callbackUrl,
+                    "x-amz-signature"         -> "xxxx",
+                    "success_action_redirect" -> "https://myservice.com/nextPage",
+                    "error_action_redirect"   -> "https://myservice.com/errorPage"
+                  )
+                )
+              )))
           )
         )
       }
@@ -154,15 +143,13 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
         val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files = for (i <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
-        val state = State.Summary(context, fileUploads)
 
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
-        sessionStateService.setState(state)
+        setContext(context)
+        setFileUploads(fileUploads)
 
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val callbackUrl =
-          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/${SHA256.compute(journeyId)}"
+          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
         givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
         val result = await(request("/summary").post(Map("choice" -> "yes")))
@@ -170,28 +157,29 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
         result.status shouldBe 200
         result.body should include(htmlEscapedPageTitle("view.upload-file.next.title"))
         result.body should include(htmlEscapedMessage("view.upload-file.next.heading"))
-        sessionStateService.getState shouldBe State.UploadSingleFile(
-          FileUploadContext(fileUploadSessionConfig),
-          reference = "11370e18-6e24-453e-b45a-76d3e32ea33d",
-          uploadRequest = UploadRequest(
-            href = "https://bucketName.s3.eu-west-2.amazonaws.com",
-            fields = Map(
-              "Content-Type"            -> "application/xml",
-              "acl"                     -> "private",
-              "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-              "policy"                  -> "xxxxxxxx==",
-              "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
-              "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
-              "x-amz-date"              -> "yyyyMMddThhmmssZ",
-              "x-amz-meta-callback-url" -> callbackUrl,
-              "x-amz-signature"         -> "xxxx",
-              "success_action_redirect" -> "https://myservice.com/nextPage",
-              "error_action_redirect"   -> "https://myservice.com/errorPage"
-            )
-          ),
-          fileUploads = FileUploads(files =
+
+
+        getFileUploads() shouldBe Some(
+          FileUploads(files =
             fileUploads.files ++
-              Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"))
+              Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d", Some(
+                UploadRequest(
+                  href = "https://bucketName.s3.eu-west-2.amazonaws.com",
+                  fields = Map(
+                    "Content-Type"            -> "application/xml",
+                    "acl"                     -> "private",
+                    "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                    "policy"                  -> "xxxxxxxx==",
+                    "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
+                    "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
+                    "x-amz-date"              -> "yyyyMMddThhmmssZ",
+                    "x-amz-meta-callback-url" -> callbackUrl,
+                    "x-amz-signature"         -> "xxxx",
+                    "success_action_redirect" -> "https://myservice.com/nextPage",
+                    "error_action_redirect"   -> "https://myservice.com/errorPage"
+                  )
+                )
+              )))
           )
         )
       }
@@ -200,21 +188,14 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
         val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = nFileUploads(FILES_LIMIT)
-        val state = State.Summary(context, fileUploads)
 
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
-        sessionStateService.setState(state)
+        setContext(context)
+        setFileUploads(fileUploads)
 
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url")
 
         val result = await(request("/summary").post(Map("choice" -> "yes")))
-
-        sessionStateService.getState shouldBe State.ContinueToHost(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads
-        )
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -224,21 +205,14 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
         val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files = for (i <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
-        val state = State.Summary(context, fileUploads)
 
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
-        sessionStateService.setState(state)
+        setContext(context)
+        setFileUploads(fileUploads)
 
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url")
 
         val result = await(request("/summary").post(Map("choice" -> "no")))
-
-        sessionStateService.getState shouldBe State.ContinueToHost(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads
-        )
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -247,21 +221,14 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
       "redirect to the continue_url when no and files number above the limit" in {
         val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = nFileUploads(FILES_LIMIT)
-        val state = State.Summary(context, fileUploads)
 
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.journeyContextDataKey, context))
-        await(newJourneyRepo.put(sessionStateService.getJourneyId(hc).get)(DataKeys.uploadedFiles, fileUploads))
-        sessionStateService.setState(state)
+        setContext(context)
+        setFileUploads(fileUploads)
 
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
         val expected = givenSomePage(200, "/continue-url")
 
         val result = await(request("/summary").post(Map("choice" -> "no")))
-
-        sessionStateService.getState shouldBe State.ContinueToHost(
-          FileUploadContext(fileUploadSessionConfig),
-          fileUploads
-        )
 
         result.status shouldBe 200
         result.body shouldBe expected

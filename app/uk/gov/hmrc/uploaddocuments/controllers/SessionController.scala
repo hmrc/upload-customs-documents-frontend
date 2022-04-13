@@ -16,18 +16,16 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import javax.inject.{Inject, Singleton}
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.uploaddocuments.views.html.TimedOutView
 
+import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class SessionController @Inject() (
-  controllerComponents: MessagesControllerComponents,
-  timedOutView: TimedOutView
-) extends FrontendController(controllerComponents) {
+class SessionController @Inject()(controllerComponents: MessagesControllerComponents,
+                                  timedOutView: TimedOutView) extends FrontendController(controllerComponents) {
 
   final val showTimeoutPage: Action[AnyContent] = Action.async { implicit request =>
     Future.successful(Ok(timedOutView()))
