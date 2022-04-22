@@ -14,14 +14,14 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.uploaddocuments.controllers.routes
+@import uk.gov.hmrc.uploaddocuments.models.CustomizedServiceContent
 
 @this(
         govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.GovukLayoutWrapper,
         html: uk.gov.hmrc.uploaddocuments.views.components.html
 )
 
-@()(implicit request: Request[_], messages: Messages)
+@()(implicit request: Request[_], messages: Messages, content: CustomizedServiceContent = CustomizedServiceContent())
 
 @govukLayout(
   pageTitle("global.error.404.title")

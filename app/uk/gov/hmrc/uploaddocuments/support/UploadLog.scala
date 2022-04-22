@@ -16,56 +16,66 @@
 
 package uk.gov.hmrc.uploaddocuments.support
 
-import play.api.Logger
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, UpscanNotification}
-import uk.gov.hmrc.uploaddocuments.models.S3UploadError
-import uk.gov.hmrc.uploaddocuments.models.Timestamp
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, S3UploadError, Timestamp, UpscanNotification}
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
-object UploadLog {
+trait UploadLog extends LoggerUtil {
 
-  val logger = Logger(getClass())
-
-  case class Success(
-    service: String,
-    fileMimeType: String,
-    fileSize: Int,
-    success: Boolean = true,
-    duration: Option[Long] = None
-  )
-  object Success {
-    implicit val format: Format[Success] = Json.format[Success]
+  def logSuccess(
+    context: FileUploadContext,
+    uploadDetails: UpscanNotification.UploadDetails,
+    timestamp: Timestamp): Unit = {
+    val success =
+      Success(
+        context.hostService.userAgent,
+        uploadDetails.fileMimeType,
+        uploadDetails.size,
+        duration = Some(timestamp.duration))
+    info(s"json${Json.stringify(Json.toJson(success))}")
   }
 
-  final case class Failure(
-    service: String,
-    error: String,
-    description: String,
-    success: Boolean = false,
-    duration: Option[Long] = None
-  )
-  object Failure {
-    implicit val format: Format[Failure] = Json.format[Failure]
-  }
-
-  def success(context: FileUploadContext, uploadDetails: UpscanNotification.UploadDetails, timestamp: Timestamp): Unit =
-    logger.info(
-      s"json${Json
-        .stringify(Json.toJson(Success(context.hostService.userAgent, uploadDetails.fileMimeType, uploadDetails.size, duration = Some(timestamp.duration))))}"
-    )
-
-  def failure(
+  def logFailure(
     context: FileUploadContext,
     failureDetails: UpscanNotification.FailureDetails,
     timestamp: Timestamp
-  ): Unit =
-    logger.info(
-      s"json${Json.stringify(Json.toJson(Failure(context.hostService.userAgent, failureDetails.failureReason.toString(), failureDetails.message, duration = Some(timestamp.duration))))}"
-    )
+  ): Unit = {
+    val failure =
+      Failure(
+        context.hostService.userAgent,
+        failureDetails.failureReason.toString,
+        failureDetails.message,
+        duration = Some(timestamp.duration))
+    info(s"json${Json.stringify(Json.toJson(failure))}")
+  }
 
-  def failure(context: FileUploadContext, error: S3UploadError): Unit =
-    logger.info(
-      s"json${Json.stringify(Json.toJson(Failure(context.hostService.userAgent, error.errorCode, error.errorMessage)))}"
-    )
+  def logFailure(context: FileUploadContext, error: S3UploadError): Unit = {
+    val failure = Failure(context.hostService.userAgent, error.errorCode, error.errorMessage)
+    info(s"json${Json.stringify(Json.toJson(failure))}")
+  }
 
+}
+
+case class Success(
+  service: String,
+  fileMimeType: String,
+  fileSize: Int,
+  success: Boolean       = true,
+  duration: Option[Long] = None
+)
+
+object Success {
+  implicit val format: Format[Success] = Json.format[Success]
+}
+
+final case class Failure(
+  service: String,
+  error: String,
+  description: String,
+  success: Boolean       = false,
+  duration: Option[Long] = None
+)
+
+object Failure {
+  implicit val format: Format[Failure] = Json.format[Failure]
 }

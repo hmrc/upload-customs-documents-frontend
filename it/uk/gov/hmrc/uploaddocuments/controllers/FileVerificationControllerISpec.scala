@@ -3,7 +3,6 @@ package uk.gov.hmrc.uploaddocuments.controllers
 import uk.gov.hmrc.uploaddocuments.models._
 
 import java.time.ZonedDateTime
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class FileVerificationControllerISpec extends ControllerISpecBase {
 

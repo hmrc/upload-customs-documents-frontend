@@ -4,8 +4,6 @@ import play.api.libs.json.{JsObject, JsValue, Json}
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 class InitiateUpscanControllerISpec extends ControllerISpecBase with UpscanInitiateStubs {
 
   "InitiateUpscanController" when {

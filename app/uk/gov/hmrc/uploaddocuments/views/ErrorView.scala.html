@@ -14,6 +14,7 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.uploaddocuments.models.CustomizedServiceContent
 @import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 @this(
@@ -22,7 +23,7 @@
         appConfig: AppConfig
 )
 
-@()(implicit request: Request[_], messages: Messages)
+@()(implicit request: Request[_], messages: Messages, content: CustomizedServiceContent = CustomizedServiceContent())
 
 @govukLayout(
   pageTitle("global.error.500.title")

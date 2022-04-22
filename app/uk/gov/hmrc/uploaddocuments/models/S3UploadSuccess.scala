@@ -34,6 +34,5 @@ case class S3UploadSuccess(
 )
 
 object S3UploadSuccess {
-  implicit val formats: Format[S3UploadSuccess] =
-    Json.format[S3UploadSuccess]
+  implicit val formats: Format[S3UploadSuccess] = Json.format[S3UploadSuccess]
 }

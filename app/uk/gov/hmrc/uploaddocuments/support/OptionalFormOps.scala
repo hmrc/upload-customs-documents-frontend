@@ -33,7 +33,7 @@ object OptionalFormOps {
     /** Returns formWithErrors or a pre-filled form, or an empty form. */
     final def or[T](
       emptyForm: Form[T],
-      maybeFillWith: Option[T] = None,
+      maybeFillWith: Option[T]       = None,
       unrelatedFormKeys: Set[String] = knownUnrelatedFlashKeys
     )(implicit request: Request[_]): Form[T] =
       formWithErrors

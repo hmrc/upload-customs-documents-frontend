@@ -29,26 +29,27 @@ case class UploadedFile(
   fileName: String,
   fileMimeType: String,
   fileSize: Int,
-  cargo: Option[JsValue] = None, // data carried through, from and to host service
+  cargo: Option[JsValue]      = None, // data carried through, from and to host service
   description: Option[String] = None,
-  previewUrl: Option[String] = None
-) {
-  def toFileUpload: FileUpload =
-    FileUpload.Accepted(
-      nonce = Nonce.Any,
-      timestamp = Timestamp.Any,
-      reference = upscanReference,
-      checksum = checksum,
-      fileName = fileName,
-      fileMimeType = fileMimeType,
-      fileSize = fileSize,
-      url = downloadUrl,
-      uploadTimestamp = uploadTimestamp,
-      cargo = cargo,
-      description = description
-    )
-}
+  previewUrl: Option[String]  = None
+)
 
 object UploadedFile {
   implicit val formats: Format[UploadedFile] = Json.format[UploadedFile]
+
+  def apply(file: FileUpload): Option[UploadedFile] = file match {
+    case f: FileUpload.Accepted =>
+      Some(
+        UploadedFile(
+          f.reference,
+          f.url,
+          f.uploadTimestamp,
+          f.checksum,
+          f.fileName,
+          f.fileMimeType,
+          f.fileSize,
+          f.cargo,
+          f.safeDescription))
+    case _ => None
+  }
 }

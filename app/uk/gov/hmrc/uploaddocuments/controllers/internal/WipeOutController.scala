@@ -23,15 +23,15 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class WipeOutController @Inject()(components: BaseControllerComponents)
-                                 (implicit ec: ExecutionContext) extends BaseController(components) {
+class WipeOutController @Inject()(components: BaseControllerComponents)(implicit ec: ExecutionContext)
+    extends BaseController(components) {
 
   // POST /internal/wipe-out
   final val wipeOut: Action[AnyContent] =
     Action.async { implicit request =>
-      whenInSession {
+      whenInSession { implicit journeyId =>
         whenAuthenticatedInBackchannel {
-          components.newJourneyCacheRepository.deleteEntity(currentJourneyId).map(_ => NoContent)
+          components.newJourneyCacheRepository.deleteEntity(journeyId).map(_ => NoContent)
         }
       }
     }

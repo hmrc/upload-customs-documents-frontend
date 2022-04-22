@@ -62,21 +62,21 @@ trait FileStream {
       .single((httpRequest, httpRequest.uri.toString()))
       .via(connectionPool)
       .runFold[Result](Results.Ok) {
+        case (_, (Success(httpResponse), _)) if httpResponse.status.isSuccess() =>
+          Results.Ok
+            .streamed(
+              content =
+                httpResponse.entity.withSizeLimit(if (fileSize == 0) defaultFileSizeLimit else fileSize).dataBytes,
+              contentLength = httpResponse.entity.contentLengthOption,
+              contentType   = Some(fileMimeType)
+            )
+            .withHeaders(contentDispositionForMimeType(fileName, fileMimeType))
+
         case (_, (Success(httpResponse), url)) =>
-          if (httpResponse.status.isSuccess())
-            Results.Ok
-              .streamed(
-                content =
-                  httpResponse.entity.withSizeLimit(if (fileSize == 0) defaultFileSizeLimit else fileSize).dataBytes,
-                contentLength = httpResponse.entity.contentLengthOption,
-                contentType = Some(fileMimeType)
-              )
-              .withHeaders(contentDispositionForMimeType(fileName, fileMimeType))
-          else
-            throw new Exception(s"Error status ${httpResponse.status} when accessing $url")
+          throw new Exception(s"Error status ${httpResponse.status} when accessing $url")
 
         case (_, (Failure(error), url)) =>
-          throw new Exception(s"Error when accessing $url: ${error.getMessage()}.")
+          throw new Exception(s"Error when accessing $url: ${error.getMessage}.")
       }
 
 }

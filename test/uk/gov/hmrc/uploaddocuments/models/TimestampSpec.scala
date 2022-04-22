@@ -45,15 +45,15 @@ class TimestampSpec extends UnitSpec {
 
     "do not compare to next Timestamp" in {
       for (i <- Stream.continually(Random.nextLong).take(1000)) {
-        Timestamp(i) should not be (Timestamp(i + 1))
-        Timestamp(i) should not be (Timestamp(i - 1))
+        Timestamp(i) should not be Timestamp(i + 1)
+        Timestamp(i) should not be Timestamp(i - 1)
       }
     }
 
     "do not compare to other entities" in {
       for (i <- Stream.continually(Random.nextLong).take(1000)) {
         Timestamp(i) should not be s"$i"
-        Timestamp(i) should not be (i.toInt)
+        Timestamp(i) should not be i.toInt
       }
     }
 

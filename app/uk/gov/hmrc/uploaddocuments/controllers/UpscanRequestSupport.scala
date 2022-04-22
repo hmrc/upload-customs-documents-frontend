@@ -21,13 +21,11 @@ import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateRequest
 
 trait UpscanRequestSupport { baseController: BaseController =>
 
-  final def upscanRequest(journeyId: String)(nonce: String, maximumFileSizeBytes: Long)(implicit
-    rh: RequestHeader
-  ) =
+  final def upscanRequest(journeyId: String)(nonce: String, maximumFileSizeBytes: Long)(implicit rh: RequestHeader) =
     UpscanInitiateRequest(
-      callbackUrl = callbackFromUpscan(journeyId, nonce),
+      callbackUrl     = callbackFromUpscan(journeyId, nonce),
       successRedirect = Some(successRedirect(journeyId)),
-      errorRedirect = Some(errorRedirect(journeyId)),
+      errorRedirect   = Some(errorRedirect(journeyId)),
       minimumFileSize = Some(1),
       maximumFileSize = Some(maximumFileSizeBytes.toInt)
     )
@@ -35,13 +33,11 @@ trait UpscanRequestSupport { baseController: BaseController =>
   final def upscanRequestWhenUploadingMultipleFiles(journeyId: String)(
     nonce: String,
     maximumFileSizeBytes: Long
-  )(implicit
-    rh: RequestHeader
-  ) =
+  )(implicit rh: RequestHeader) =
     UpscanInitiateRequest(
-      callbackUrl = callbackFromUpscan(journeyId, nonce),
+      callbackUrl     = callbackFromUpscan(journeyId, nonce),
       successRedirect = Some(successRedirectWhenUploadingMultipleFiles(journeyId)),
-      errorRedirect = Some(errorRedirect(journeyId)),
+      errorRedirect   = Some(errorRedirect(journeyId)),
       minimumFileSize = Some(1),
       maximumFileSize = Some(maximumFileSizeBytes.toInt)
     )
@@ -57,7 +53,8 @@ trait UpscanRequestSupport { baseController: BaseController =>
     })
 
   final def successRedirectWhenUploadingMultipleFiles(journeyId: String): String =
-    baseController.components.appConfig.baseExternalCallbackUrl + routes.FilePostedController.asyncMarkFileUploadAsPosted(journeyId)
+    baseController.components.appConfig.baseExternalCallbackUrl + routes.FilePostedController
+      .asyncMarkFileUploadAsPosted(journeyId)
 
   final def errorRedirect(journeyId: String)(implicit rh: RequestHeader): String =
     baseController.components.appConfig.baseExternalCallbackUrl + (rh.cookies.get(COOKIE_JSENABLED) match {

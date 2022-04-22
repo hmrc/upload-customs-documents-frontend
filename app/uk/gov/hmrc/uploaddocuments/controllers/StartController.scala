@@ -22,8 +22,8 @@ import uk.gov.hmrc.uploaddocuments.views.FileUploadViews
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class StartController @Inject()(views: FileUploadViews,
-                                components: BaseControllerComponents) extends BaseController(components) {
+class StartController @Inject()(views: FileUploadViews, components: BaseControllerComponents)
+    extends BaseController(components) {
 
   // GET /
   final val start: Action[AnyContent] =

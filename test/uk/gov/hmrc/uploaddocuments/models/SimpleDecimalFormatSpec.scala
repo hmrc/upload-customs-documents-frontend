@@ -25,7 +25,7 @@ class SimpleDecimalFormatSpec extends AnyWordSpec with Matchers {
   case class A(i: Int)
   val format = SimpleDecimalFormat[A](bd => A(bd.toInt), a => BigDecimal(a.i))
 
-  "SimpleStringFormats" should {
+  "SimpleDecimalFormat" should {
     "serialize an entity as a number" in {
       format.writes(A(2)) shouldBe JsNumber(2)
       format.writes(A(0)) shouldBe JsNumber(0)

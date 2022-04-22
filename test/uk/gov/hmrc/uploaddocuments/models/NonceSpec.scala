@@ -53,15 +53,15 @@ class NonceSpec extends UnitSpec {
 
     "do not compare to next Nonce" in {
       for (i <- Stream.continually(Random.nextInt).take(1000)) {
-        Nonce(i) should not be (Nonce(i + 1))
-        Nonce(i) should not be (Nonce(i - 1))
+        Nonce(i) should not be Nonce(i + 1)
+        Nonce(i) should not be Nonce(i - 1)
       }
     }
 
     "do not compare to other entities" in {
       for (i <- Stream.continually(Random.nextInt).take(1000)) {
         Nonce(i) should not be s"$i"
-        Nonce(i) should not be (i.toInt)
+        Nonce(i) should not be i.toInt
       }
     }
 
@@ -73,8 +73,8 @@ class NonceSpec extends UnitSpec {
     "have stable and unique hash code" in {
       for (i <- Stream.continually(Random.nextInt).take(1000)) {
         Nonce(i).hashCode shouldBe i.toInt
-        Nonce(i).hashCode should not be (Nonce(i + 1).hashCode)
-        Nonce(i).hashCode should not be (Nonce(i - 1).hashCode)
+        Nonce(i).hashCode should not be Nonce(i + 1).hashCode
+        Nonce(i).hashCode should not be Nonce(i - 1).hashCode
       }
     }
   }

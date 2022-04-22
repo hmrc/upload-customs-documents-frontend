@@ -25,30 +25,32 @@ object ViewHelpers {
   /** Key of the prefix to the page's title when the form has errors. */
   val errorBrowserTitlePrefixKey = "error.browser.title.prefix"
 
-  def pageTitle(key: String, args: Any*)(implicit
-    messages: Messages,
-    content: CustomizedServiceContent = CustomizedServiceContent()
-  ): Option[String] =
+  def pageTitle(
+    key: String,
+    args: Any*
+  )(implicit messages: Messages, content: CustomizedServiceContent): Option[String] =
     content.title.orElse(Some(messages(key, args: _*)))
 
-  def pageTitleWithErrors(key: String, hasErrors: Boolean, args: Any*)(implicit
-    messages: Messages,
-    content: CustomizedServiceContent = CustomizedServiceContent()
-  ): Option[String] =
-    pageTitle(key, args: _*).map(title =>
+  def pageTitleWithErrors(
+    key: String,
+    hasErrors: Boolean,
+    args: Any*
+  )(implicit messages: Messages, content: CustomizedServiceContent): Option[String] =
+    pageTitle(key, args: _*).map { title =>
       if (hasErrors) messages(errorBrowserTitlePrefixKey) + " " + title
       else title
-    )
+    }
 
-  def pageWithFormTitle(key: String, form: Form[_], args: Any*)(implicit
-    messages: Messages,
-    content: CustomizedServiceContent = CustomizedServiceContent()
-  ): Option[String] =
+  def pageWithFormTitle(
+    key: String,
+    form: Form[_],
+    args: Any*
+  )(implicit messages: Messages, content: CustomizedServiceContent): Option[String] =
     pageTitleWithErrors(key, form.hasErrors, args: _*)
 
   def pageHeading(
     key: String
-  )(implicit messages: Messages, content: CustomizedServiceContent = CustomizedServiceContent()): String =
+  )(implicit messages: Messages, content: CustomizedServiceContent): String =
     content.title.getOrElse(messages(key))
 
 }

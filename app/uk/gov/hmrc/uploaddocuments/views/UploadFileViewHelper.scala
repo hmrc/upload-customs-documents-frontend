@@ -16,68 +16,51 @@
 
 package uk.gov.hmrc.uploaddocuments.views
 
-import javax.inject.Singleton
-import uk.gov.hmrc.uploaddocuments.models.FileUploadError
 import play.api.data.FormError
-import uk.gov.hmrc.uploaddocuments.models.FileTransmissionFailed
-import uk.gov.hmrc.uploaddocuments.models.FileVerificationFailed
-import uk.gov.hmrc.uploaddocuments.models.S3UploadError
-import uk.gov.hmrc.uploaddocuments.models.UpscanNotification
-import com.google.inject.Inject
-import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
-import uk.gov.hmrc.uploaddocuments.models.DuplicateFileUpload
-import uk.gov.hmrc.uploaddocuments.models.FileVerificationStatus
-import uk.gov.hmrc.uploaddocuments.models.FileUpload
-import play.api.mvc.Call
-import play.api.libs.json.Json
 import play.api.i18n.Messages
+import play.api.libs.json.Json
+import play.api.mvc.Call
+import uk.gov.hmrc.uploaddocuments.models._
 
-@Singleton
-class UploadFileViewHelper @Inject() (appConfig: AppConfig) {
+object UploadFileViewHelper {
 
   def initialScriptStateFrom(
     initialFileUploads: Seq[FileUpload],
     previewFile: (String, String) => Call,
     maximumFileSizeBytes: Long,
     allowedFileTypesHint: String
-  )(implicit
-    messages: Messages
-  ): String =
-    Json.stringify(
-      Json.toJson(
-        initialFileUploads.map(file =>
-          FileVerificationStatus(file, this, previewFile, (maximumFileSizeBytes / (1024 * 1024)), allowedFileTypesHint)
-        )
-      )
-    )
+  )(implicit messages: Messages): String = {
+    val fileVerificationStatuses = initialFileUploads.map(file =>
+      FileVerificationStatus(file, previewFile, maximumFileSizeBytes, allowedFileTypesHint))
+    Json.stringify(Json.toJson(fileVerificationStatuses))
+  }
 
-  def toFormError(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String): FormError =
-    error match {
-      case FileTransmissionFailed(error) =>
-        FormError("file", Seq(toMessageKey(error)), Seq((maximumFileSizeBytes / (1024 * 1024)), allowedFileTypesHint))
+  def toFormError(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(
+    implicit messages: Messages): FormError =
+    FormError("file", Seq(toMessage(error, maximumFileSizeBytes, allowedFileTypesHint)))
 
-      case FileVerificationFailed(details) =>
-        FormError("file", Seq(toMessageKey(details)), Seq((maximumFileSizeBytes / (1024 * 1024)), allowedFileTypesHint))
+  def toMessage(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(
+    implicit messages: Messages): String = error match {
+    case FileTransmissionFailed(error) =>
+      messages(UploadFileViewHelper.toMessageKey(error), maximumFileSizeBytes / (1024 * 1024), allowedFileTypesHint)
+    case FileVerificationFailed(details) =>
+      messages(UploadFileViewHelper.toMessageKey(details), maximumFileSizeBytes / (1024 * 1024), allowedFileTypesHint)
+    case _: DuplicateFileUpload => messages(duplicateFileMessageKey)
+  }
 
-      case DuplicateFileUpload(checksum, existingFileName, duplicateFileName) =>
-        FormError("file", Seq(duplicateFileMessageKey))
-    }
+  def toMessageKey(error: S3UploadError): String = error.errorCode match {
+    case "400" | "InvalidArgument" => "error.file-upload.required"
+    case "InternalError"           => "error.file-upload.try-again"
+    case "EntityTooLarge"          => "error.file-upload.invalid-size-large"
+    case "EntityTooSmall"          => "error.file-upload.invalid-size-small"
+    case _                         => "error.file-upload.unknown"
+  }
 
-  def toMessageKey(error: S3UploadError): String =
-    error.errorCode match {
-      case "400" | "InvalidArgument" => "error.file-upload.required"
-      case "InternalError"           => "error.file-upload.try-again"
-      case "EntityTooLarge"          => "error.file-upload.invalid-size-large"
-      case "EntityTooSmall"          => "error.file-upload.invalid-size-small"
-      case _                         => "error.file-upload.unknown"
-    }
-
-  def toMessageKey(details: UpscanNotification.FailureDetails): String =
-    details.failureReason match {
-      case UpscanNotification.QUARANTINE => "error.file-upload.quarantine"
-      case UpscanNotification.REJECTED   => "error.file-upload.invalid-type"
-      case UpscanNotification.UNKNOWN    => "error.file-upload.unknown"
-    }
+  def toMessageKey(details: UpscanNotification.FailureDetails): String = details.failureReason match {
+    case UpscanNotification.QUARANTINE => "error.file-upload.quarantine"
+    case UpscanNotification.REJECTED   => "error.file-upload.invalid-type"
+    case UpscanNotification.UNKNOWN    => "error.file-upload.unknown"
+  }
 
   val duplicateFileMessageKey: String = "error.file-upload.duplicate"
 }

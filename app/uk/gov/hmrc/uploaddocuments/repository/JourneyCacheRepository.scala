@@ -16,13 +16,14 @@
 
 package uk.gov.hmrc.uploaddocuments.repository
 
-import uk.gov.hmrc.mongo.cache.{CacheItem, DataKey}
+import uk.gov.hmrc.mongo.cache.DataKey
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploadInitializationRequest, FileUploads}
+import uk.gov.hmrc.uploaddocuments.controllers.BaseController
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
 class JourneyCacheRepository @Inject()(
@@ -31,15 +32,15 @@ class JourneyCacheRepository @Inject()(
   appConfig: AppConfig
 )(implicit ec: ExecutionContext)
     extends CacheRepository(
-      mongoComponent = mongoComponent,
-      collectionName = "upload-customs-documents-journeys",
-      ttl = appConfig.mongoSessionExpiration,
+      mongoComponent   = mongoComponent,
+      collectionName   = "upload-customs-documents-journeys",
+      ttl              = appConfig.mongoSessionExpiration,
       timestampSupport = timestampSupport
-    )
+    ){}
 
 object JourneyCacheRepository {
   object DataKeys {
-    val journeyContext = DataKey[FileUploadContext]("journeyConfig")
-    val uploadedFiles = DataKey[FileUploads]("uploadedFiles")
+    val journeyContext: DataKey[FileUploadContext] = DataKey[FileUploadContext]("journeyConfig")
+    val uploadedFiles: DataKey[FileUploads]        = DataKey[FileUploads]("uploadedFiles")
   }
 }

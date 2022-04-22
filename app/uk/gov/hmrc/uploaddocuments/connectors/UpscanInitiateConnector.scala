@@ -30,12 +30,12 @@ import scala.concurrent.{ExecutionContext, Future}
 /** Connects to the upscan-initiate service API.
   */
 @Singleton
-class UpscanInitiateConnector @Inject() (appConfig: AppConfig, http: HttpGet with HttpPost, metrics: Metrics)
+class UpscanInitiateConnector @Inject()(appConfig: AppConfig, http: HttpGet with HttpPost, metrics: Metrics)
     extends HttpAPIMonitor {
 
-  val baseUrl: String = appConfig.upscanInitiateBaseUrl
+  val baseUrl: String      = appConfig.upscanInitiateBaseUrl
   val upscanInitiatev2Path = "/upscan/v2/initiate"
-  val userAgent = "upload-customs-documents-frontend"
+  val userAgent            = "upload-customs-documents-frontend"
 
   override val kenshooRegistry: MetricRegistry = metrics.defaultRegistry
 
@@ -48,13 +48,11 @@ class UpscanInitiateConnector @Inject() (appConfig: AppConfig, http: HttpGet wit
         .POST[UpscanInitiateRequest, UpscanInitiateResponse](
           new URL(baseUrl + upscanInitiatev2Path).toExternalForm,
           request,
-          Seq("User-Agent" -> hostUserAgent)
-        )
-        .recoverWith { case e: Throwable =>
-          Future.failed(UpscanInitiateError(e))
+          Seq("User-Agent" -> hostUserAgent))
+        .recoverWith {
+          case e: Throwable => Future.failed(UpscanInitiateError(e))
         }
     }
-
 }
 
 case class UpscanInitiateError(e: Throwable) extends RuntimeException(e)

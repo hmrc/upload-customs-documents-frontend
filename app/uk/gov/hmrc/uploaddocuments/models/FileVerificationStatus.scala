@@ -24,77 +24,47 @@ import uk.gov.hmrc.uploaddocuments.views.UploadFileViewHelper
 case class FileVerificationStatus(
   reference: String,
   fileStatus: String,
-  fileMimeType: Option[String] = None,
-  fileName: Option[String] = None,
-  fileSize: Option[Int] = None,
-  previewUrl: Option[String] = None,
-  errorMessage: Option[String] = None,
+  fileMimeType: Option[String]         = None,
+  fileName: Option[String]             = None,
+  fileSize: Option[Int]                = None,
+  previewUrl: Option[String]           = None,
+  errorMessage: Option[String]         = None,
   uploadRequest: Option[UploadRequest] = None,
-  description: Option[String] = None
+  description: Option[String]          = None
 )
 
 object FileVerificationStatus {
 
   def apply(
     fileUpload: FileUpload,
-    uploadFileViewHelper: UploadFileViewHelper,
     filePreviewUrl: (String, String) => Call,
     maximumFileSizeBytes: Long,
     allowedFileTypesHint: String
-  )(implicit
-    messages: Messages
-  ): FileVerificationStatus =
+  )(implicit messages: Messages): FileVerificationStatus = {
+    val errorMessage: ErroredFileUpload => String =
+      file => UploadFileViewHelper.toMessage(FileUploadError(file), maximumFileSizeBytes, allowedFileTypesHint)
+
     fileUpload match {
       case f: FileUpload.Initiated =>
         FileVerificationStatus(fileUpload.reference, "NOT_UPLOADED", uploadRequest = f.uploadRequest)
-
-      case f: FileUpload.Posted =>
-        FileVerificationStatus(fileUpload.reference, "WAITING")
-
+      case _: FileUpload.Posted => FileVerificationStatus(fileUpload.reference, "WAITING")
       case f: FileUpload.Accepted =>
         FileVerificationStatus(
-          fileUpload.reference,
+          f.reference,
           "ACCEPTED",
           fileMimeType = Some(f.fileMimeType),
-          fileName = Some(f.fileName),
-          fileSize = Some(f.fileSize),
-          previewUrl = Some(s"${filePreviewUrl(f.reference, f.fileName).url}"),
-          description = f.safeDescription
+          fileName     = Some(f.fileName),
+          fileSize     = Some(f.fileSize),
+          previewUrl   = Some(s"${filePreviewUrl(f.reference, f.fileName).url}"),
+          description  = f.safeDescription
         )
-
       case f: FileUpload.Failed =>
-        FileVerificationStatus(
-          fileUpload.reference,
-          "FAILED",
-          errorMessage = Some(
-            messages(
-              uploadFileViewHelper.toMessageKey(f.details),
-              (maximumFileSizeBytes / (1024 * 1024)),
-              allowedFileTypesHint
-            )
-          )
-        )
-
+        FileVerificationStatus(fileUpload.reference, "FAILED", errorMessage = Some(errorMessage(f)))
       case f: FileUpload.Rejected =>
-        FileVerificationStatus(
-          fileUpload.reference,
-          "REJECTED",
-          errorMessage = Some(
-            messages(
-              uploadFileViewHelper.toMessageKey(f.details),
-              (maximumFileSizeBytes / (1024 * 1024)),
-              allowedFileTypesHint
-            )
-          )
-        )
-
+        FileVerificationStatus(fileUpload.reference, "REJECTED", errorMessage = Some(errorMessage(f)))
       case f: FileUpload.Duplicate =>
-        FileVerificationStatus(
-          fileUpload.reference,
-          "DUPLICATE",
-          errorMessage = Some(messages(uploadFileViewHelper.duplicateFileMessageKey))
-        )
+        FileVerificationStatus(fileUpload.reference, "DUPLICATE", errorMessage = Some(errorMessage(f)))
     }
-
+  }
   implicit val formats: Format[FileVerificationStatus] = Json.format[FileVerificationStatus]
 }

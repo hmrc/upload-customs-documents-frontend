@@ -24,15 +24,14 @@ import uk.gov.hmrc.uploaddocuments.models.EnumerationFormats
 
 trait CheckboxItemsHelper {
 
-  def checkboxItems[A: EnumerationFormats](formName: String, fieldName: String, values: Seq[A], form: Form[_])(implicit
-    messages: Messages
-  ): Seq[CheckboxItem] =
+  def checkboxItems[A: EnumerationFormats](formName: String, fieldName: String, values: Seq[A], form: Form[_])(
+    implicit messages: Messages): Seq[CheckboxItem] =
     values
       .map(implicitly[EnumerationFormats[A]].keyOf)
       .collect { case Some(k) => k }
       .map { key =>
         CheckboxItem(
-          value = key,
+          value   = key,
           content = Text(messages(s"form.$formName.$fieldName.$key")),
           checked = form(fieldName).value.contains(key)
         )

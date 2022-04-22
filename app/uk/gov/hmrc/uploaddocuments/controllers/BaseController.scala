@@ -35,7 +35,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class BaseControllerComponents @Inject() (
+class BaseControllerComponents @Inject()(
   val appConfig: AppConfig,
   val authConnector: FrontendAuthConnector,
   val environment: Environment,
@@ -47,74 +47,55 @@ class BaseControllerComponents @Inject() (
 abstract class BaseController(
   val components: BaseControllerComponents
 ) extends MessagesBaseController with Utf8MimeTypes with WithJsonBody with I18nSupport with AuthActions {
+  type JourneyId = String
 
   final val COOKIE_JSENABLED = "jsenabled"
 
-  final def config: Configuration = components.configuration
-  final def env: Environment = components.environment
+  final def config: Configuration        = components.configuration
+  final def env: Environment             = components.environment
   final def authConnector: AuthConnector = components.authConnector
+
   final protected def controllerComponents: MessagesControllerComponents = components.messagesControllerComponents
 
-  implicit class FutureOps[A](value: A) {
-    def asFuture: Future[A] = Future.successful(value)
-  }
-
-  private val journeyIdPathParamRegex = ".*?/journey/([a-fA-F0-9]+?)/.*".r
-
-  final def currentJourneyId(implicit rh: RequestHeader): String = journeyId.get
-
-  final def journeyId(implicit rh: RequestHeader): Option[String] =
-    journeyId(decodeHeaderCarrier(rh), rh)
-
-  private def journeyId(hc: HeaderCarrier, rh: RequestHeader): Option[String] =
-    (rh.path match {
-      case journeyIdPathParamRegex(id) => Some(id)
-      case _                           => None
-    })
-      .orElse(hc.sessionId.map(_.value).map(SHA256.compute))
+  final def journeyIdFromSession(implicit rh: RequestHeader): Option[JourneyId] =
+    decodeHeaderCarrier(rh).sessionId.map(_.value).map(SHA256.compute)
 
   final implicit def context(implicit rh: RequestHeader): HeaderCarrier = {
     val hc = decodeHeaderCarrier(rh)
-    journeyId(hc, rh)
-      .map(jid => hc.withExtraHeaders("FileUploadJourney" -> jid))
-      .getOrElse(hc)
+    journeyIdFromSession.fold(hc)(jid => hc.withExtraHeaders("FileUploadJourney" -> jid))
   }
 
   private def decodeHeaderCarrier(rh: RequestHeader): HeaderCarrier =
     HeaderCarrierConverter.fromRequestAndSession(rh, rh.session)
 
   final def whenInSession(
-    body: => Future[Result]
+    body: JourneyId => Future[Result]
   )(implicit request: Request[_]): Future[Result] =
-    journeyId match {
-      case None => Future.successful(Redirect(components.appConfig.govukStartUrl))
-      case _    => body
-    }
+    journeyIdFromSession.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
 
   final def withJourneyContext(
     body: FileUploadContext => Future[Result]
-  )(implicit request: Request[_], ec: ExecutionContext): Future[Result] =
-    components.newJourneyCacheRepository.get(currentJourneyId)(DataKeys.journeyContext) flatMap {
-      case Some(journey) => body(journey)
-      case _             => Future.successful(Redirect(components.appConfig.govukStartUrl))
+  )(implicit ec: ExecutionContext, journeyId: JourneyId): Future[Result] =
+    components.newJourneyCacheRepository.get(journeyId)(DataKeys.journeyContext) flatMap {
+      _.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
     }
 
   final def withUploadedFiles(
     body: FileUploads => Future[Result]
-  )(implicit request: Request[_], ec: ExecutionContext): Future[Result] =
-    components.newJourneyCacheRepository.get(currentJourneyId)(DataKeys.uploadedFiles) flatMap {
-      case Some(files) => body(files)
-      case _           => Future.successful(Redirect(components.appConfig.govukStartUrl))
+  )(implicit ec: ExecutionContext, journeyId: JourneyId): Future[Result] =
+    components.newJourneyCacheRepository.get(journeyId)(DataKeys.uploadedFiles) flatMap {
+      _.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
     }
 
   implicit class ResultExtensions(r: Result) {
 
     //TODO: Not really sure what the flashing does - this was lifted from the Router class...
-    def withFormError(formWithErrors: Form[_]) = r.flashing(Flash {
-      val data = formWithErrors.data
-      // dummy parameter required if empty data
-      if (data.isEmpty) Map("dummy" -> "") else data
-    })
+    def withFormError(formWithErrors: Form[_]) =
+      r.flashing(Flash {
+        val data = formWithErrors.data
+        // dummy parameter required if empty data
+        if (data.isEmpty) Map("dummy" -> "") else data
+      })
   }
 
   final def preferUploadMultipleFiles(implicit rh: RequestHeader): Boolean =

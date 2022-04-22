@@ -24,16 +24,14 @@ import uk.gov.hmrc.uploaddocuments.models.EnumerationFormats
 
 trait RadioItemsHelper {
 
-  def radioItems[A: EnumerationFormats](formName: String, fieldName: String, values: Seq[A], form: Form[_])(implicit
-    messages: Messages
-  ): Seq[RadioItem] =
+  def radioItems[A: EnumerationFormats](formName: String, fieldName: String, values: Seq[A], form: Form[_])(
+    implicit messages: Messages): Seq[RadioItem] =
     values
-      .map(implicitly[EnumerationFormats[A]].keyOf)
-      .collect { case Some(k) => k }
+      .flatMap(implicitly[EnumerationFormats[A]].keyOf)
       .map { key =>
         RadioItem(
-          value = Some(key),
-          content = Text(messages(s"form.${if (formName.isEmpty()) "" else s"$formName."}$fieldName.$key")),
+          value   = Some(key),
+          content = Text(messages(s"form.${if (formName.nonEmpty) s"$formName."}$fieldName.$key")),
           checked = form(fieldName).value.contains(key)
         )
       }

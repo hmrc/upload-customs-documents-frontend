@@ -27,18 +27,20 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class RemoveController @Inject()(fileUploadResultPushConnector: FileUploadResultPushConnector,
-                                 components: BaseControllerComponents)
-                                (implicit ec: ExecutionContext) extends BaseController(components) with UpscanRequestSupport {
+class RemoveController @Inject()(
+  fileUploadResultPushConnector: FileUploadResultPushConnector,
+  components: BaseControllerComponents
+)(implicit ec: ExecutionContext)
+    extends BaseController(components) with UpscanRequestSupport {
 
   // GET /uploaded/:reference/remove
   final def removeFileUploadByReference(reference: String): Action[AnyContent] =
     Action.async { implicit request =>
-      whenInSession {
+      whenInSession { implicit journeyId =>
         whenAuthenticated {
           withJourneyContext { journeyContext =>
             withUploadedFiles { files =>
-              removeFile(files, reference, currentJourneyId, journeyContext).map {
+              removeFile(files, reference, journeyId, journeyContext).map {
                 case (Left(_), _) => InternalServerError
                 case (Right(_), updatedFilesWithFileRemoved) =>
                   if (updatedFilesWithFileRemoved.isEmpty) {
@@ -56,11 +58,11 @@ class RemoveController @Inject()(fileUploadResultPushConnector: FileUploadResult
   // POST /uploaded/:reference/remove
   final def removeFileUploadByReferenceAsync(reference: String): Action[AnyContent] =
     Action.async { implicit request =>
-      whenInSession {
+      whenInSession { implicit journeyId =>
         whenAuthenticated {
           withJourneyContext { journeyContext =>
             withUploadedFiles { files =>
-              removeFile(files, reference, currentJourneyId, journeyContext).map { _ =>
+              removeFile(files, reference, journeyId, journeyContext).map { _ =>
                 NoContent
               }
             }
@@ -69,13 +71,12 @@ class RemoveController @Inject()(fileUploadResultPushConnector: FileUploadResult
       }
     }
 
-  def removeFile(files: FileUploads, reference: String, journeyId: String, journeyContext: FileUploadContext)
-                (implicit hc: HeaderCarrier): Future[(Response, FileUploads)] = {
+  def removeFile(files: FileUploads, reference: String, journeyId: String, journeyContext: FileUploadContext)(
+    implicit hc: HeaderCarrier): Future[(Response, FileUploads)] = {
     val updatedFiles = files.copy(files = files.files.filterNot(_.reference == reference))
     for {
       _ <- components.newJourneyCacheRepository.put(journeyId)(DataKeys.uploadedFiles, updatedFiles)
-      result <-
-        fileUploadResultPushConnector.push(FileUploadResultPushConnector.Request.from(journeyContext, updatedFiles))
+      result <- fileUploadResultPushConnector.push(FileUploadResultPushConnector.Request(journeyContext, updatedFiles))
     } yield (result, updatedFiles)
   }
 }

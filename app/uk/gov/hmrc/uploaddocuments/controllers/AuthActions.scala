@@ -36,18 +36,14 @@ trait AuthActions extends AuthorisedFunctions with AuthRedirects {
   protected def authorisedWithEnrolment[A](serviceName: String, identifierKey: String)(
     body: ((Option[String], Option[String])) => Future[Result]
   )(implicit request: Request[A], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] =
-    authorised(
-      Enrolment(serviceName)
-        and AuthProviders(GovernmentGateway)
-    )
-      .retrieve(credentials and authorisedEnrolments) { case credentials ~ enrolments =>
-        val id = for {
-          enrolment  <- enrolments.getEnrolment(serviceName)
-          identifier <- enrolment.getIdentifier(identifierKey)
-        } yield identifier.value
-
-        id.map(x => body((credentials.map(_.providerId), Some(x))))
-          .getOrElse(throw InsufficientEnrolments())
+    authorised(Enrolment(serviceName) and AuthProviders(GovernmentGateway))
+      .retrieve(credentials and authorisedEnrolments) {
+        case credentials ~ enrolments =>
+          val id = for {
+            enrolment  <- enrolments.getEnrolment(serviceName)
+            identifier <- enrolment.getIdentifier(identifierKey)
+          } yield body((credentials.map(_.providerId), Some(identifier.value)))
+          id.getOrElse(throw InsufficientEnrolments())
       }
       .recover(handleFailure)
 
@@ -63,9 +59,10 @@ trait AuthActions extends AuthorisedFunctions with AuthRedirects {
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result] =
     authorised(AuthProviders(GovernmentGateway, PrivilegedApplication))
       .retrieve(credentials)(credentials => body((credentials.map(_.providerId), None)))
-      .recover { case e: AuthorisationException =>
-        Logger(getClass).warn(s"Access forbidden because of ${e.getMessage()}")
-        Results.Forbidden
+      .recover {
+        case e: AuthorisationException =>
+          Logger(getClass).warn(s"Access forbidden because of ${e.getMessage}")
+          Results.Forbidden
       }
 
   protected def whenAuthenticated[A](
@@ -81,14 +78,15 @@ trait AuthActions extends AuthorisedFunctions with AuthRedirects {
     implicit val hc = HeaderCarrierConverter.fromRequest(request) // required to process Session-ID from the cookie
     authorised(AuthProviders(GovernmentGateway, PrivilegedApplication))
       .retrieve(credentials)(_ => body)
-      .recover { case e: AuthorisationException =>
-        Logger(getClass).warn(s"Access forbidden because of ${e.getMessage()}")
-        Results.Forbidden
+      .recover {
+        case e: AuthorisationException =>
+          Logger(getClass).warn(s"Access forbidden because of ${e.getMessage}")
+          Results.Forbidden
       }
   }
 
   protected def handleFailure(implicit request: Request[_]): PartialFunction[Throwable, Result] = {
-    case e: AuthorisationException =>
+    case _: AuthorisationException =>
       val continueUrl = CallOps.localFriendlyUrl(env, config)(request.uri, request.host)
       toGGLogin(continueUrl)
   }

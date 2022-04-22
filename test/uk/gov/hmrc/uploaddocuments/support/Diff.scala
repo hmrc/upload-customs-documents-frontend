@@ -36,10 +36,10 @@ object Diff {
     * @return
     */
   private def prettyPrint(a: Any, indentSize: Int = 2, maxElementWidth: Int = 30, depth: Int = 0): String = {
-    val indent = " " * depth * indentSize
+    val indent      = " " * depth * indentSize
     val fieldIndent = indent + (" " * indentSize)
-    val thisDepth = prettyPrint(_: Any, indentSize, maxElementWidth, depth)
-    val nextDepth = prettyPrint(_: Any, indentSize, maxElementWidth, depth + 1)
+    val thisDepth   = prettyPrint(_: Any, indentSize, maxElementWidth, depth)
+    val nextDepth   = prettyPrint(_: Any, indentSize, maxElementWidth, depth + 1)
     a match {
       // Make Strings look similar to their literal form.
       case s: String =>
@@ -63,7 +63,7 @@ object Diff {
       case p: Product =>
         val prefix = p.productPrefix
         // We'll use reflection to get the constructor arg names and values.
-        val cls = p.getClass
+        val cls    = p.getClass
         val fields = cls.getDeclaredFields.filterNot(_.isSynthetic).map(_.getName)
         val values = p.productIterator.toSeq
         // If we weren't able to match up fields/values, fall back to toString.

@@ -48,22 +48,22 @@ trait Retries {
             after(delay, actorSystem.scheduler)(loop(remainingIntervals.tail)(mdcData)(block))
           } else {
             Future.successful(result)
-          }
-        )
-        .recoverWith { case e: Throwable =>
-          if (remainingIntervals.nonEmpty && shouldRetry(Failure(e))) {
-            val delay = remainingIntervals.head
-            Logger(getClass).warn(
-              s"Will retry [${intervals.size - remainingIntervals.size + 1}] in $delay due to ${e.getClass
-                .getName()}: ${e.getMessage()}"
-            )
-            after(delay, actorSystem.scheduler)(loop(remainingIntervals.tail)(mdcData)(block))
-          } else {
-            Logger(getClass).error(
-              s"After [${intervals.size + 1}] retries failing with ${e.getClass.getName()}: ${e.getMessage()}"
-            )
-            Future.failed(e)
-          }
+        })
+        .recoverWith {
+          case e: Throwable =>
+            if (remainingIntervals.nonEmpty && shouldRetry(Failure(e))) {
+              val delay = remainingIntervals.head
+              Logger(getClass).warn(
+                s"Will retry [${intervals.size - remainingIntervals.size + 1}] in $delay due to ${e.getClass
+                  .getName}: ${e.getMessage}"
+              )
+              after(delay, actorSystem.scheduler)(loop(remainingIntervals.tail)(mdcData)(block))
+            } else {
+              Logger(getClass).error(
+                s"After [${intervals.size + 1}] retries failing with ${e.getClass.getName}: ${e.getMessage}"
+              )
+              Future.failed(e)
+            }
         }
     loop(intervals)(Mdc.mdcData)(block)
   }

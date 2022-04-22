@@ -3,7 +3,6 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 import play.api.libs.json.{JsString, Json}
 import uk.gov.hmrc.uploaddocuments.controllers.ControllerISpecBase
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 
 import java.time.ZonedDateTime
 
@@ -35,12 +34,12 @@ class InitializeControllerISpec extends ControllerISpecBase {
               Json.toJson(
                 UploadedFile(
                   upscanReference = "jjSJKjksjJSJ",
-                  downloadUrl = "https://aws.amzon.com/dummy.jpg",
+                  downloadUrl     = "https://aws.amzon.com/dummy.jpg",
                   uploadTimestamp = ZonedDateTime.parse("2007-12-03T10:15:30+01:00"),
-                  checksum = "akskakslaklskalkskalksl",
-                  fileName = "dummy.jpg",
-                  fileMimeType = "image/jpg",
-                  fileSize = 1024
+                  checksum        = "akskakslaklskalkskalksl",
+                  fileName        = "dummy.jpg",
+                  fileMimeType    = "image/jpg",
+                  fileSize        = 1024
                 )
               )
             )
@@ -73,13 +72,13 @@ class InitializeControllerISpec extends ControllerISpecBase {
         val preexistingUploads = Seq(
           UploadedFile(
             upscanReference = "jjSJKjksjJSJ",
-            downloadUrl = "https://aws.amzon.com/dummy.jpg",
+            downloadUrl     = "https://aws.amzon.com/dummy.jpg",
             uploadTimestamp = ZonedDateTime.parse("2007-12-03T10:15:30+01:00"),
-            checksum = "akskakslaklskalkskalksl",
-            fileName = "dummy.jpg",
-            fileMimeType = "image/jpg",
-            fileSize = 1024,
-            cargo = Some(Json.obj("foo" -> JsString("bar")))
+            checksum        = "akskakslaklskalkskalksl",
+            fileName        = "dummy.jpg",
+            fileMimeType    = "image/jpg",
+            fileSize        = 1024,
+            cargo           = Some(Json.obj("foo" -> JsString("bar")))
           )
         )
 
@@ -106,7 +105,7 @@ class InitializeControllerISpec extends ControllerISpecBase {
         )
 
         getFileUploads() shouldBe Some(
-          FileUploads(preexistingUploads.map(_.toFileUpload))
+          FileUploads(preexistingUploads.map(FileUpload.apply))
         )
       }
     }

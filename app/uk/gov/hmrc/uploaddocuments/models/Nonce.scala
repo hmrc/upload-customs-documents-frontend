@@ -32,21 +32,19 @@ sealed trait Nonce {
 
   /** Encodes nonce as an url-safe base64 string */
   final override def toString: String =
-    new String(Base64.getUrlEncoder().encode(Nonce.intToByteArray(value)), StandardCharsets.UTF_8)
+    new String(Base64.getUrlEncoder.encode(Nonce.intToByteArray(value)), StandardCharsets.UTF_8)
 }
 
 object Nonce {
 
-  final def random: Nonce =
-    toNonce(Random.nextInt())
+  final def random: Nonce = Strict(Random.nextInt())
 
-  final def apply(value: Int): Nonce =
-    toNonce(value)
+  final def apply(value: Int): Nonce = Strict(value)
 
   /** Decodes nonce from an url-safe base64 string */
   final def apply(string: String): Nonce =
-    Try[Nonce](Nonce.byteArrayToInt(Base64.getUrlDecoder.decode(string.getBytes(StandardCharsets.UTF_8))))
-      .getOrElse(Nonce.random)
+    Try(Nonce.byteArrayToInt(Base64.getUrlDecoder.decode(string.getBytes(StandardCharsets.UTF_8))))
+      .fold(_ => Nonce.random, Nonce.apply)
 
   object Any extends Nonce {
     final val value: Int = 0
@@ -54,19 +52,17 @@ object Nonce {
       obj.isInstanceOf[Nonce]
   }
 
-  final class Strict(val value: Int) extends Nonce {
-    final override def equals(obj: scala.Any): Boolean =
-      if (obj.isInstanceOf[Any.type]) true
-      else if (obj.isInstanceOf[Nonce])
-        obj.asInstanceOf[Nonce].value == value
-      else false
+  final case class Strict(value: Int) extends Nonce {
+    override def equals(obj: scala.Any): Boolean =
+      obj match {
+        case strict: Strict => strict.value == value
+        case Any            => true
+        case _              => false
+      }
   }
 
   implicit final val formats: Format[Nonce] =
     SimpleDecimalFormat[Nonce](s => Nonce(s.toIntExact), n => BigDecimal(n.value))
-
-  implicit final def toNonce(value: Int): Nonce =
-    new Strict(value)
 
   final def intToByteArray(value: Int): Array[Byte] =
     Array[Byte](

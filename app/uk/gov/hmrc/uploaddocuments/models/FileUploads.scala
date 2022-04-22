@@ -17,116 +17,77 @@
 package uk.gov.hmrc.uploaddocuments.models
 
 import play.api.libs.json.{Format, JsValue, Json}
+import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel.minStatusOverwriteGapInMilliseconds
 import uk.gov.hmrc.uploaddocuments.support.HtmlCleaner
 
 import java.time.ZonedDateTime
 import scala.util.matching.Regex
 
 /** Container for file upload status tracking. */
-case class FileUploads(
-  files: Seq[FileUpload] = Seq.empty
-) {
+case class FileUploads(files: Seq[FileUpload] = Seq.empty) {
 
-  def isEmpty: Boolean = acceptedCount == 0
-  def nonEmpty: Boolean = !isEmpty
-  def isSingle: Boolean = acceptedCount == 1
+  lazy val isEmpty: Boolean  = acceptedCount == 0
+  lazy val isSingle: Boolean = acceptedCount == 1
 
-  def acceptedCount: Int =
-    files
-      .count { case _: FileUpload.Accepted => true; case _ => false }
+  lazy val acceptedCount: Int  = files.count { case _: FileUpload.Accepted  => true; case _ => false }
+  lazy val initiatedCount: Int = files.count { case _: FileUpload.Initiated => true; case _ => false }
+  lazy val postedCount: Int    = files.count { case _: FileUpload.Posted    => true; case _ => false }
 
-  def initiatedCount: Int =
-    files
-      .count {
-        case _: FileUpload.Initiated => true
-        case _                       => false
-      }
+  lazy val initiatedOrAcceptedCount: Int = acceptedCount + initiatedCount + postedCount
 
-  def initiatedOrAcceptedCount: Int =
-    files
-      .count {
-        case _: FileUpload.Accepted  => true
-        case _: FileUpload.Initiated => true
-        case _: FileUpload.Posted    => true
-        case _                       => false
-      }
-
-  def findUploadWithUpscanReference(reference: String): Option[FileUpload] =
-    files.find(_.reference == reference)
-
-  def toUploadedFiles: Seq[UploadedFile] =
-    files.collect { case f: FileUpload.Accepted =>
-      UploadedFile(
-        f.reference,
-        f.url,
-        f.uploadTimestamp,
-        f.checksum,
-        f.fileName,
-        f.fileMimeType,
-        f.fileSize,
-        f.cargo,
-        f.safeDescription
-      )
-    }
+  lazy val toUploadedFiles: Seq[UploadedFile] =
+    files.flatMap(UploadedFile(_))
 
   def +(file: FileUpload): FileUploads = copy(files = files :+ file)
 
-  def hasUploadId(uploadId: String): Boolean =
-    files.exists {
-      case FileUpload.Initiated(_, _, _, _, Some(`uploadId`)) => true
-      case _                                                  => false
-    }
-
-  def findReferenceAndUploadRequestForUploadId(uploadId: String): Option[(String, UploadRequest)] =
-    files.collectFirst { case FileUpload.Initiated(_, _, reference, Some(uploadRequest), Some(`uploadId`)) =>
-      (reference, uploadRequest)
-    }
-
-  def filterOutInitiated: FileUploads =
-    copy(files = files.filter {
-      case _: FileUpload.Initiated => false
-      case _                       => true
-    })
-
-  def onlyAccepted: FileUploads =
-    copy(files = files.filter {
-      case _: FileUpload.Accepted => true
-      case _                      => false
-    })
+  lazy val onlyAccepted: FileUploads =
+    copy(files = files.filter { case _: FileUpload.Accepted => true; case _ => false })
 
   def hasFileWithDescription(description: String): Boolean =
-    files.exists {
-      case a: FileUpload.Accepted => a.safeDescription.contains(description)
-      case _                      => false
-    }
+    files.exists { case a: FileUpload.Accepted => a.safeDescription.contains(description); case _ => false }
 
-  def erroredFileUpload: Option[FileUpload] = files.find {
-    case _: ErroredFileUpload => true; case _ => false
-  }
+  lazy val erroredFileUpload: Option[FileUpload] =
+    files.find { case _: ErroredFileUpload => true; case _ => false }
 
 }
 
 object FileUploads {
   implicit val formats: Format[FileUploads] = Json.format[FileUploads]
+  def apply(initRequest: FileUploadInitializationRequest): FileUploads =
+    FileUploads(initRequest.existingFiles.take(initRequest.config.maximumNumberOfFiles).map(FileUpload.apply))
 }
 
 /** File upload status */
 sealed trait FileUpload {
-  def nonce: Nonce
-  def timestamp: Timestamp
-  def reference: String
-  def isReady: Boolean
-  final def isNotReady: Boolean = !isReady
-  def checksumOpt: Option[String] = None
+  val nonce: Nonce
+  val timestamp: Timestamp
+  val reference: String
+  val isReady: Boolean
+  final def canOverwriteFileUploadStatus(now: Timestamp): Boolean =
+    !isReady || now.isAfter(timestamp, minStatusOverwriteGapInMilliseconds)
 }
 sealed trait ErroredFileUpload extends FileUpload
 
 object FileUpload extends SealedTraitFormats[FileUpload] {
 
-  final def unapply(fileUpload: FileUpload): Option[(Nonce, String, Timestamp)] =
-    Some((fileUpload.nonce.value, fileUpload.reference, fileUpload.timestamp))
+  final def unapply(fileUpload: FileUpload): Option[(Nonce, String)] = Some((fileUpload.nonce, fileUpload.reference))
 
-  final val isWindowPathHaving: Regex = "[a-zA-Z]\\:.*\\\\(.+)".r("name")
+  def apply(uploadedFile: UploadedFile): FileUpload =
+    FileUpload.Accepted(
+      nonce           = Nonce.Any,
+      timestamp       = Timestamp.Any,
+      reference       = uploadedFile.upscanReference,
+      checksum        = uploadedFile.checksum,
+      fileName        = uploadedFile.fileName,
+      fileMimeType    = uploadedFile.fileMimeType,
+      fileSize        = uploadedFile.fileSize,
+      url             = uploadedFile.downloadUrl,
+      uploadTimestamp = uploadedFile.uploadTimestamp,
+      cargo           = uploadedFile.cargo,
+      description     = uploadedFile.description
+    )
+
+  final val isWindowPathHaving: Regex = "[a-zA-Z]:.*\\\\(.+)".r("name")
 
   final def sanitizeFileName(fileName: String): String =
     fileName match {
@@ -142,9 +103,9 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
     timestamp: Timestamp,
     reference: String,
     uploadRequest: Option[UploadRequest] = None,
-    uploadId: Option[String] = None
+    uploadId: Option[String]             = None
   ) extends FileUpload {
-    override def isReady: Boolean = false
+    override val isReady: Boolean = false
   }
 
   /** Status when the file has successfully arrived to AWS S3 for verification. */
@@ -153,7 +114,7 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
     timestamp: Timestamp,
     reference: String
   ) extends FileUpload {
-    override def isReady: Boolean = false
+    override val isReady: Boolean = false
   }
 
   /** Status when file transmission has been rejected by AWS S3. */
@@ -163,7 +124,7 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
     reference: String,
     details: S3UploadError
   ) extends ErroredFileUpload {
-    override def isReady: Boolean = true
+    override val isReady: Boolean = true
   }
 
   /** Status when the file has been positively verified and is ready for further actions. */
@@ -177,15 +138,12 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
     fileName: String,
     fileMimeType: String,
     fileSize: Int,
-    cargo: Option[JsValue] = None, // data carried through, from and to host service
+    cargo: Option[JsValue]                  = None, // data carried through, from and to host service
     private val description: Option[String] = None
   ) extends FileUpload {
+    override val isReady: Boolean = true
 
-    override def isReady: Boolean = true
-    override def checksumOpt: Option[String] = Some(checksum)
-
-    final def safeDescription: Option[String] =
-      description.map(HtmlCleaner.cleanSimpleText)
+    final val safeDescription: Option[String] = description.map(HtmlCleaner.cleanSimpleText)
   }
 
   /** Status when the file has failed verification and may not be used. */
@@ -195,7 +153,7 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
     reference: String,
     details: UpscanNotification.FailureDetails
   ) extends ErroredFileUpload {
-    override def isReady: Boolean = true
+    override val isReady: Boolean = true
   }
 
   /** Status when the file is a duplicate of an existing upload. */
@@ -207,7 +165,7 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
     existingFileName: String,
     duplicateFileName: String
   ) extends ErroredFileUpload {
-    override def isReady: Boolean = true
+    override val isReady: Boolean = true
   }
 
   override val formats = Set(

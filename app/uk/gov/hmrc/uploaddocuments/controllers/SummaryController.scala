@@ -26,15 +26,17 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SummaryController @Inject()(view: SummaryView,
-                                  viewNoChoice: SummaryNoChoiceView,
-                                  components: BaseControllerComponents)
-                                 (implicit ec: ExecutionContext) extends BaseController(components) with UpscanRequestSupport {
+class SummaryController @Inject()(
+  view: SummaryView,
+  viewNoChoice: SummaryNoChoiceView,
+  components: BaseControllerComponents
+)(implicit ec: ExecutionContext)
+    extends BaseController(components) with UpscanRequestSupport {
 
   // GET /summary
   final val showSummary: Action[AnyContent] =
     Action.async { implicit request =>
-      whenInSession {
+      whenInSession { implicit journeyId =>
         whenAuthenticated {
           withJourneyContext { journeyConfig =>
             withUploadedFiles { files =>
@@ -45,46 +47,43 @@ class SummaryController @Inject()(view: SummaryView,
       }
     }
 
-  private def renderView(form: Form[Boolean],
-                         context: FileUploadContext,
-                         fileUploads: FileUploads)
-                        (implicit request: Request[_]) =
+  private def renderView(form: Form[Boolean], context: FileUploadContext, fileUploads: FileUploads)(
+    implicit request: Request[_]) =
     if (fileUploads.acceptedCount < context.config.maximumNumberOfFiles)
       view(
         maxFileUploadsNumber = context.config.maximumNumberOfFiles,
         maximumFileSizeBytes = context.config.maximumFileSizeBytes,
-        form = form,
-        fileUploads = fileUploads,
-        postAction = routes.SummaryController.submitUploadAnotherFileChoice,
-        previewFileCall = routes.PreviewController.previewFileUploadByReference,
-        removeFileCall = routes.RemoveController.removeFileUploadByReference,
-        backLink = routes.StartController.start //TODO: Back Linking needs fixing! Set to start by default for now!!!
+        form                 = form,
+        fileUploads          = fileUploads,
+        postAction           = routes.SummaryController.submitUploadAnotherFileChoice,
+        previewFileCall      = routes.PreviewController.previewFileUploadByReference,
+        removeFileCall       = routes.RemoveController.removeFileUploadByReference,
+        backLink             = routes.StartController.start // TODO: Back Linking needs fixing! Set to start by default for now!!!
       )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
     else
       viewNoChoice(
         maxFileUploadsNumber = context.config.maximumNumberOfFiles,
-        fileUploads = fileUploads,
-        postAction = routes.ContinueToHostController.continueToHost,
-        previewFileCall = routes.PreviewController.previewFileUploadByReference,
-        removeFileCall = routes.RemoveController.removeFileUploadByReference,
-        backLink = Call("GET", context.config.backlinkUrl)
+        fileUploads          = fileUploads,
+        postAction           = routes.ContinueToHostController.continueToHost,
+        previewFileCall      = routes.PreviewController.previewFileUploadByReference,
+        removeFileCall       = routes.RemoveController.removeFileUploadByReference,
+        backLink             = Call("GET", context.config.backlinkUrl)
       )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
 
   // POST /summary
   final val submitUploadAnotherFileChoice: Action[AnyContent] =
     Action.async { implicit request =>
-      whenInSession {
+      whenInSession { implicit journeyId =>
         whenAuthenticated {
           withJourneyContext { journeyContext =>
             withUploadedFiles { files =>
               Forms.YesNoChoiceForm.bindFromRequest
                 .fold(
-                  formWithErrors => Future(BadRequest(renderView(formWithErrors, journeyContext, files))),
-                  {
+                  formWithErrors => Future(BadRequest(renderView(formWithErrors, journeyContext, files))), {
                     case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
-                      Future(Redirect(routes.ChooseSingleFileController.showChooseFile))
+                      Future.successful(Redirect(routes.ChooseSingleFileController.showChooseFile))
                     case _ =>
-                      Future(Redirect(routes.ContinueToHostController.continueToHost))
+                      Future.successful(Redirect(routes.ContinueToHostController.continueToHost))
                   }
                 )
             }
