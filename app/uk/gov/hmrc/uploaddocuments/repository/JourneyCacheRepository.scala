@@ -36,7 +36,7 @@ class JourneyCacheRepository @Inject()(
       collectionName   = "upload-customs-documents-journeys",
       ttl              = appConfig.mongoSessionExpiration,
       timestampSupport = timestampSupport
-    ){}
+    )
 
 object JourneyCacheRepository {
   object DataKeys {
