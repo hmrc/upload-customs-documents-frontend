@@ -16,19 +16,15 @@
 
 package uk.gov.hmrc.uploaddocuments.services
 
-object Breadcrumbs {
+import akka.actor.Scheduler
+import akka.pattern.FutureTimeoutSupport
 
-  final def updateBreadcrumbs[A](
-    newState: A,
-    currentState: A,
-    currentBreadcrumbs: List[A],
-    isTransient: A => Boolean
-  ): List[A] =
-    if (isTransient(currentState))
-      currentBreadcrumbs
-    else if (newState.getClass == currentState.getClass)
-      currentBreadcrumbs
-    else if (currentBreadcrumbs.nonEmpty && currentBreadcrumbs.head.getClass() == newState.getClass())
-      currentBreadcrumbs.tail
-    else currentState :: currentBreadcrumbs.take(3)
+import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.{ExecutionContext, Future}
+
+object ScheduleAfter extends FutureTimeoutSupport {
+
+  /** Delay execution of the future by given miliseconds */
+  def apply[T](delayInMiliseconds: Long)(body: => Future[T])(implicit scheduler: Scheduler, ec: ExecutionContext): Future[T] =
+    after(duration = FiniteDuration(delayInMiliseconds, "ms"), using = scheduler)(body)
 }

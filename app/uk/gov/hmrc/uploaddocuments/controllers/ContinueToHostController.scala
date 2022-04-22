@@ -17,60 +17,34 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
-import uk.gov.hmrc.uploaddocuments.journeys.State
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ContinueToHostController @Inject() (
-  sessionStateService: SessionStateService,
-  router: Router,
-  renderer: Renderer,
-  components: BaseControllerComponents
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+class ContinueToHostController @Inject()(components: BaseControllerComponents)
+                                        (implicit ec: ExecutionContext) extends BaseController(components) {
 
   // GET /continue-to-host
   final val continueToHost: Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          val sessionStateUpdate =
-            JourneyModel.continueToHost
-          sessionStateService
-            .getCurrentOrUpdateSessionState[State.ContinueToHost](sessionStateUpdate)
-            .map {
-              case (continueToHost: State.ContinueToHost, breadcrumbs) =>
-                renderer.display(continueToHost, breadcrumbs, None)
-
-              case other =>
-                router.redirectTo(other)
+          withJourneyContext { journeyConfig =>
+            withUploadedFiles { files =>
+              Future(Redirect(redirectRoute(files, journeyConfig)))
             }
-            .andThen { case _ => sessionStateService.cleanBreadcrumbs }
+          }
         }
       }
     }
 
-  // POST /continue-to-host
-  final val continueWithYesNo: Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession {
-        whenAuthenticated {
-          Forms.YesNoChoiceForm.bindFromRequest
-            .fold(
-              formWithErrors => sessionStateService.currentSessionState.map(router.redirectWithForm(formWithErrors)),
-              choice => {
-                val sessionStateUpdate =
-                  JourneyModel.continueWithYesNo(choice)
-                sessionStateService
-                  .updateSessionState(sessionStateUpdate)
-                  .map(router.redirectTo)
-              }
-            )
-        }
-      }
-    }
+  private def redirectRoute(fileUploads: FileUploads, context: FileUploadContext) =
+    if (fileUploads.acceptedCount == 0)
+      context.config.getContinueWhenEmptyUrl
+    else if (fileUploads.acceptedCount >= context.config.maximumNumberOfFiles)
+      context.config.getContinueWhenFullUrl
+    else
+      context.config.continueUrl
 }

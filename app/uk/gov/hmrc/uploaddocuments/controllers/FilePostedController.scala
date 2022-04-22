@@ -16,40 +16,41 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import akka.actor.ActorSystem
 import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
+import play.mvc.Http.HeaderNames
+import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel.canOverwriteFileUploadStatus
+import uk.gov.hmrc.uploaddocuments.models.{FileUpload, Timestamp}
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
-import play.api.http.HeaderNames
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FilePostedController @Inject() (
-  sessionStateService: SessionStateService,
-  router: Router,
-  renderer: Renderer,
-  components: BaseControllerComponents,
-  actorSystem: ActorSystem
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+class FilePostedController @Inject()(components: BaseControllerComponents)
+                                    (implicit ec: ExecutionContext) extends BaseController(components) {
 
   // GET /journey/:journeyId/file-posted
   final def asyncMarkFileUploadAsPosted(journeyId: String): Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession {
-        Forms.UpscanUploadSuccessForm.bindFromRequest
-          .fold(
-            formWithErrors => sessionStateService.currentSessionState.map(router.redirectWithForm(formWithErrors)),
-            s3UploadSuccess => {
-              val sessionStateUpdate =
-                JourneyModel.markUploadAsPosted(s3UploadSuccess)
-              sessionStateService
-                .updateSessionState(sessionStateUpdate)
-                .map(renderer.acknowledgeFileUploadRedirect)
-            }
-          )
+        withUploadedFiles { files =>
+          Forms.UpscanUploadSuccessForm.bindFromRequest
+            .fold(
+              formWithErrors => Future(Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles).withFormError(formWithErrors)),
+              s3UploadSuccess => {
+                val now = Timestamp.now
+                val updatedFileUploads =
+                  files.copy(files = files.files.map {
+                    case fu@FileUpload(nonce, ref, _) if ref == s3UploadSuccess.key && canOverwriteFileUploadStatus(fu, true, now) =>
+                      FileUpload.Posted(nonce, Timestamp.now, ref)
+                    case u => u
+                  })
+                components.newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, updatedFileUploads).map { _ =>
+                  Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
+                }
+              }
+            )
+        }
       }
     }
 

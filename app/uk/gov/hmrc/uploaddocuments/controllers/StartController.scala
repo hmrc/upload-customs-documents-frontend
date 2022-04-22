@@ -17,26 +17,21 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 import uk.gov.hmrc.uploaddocuments.views.FileUploadViews
 
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class StartController @Inject() (
-  sessionStateService: SessionStateService,
-  router: Router,
-  views: FileUploadViews,
-  components: BaseControllerComponents
-) extends BaseController(components) {
+class StartController @Inject()(views: FileUploadViews,
+                                components: BaseControllerComponents) extends BaseController(components) {
 
   // GET /
   final val start: Action[AnyContent] =
     Action { implicit request =>
-      if (router.preferUploadMultipleFiles)
-        Redirect(router.showChooseMultipleFiles)
+      if (preferUploadMultipleFiles)
+        Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles)
       else
-        Ok(views.startView(router.showChooseMultipleFiles))
+        Ok(views.startView(routes.ChooseMultipleFilesController.showChooseMultipleFiles))
     }
 
 }

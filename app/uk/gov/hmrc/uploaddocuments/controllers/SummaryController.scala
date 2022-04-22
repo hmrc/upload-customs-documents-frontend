@@ -16,62 +16,79 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
-import uk.gov.hmrc.uploaddocuments.journeys.State
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
+import play.api.data.Form
+import play.api.mvc.{Action, AnyContent, Call, Request}
+import uk.gov.hmrc.uploaddocuments.controllers.Forms.YesNoChoiceForm
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
+import uk.gov.hmrc.uploaddocuments.views.html.{SummaryNoChoiceView, SummaryView}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SummaryController @Inject() (
-  sessionStateService: SessionStateService,
-  upscanInitiateConnector: UpscanInitiateConnector,
-  val router: Router,
-  renderer: Renderer,
-  components: BaseControllerComponents
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) with UpscanRequestSupport {
+class SummaryController @Inject()(view: SummaryView,
+                                  viewNoChoice: SummaryNoChoiceView,
+                                  components: BaseControllerComponents)
+                                 (implicit ec: ExecutionContext) extends BaseController(components) with UpscanRequestSupport {
 
   // GET /summary
   final val showSummary: Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          val sessionStateUpdate = JourneyModel.backToSummary
-          sessionStateService
-            .getCurrentOrUpdateSessionState[State.Summary](sessionStateUpdate)
-            .map {
-              case (summary: State.Summary, breadcrumbs) =>
-                renderer.display(summary, breadcrumbs, None)
-
-              case other =>
-                router.redirectTo(other)
+          withJourneyContext { journeyConfig =>
+            withUploadedFiles { files =>
+              Future(Ok(renderView(YesNoChoiceForm, journeyConfig, files)))
             }
+          }
         }
       }
     }
+
+  private def renderView(form: Form[Boolean],
+                         context: FileUploadContext,
+                         fileUploads: FileUploads)
+                        (implicit request: Request[_]) =
+    if (fileUploads.acceptedCount < context.config.maximumNumberOfFiles)
+      view(
+        maxFileUploadsNumber = context.config.maximumNumberOfFiles,
+        maximumFileSizeBytes = context.config.maximumFileSizeBytes,
+        form = form,
+        fileUploads = fileUploads,
+        postAction = routes.SummaryController.submitUploadAnotherFileChoice,
+        previewFileCall = routes.PreviewController.previewFileUploadByReference,
+        removeFileCall = routes.RemoveController.removeFileUploadByReference,
+        backLink = routes.StartController.start //TODO: Back Linking needs fixing! Set to start by default for now!!!
+      )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
+    else
+      viewNoChoice(
+        maxFileUploadsNumber = context.config.maximumNumberOfFiles,
+        fileUploads = fileUploads,
+        postAction = routes.ContinueToHostController.continueToHost,
+        previewFileCall = routes.PreviewController.previewFileUploadByReference,
+        removeFileCall = routes.RemoveController.removeFileUploadByReference,
+        backLink = Call("GET", context.config.backlinkUrl)
+      )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
 
   // POST /summary
   final val submitUploadAnotherFileChoice: Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          Forms.YesNoChoiceForm.bindFromRequest
-            .fold(
-              formWithErrors => sessionStateService.currentSessionState.map(router.redirectWithForm(formWithErrors)),
-              choice => {
-                val sessionStateUpdate =
-                  JourneyModel.submitedUploadAnotherFileChoice(upscanRequest(currentJourneyId))(
-                    upscanInitiateConnector.initiate(_, _)
-                  )(JourneyModel.continueToHost)(choice)
-                sessionStateService
-                  .updateSessionState(sessionStateUpdate)
-                  .map(router.redirectTo)
-              }
-            )
+          withJourneyContext { journeyContext =>
+            withUploadedFiles { files =>
+              Forms.YesNoChoiceForm.bindFromRequest
+                .fold(
+                  formWithErrors => Future(BadRequest(renderView(formWithErrors, journeyContext, files))),
+                  {
+                    case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
+                      Future(Redirect(routes.ChooseSingleFileController.showChooseFile))
+                    case _ =>
+                      Future(Redirect(routes.ContinueToHostController.continueToHost))
+                  }
+                )
+            }
+          }
         }
       }
     }

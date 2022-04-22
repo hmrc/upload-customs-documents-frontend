@@ -18,29 +18,20 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents}
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class WipeOutController @Inject() (
-  sessionStateService: SessionStateService,
-  components: BaseControllerComponents
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+class WipeOutController @Inject()(components: BaseControllerComponents)
+                                 (implicit ec: ExecutionContext) extends BaseController(components) {
 
   // POST /internal/wipe-out
   final val wipeOut: Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticatedInBackchannel {
-          val sessionStateUpdate = JourneyModel.wipeOut
-          sessionStateService
-            .updateSessionState(sessionStateUpdate)
-            .map(_ => NoContent)
-            .andThen { case _ => sessionStateService.cleanBreadcrumbs }
+          components.newJourneyCacheRepository.deleteEntity(currentJourneyId).map(_ => NoContent)
         }
       }
     }

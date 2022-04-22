@@ -6,7 +6,7 @@ lazy val root = (project in file("."))
     name := "upload-customs-documents-frontend",
     organization := "uk.gov.hmrc",
     scalaVersion := "2.12.15",
-    PlayKeys.playDefaultPort := 10100,
+    PlayKeys.playDefaultPort := 10110,
     TwirlKeys.templateImports ++= Seq(
       "play.twirl.api.HtmlFormat",
       "uk.gov.hmrc.govukfrontend.views.html.components._",
@@ -18,8 +18,6 @@ lazy val root = (project in file("."))
     publishingSettings,
     CodeCoverageSettings.settings,
     Compile / unmanagedResourceDirectories += baseDirectory.value / "resources",
-    Compile / scalafmtOnCompile := true,
-    Test / scalafmtOnCompile := true,
     majorVersion := 0,
     Test / javaOptions += "-Djava.locale.providers=CLDR,JRE",
     WebpackKeys.configurations := Seq(
@@ -53,13 +51,10 @@ lazy val root = (project in file("."))
     IntegrationTest / unmanagedSourceDirectories += baseDirectory(_ / "it").value,
     IntegrationTest / parallelExecution := false,
     IntegrationTest / testGrouping := oneForkedJvmPerTest((IntegrationTest / definedTests).value),
-    IntegrationTest / scalafmtOnCompile := true,
     IntegrationTest / javaOptions += "-Djava.locale.providers=CLDR,JRE"
   )
   .disablePlugins(JUnitXmlReportPlugin) // Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
-
-inConfig(IntegrationTest)(org.scalafmt.sbt.ScalafmtPlugin.scalafmtConfigSettings)
 
 def oneForkedJvmPerTest(tests: Seq[TestDefinition]) =
   tests.map { test =>

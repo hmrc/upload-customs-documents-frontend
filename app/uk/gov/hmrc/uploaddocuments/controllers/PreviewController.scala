@@ -16,38 +16,48 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
+import akka.actor.ActorSystem
 import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.uploaddocuments.connectors.{FileUploadResultPushConnector, UpscanInitiateConnector}
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
+import play.mvc.Http.HeaderNames
+import uk.gov.hmrc.uploaddocuments.connectors.FileStream
+import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploads, RFC3986Encoder}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PreviewController @Inject() (
-  sessionStateService: SessionStateService,
-  upscanInitiateConnector: UpscanInitiateConnector,
-  fileUploadResultPushConnector: FileUploadResultPushConnector,
-  router: Router,
-  renderer: Renderer,
-  components: BaseControllerComponents
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+class PreviewController @Inject()(components: BaseControllerComponents,
+                                  val actorSystem: ActorSystem)
+                                 (implicit ec: ExecutionContext) extends BaseController(components) with FileStream {
 
   // GET /preview/:reference/:fileName
   final def previewFileUploadByReference(reference: String, fileName: String): Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          sessionStateService.currentSessionState
-            .flatMap {
-              case Some((state, _)) =>
-                renderer.streamFileFromUspcan(reference)(state)
-
-              case None =>
-                NotFound.asFuture
-            }
+          withUploadedFiles { files =>
+            streamFileFromUspcan(reference, files)
+          }
         }
       }
+    }
+
+  private def streamFileFromUspcan(reference: String, files: FileUploads) =
+    files.files.find(_.reference == reference) match {
+      case Some(file: FileUpload.Accepted) =>
+        getFileStream(
+          url = file.url,
+          fileName = file.fileName,
+          fileMimeType = file.fileMimeType,
+          fileSize = file.fileSize,
+          contentDispositionForMimeType = (fileName, fileMimeType) =>
+            fileMimeType match {
+              case _ =>
+                HeaderNames.CONTENT_DISPOSITION ->
+                  s"""inline; filename="${fileName.filter(_.toInt < 128)}"; filename*=utf-8''${RFC3986Encoder
+                    .encode(fileName)}"""
+            }
+        )
+      case _ => Future.successful(NotFound)
     }
 }

@@ -17,6 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.models
 
 import play.api.libs.json.Json
+import uk.gov.hmrc.uploaddocuments.models.FileUpload.{Duplicate, Failed, Rejected}
 
 sealed trait FileUploadError
 
@@ -26,6 +27,16 @@ case class DuplicateFileUpload(checksum: String, existingFileName: String, dupli
     extends FileUploadError
 
 object FileUploadError extends SealedTraitFormats[FileUploadError] {
+
+  def apply(file: FileUpload): Option[FileUploadError] = file match {
+    case dupe: Duplicate =>
+      Some(DuplicateFileUpload(dupe.checksum, dupe.existingFileName, dupe.duplicateFileName))
+    case failed: Failed =>
+      Some(FileVerificationFailed(failed.details))
+    case rejected: Rejected =>
+      Some(FileTransmissionFailed(rejected.details))
+    case _ => None
+  }
 
   override val formats = Set(
     Case[FileTransmissionFailed](Json.format[FileTransmissionFailed]),

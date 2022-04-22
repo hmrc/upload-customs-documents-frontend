@@ -16,39 +16,55 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import akka.actor.ActorSystem
+import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel
-import uk.gov.hmrc.uploaddocuments.services.SessionStateService
+import uk.gov.hmrc.uploaddocuments.models.{FileUpload, Nonce, Timestamp, UploadRequest}
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class InitiateUpscanController @Inject() (
-  sessionStateService: SessionStateService,
-  upscanInitiateConnector: UpscanInitiateConnector,
-  val router: Router,
-  renderer: Renderer,
-  components: BaseControllerComponents,
-  actorSystem: ActorSystem
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) with UpscanRequestSupport {
+class InitiateUpscanController @Inject()(upscanInitiateConnector: UpscanInitiateConnector,
+                                         components: BaseControllerComponents)
+                                        (implicit ec: ExecutionContext) extends BaseController(components) with UpscanRequestSupport {
 
-  // POST /initiate-upscan/:uploadId
+  // POST /new/initiate-upscan/:uploadId
   final def initiateNextFileUpload(uploadId: String): Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession {
         whenAuthenticated {
-          val sessionStateUpdate =
-            JourneyModel
-              .initiateNextFileUpload(uploadId)(upscanRequestWhenUploadingMultipleFiles(currentJourneyId))(
-                upscanInitiateConnector.initiate(_, _)
-              )
-          sessionStateService
-            .updateSessionState(sessionStateUpdate)
-            .map(renderer.renderUploadRequestJson(uploadId))
+          withJourneyContext { journeyContext =>
+            withUploadedFiles { files =>
+              val nonce = Nonce.random
+              for {
+                upscanResponse <- upscanInitiateConnector.initiate(
+                  journeyContext.hostService.userAgent,
+                  upscanRequestWhenUploadingMultipleFiles(currentJourneyId)(
+                    nonce.toString,
+                    journeyContext.config.maximumFileSizeBytes
+                  )
+                )
+                updatedFiles = files + FileUpload.Initiated(
+                  nonce = nonce,
+                  timestamp = Timestamp.now,
+                  reference = upscanResponse.reference,
+                  uploadRequest = Some(upscanResponse.uploadRequest),
+                  uploadId = Some(uploadId)
+                )
+                _ <- components.newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, updatedFiles)
+              } yield {
+                val json =
+                  Json.obj(
+                    "upscanReference" -> upscanResponse.reference,
+                    "uploadId"        -> uploadId,
+                    "uploadRequest"   -> UploadRequest.formats.writes(upscanResponse.uploadRequest)
+                  )
+                Ok(json)
+              }
+            }
+          }
         }
       }
     }

@@ -1,51 +1,37 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import akka.actor.ActorSystem
-import com.typesafe.config.Config
 import play.api.libs.ws.{DefaultWSCookie, StandaloneWSRequest}
-import play.api.mvc.{AnyContent, Call, Cookie, Request, Session}
+import play.api.mvc._
 import play.api.test.FakeRequest
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.{HeaderCarrier, SessionId, SessionKeys}
-import uk.gov.hmrc.uploaddocuments.journeys.State
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.repository.CacheRepository
-import uk.gov.hmrc.uploaddocuments.services.{EncryptedSessionCache, KeyProvider, SessionStateService}
-import uk.gov.hmrc.uploaddocuments.support.{SHA256, ServerISpec, StateMatchers, TestData, TestSessionStateService}
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
+import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.support.{SHA256, ServerISpec, TestData}
 
 import java.time.ZonedDateTime
 
-trait ControllerISpecBase extends ServerISpec with StateMatchers {
+trait ControllerISpecBase extends ServerISpec {
 
   val journeyId = "sadasdjkasdhuqyhwa326176318346674e764764"
+  val sessionId = SessionId(journeyId)
 
-  implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(SessionId(journeyId)))
+  implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(sessionId))
+  def getJourneyId: String = SHA256.compute(journeyId)
+
+  lazy val newJourneyRepo = app.injector.instanceOf[JourneyCacheRepository]
 
   import play.api.i18n._
   implicit val messages: Messages = MessagesImpl(Lang("en"), app.injector.instanceOf[MessagesApi])
 
-  lazy val sessionStateService = new TestSessionStateService
-    with SessionStateService with EncryptedSessionCache[State, HeaderCarrier] {
-
-    override lazy val actorSystem: ActorSystem = app.injector.instanceOf[ActorSystem]
-    override lazy val cacheRepository = app.injector.instanceOf[CacheRepository]
-    lazy val keyProvider: KeyProvider = KeyProvider(app.injector.instanceOf[Config])
-
-    override lazy val keyProviderFromContext: HeaderCarrier => KeyProvider =
-      hc => KeyProvider(keyProvider, None)
-
-    override def getJourneyId(hc: HeaderCarrier): Option[String] =
-      hc.sessionId.map(_.value).map(SHA256.compute)
-
-  }
-
   final def fakeRequest(cookies: Cookie*)(implicit
-    hc: HeaderCarrier
+                                          hc: HeaderCarrier
   ): Request[AnyContent] =
     fakeRequest("GET", "/", cookies: _*)
 
   final def fakeRequest(method: String, path: String, cookies: Cookie*)(implicit
-    hc: HeaderCarrier
+                                                                        hc: HeaderCarrier
   ): Request[AnyContent] =
     FakeRequest(Call(method, path))
       .withCookies(cookies: _*)
@@ -82,7 +68,7 @@ trait ControllerISpecBase extends ServerISpec with StateMatchers {
   }
 
   final def requestWithCookies(path: String, cookies: (String, String)*)(implicit
-    hc: HeaderCarrier
+                                                                         hc: HeaderCarrier
   ): StandaloneWSRequest = {
     val sessionCookie =
       sessionCookieBaker
@@ -129,5 +115,17 @@ trait ControllerISpecBase extends ServerISpec with StateMatchers {
     )
 
   final def FILES_LIMIT = fileUploadSessionConfig.maximumNumberOfFiles
+
+  final def setContext(context: FileUploadContext = FileUploadContext(fileUploadSessionConfig)) =
+    await(newJourneyRepo.put(getJourneyId)(DataKeys.journeyContext, context))
+
+  final def setFileUploads(files: FileUploads = FileUploads()) =
+    await(newJourneyRepo.put(getJourneyId)(DataKeys.uploadedFiles, files))
+
+  final def getContext() =
+    await(newJourneyRepo.get(getJourneyId)(DataKeys.journeyContext))
+
+  final def getFileUploads() =
+    await(newJourneyRepo.get(getJourneyId)(DataKeys.uploadedFiles))
 
 }
