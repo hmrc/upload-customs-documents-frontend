@@ -46,11 +46,7 @@ final case class CustomizedServiceContent(
   yesNoQuestionText: Option[String] = None,
   yesNoQuestionRequiredError: Option[String] = None
 ) {
-
-  def safeDescriptionHtml: Option[String] =
-    descriptionHtml
-      .map(html => HtmlCleaner.cleanBlock(html))
-
+  lazy val safeDescriptionHtml: Option[String] = descriptionHtml.map(html => HtmlCleaner.cleanBlock(html))
 }
 
 object CustomizedServiceContent {
@@ -62,7 +58,6 @@ object CustomizedServiceContent {
     override val values: Set[PhaseBanner] = Set(alpha, beta)
   }
 
-  implicit val format: Format[CustomizedServiceContent] =
-    Json.format[CustomizedServiceContent]
+  implicit val format: Format[CustomizedServiceContent] = Json.format[CustomizedServiceContent]
 
 }

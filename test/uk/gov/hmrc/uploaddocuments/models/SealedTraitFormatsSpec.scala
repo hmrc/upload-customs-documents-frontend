@@ -35,7 +35,7 @@ class SealedTraitFormatsSpec extends AnyWordSpec with Matchers {
     )
   }
 
-  "SimpleStringFormats" should {
+  "SealedTraitFormats" should {
     "serialize an entity as a number" in {
       format.format.writes(A1(2)) shouldBe Json.obj("A1" -> Json.obj("i" -> JsNumber(2)))
       format.format.writes(A1(0)) shouldBe Json.obj("A1" -> Json.obj("i" -> JsNumber(0)))
@@ -44,12 +44,10 @@ class SealedTraitFormatsSpec extends AnyWordSpec with Matchers {
       format.format.writes(A2("0")) shouldBe Json.obj("A2" -> Json.obj("j" -> JsString("0")))
       format.format.writes(A2("101")) shouldBe Json.obj("A2" -> Json.obj("j" -> JsString("101")))
       format.format.writes(A3(7, "2")) shouldBe Json.obj("A3" -> Json.obj("i" -> JsNumber(7), "j" -> JsString("2")))
-      format.format.writes(A3(77, "0")) shouldBe Json.obj(
-        "A3" -> Json.obj("i" -> JsNumber(77), "j" -> JsString("0"))
-      )
-      format.format.writes(A3(777, "101")) shouldBe Json.obj(
-        "A3" -> Json.obj("i" -> JsNumber(777), "j" -> JsString("101"))
-      )
+      format.format.writes(A3(77, "0")) shouldBe
+        Json.obj("A3" -> Json.obj("i" -> JsNumber(77), "j" -> JsString("0")))
+      format.format.writes(A3(777, "101")) shouldBe
+        Json.obj("A3" -> Json.obj("i" -> JsNumber(777), "j" -> JsString("101")))
       an[Exception] shouldBe thrownBy(format.format.writes(A4(2)))
     }
 
@@ -60,19 +58,12 @@ class SealedTraitFormatsSpec extends AnyWordSpec with Matchers {
       format.format.reads(Json.obj("A2" -> Json.obj("j" -> JsString("2")))) shouldBe JsSuccess(A2("2"))
       format.format.reads(Json.obj("A2" -> Json.obj("j" -> JsString("0")))) shouldBe JsSuccess(A2("0"))
       format.format.reads(Json.obj("A2" -> Json.obj("j" -> JsString("101")))) shouldBe JsSuccess(A2("101"))
-      format.format.reads(Json.obj("A3" -> Json.obj("i" -> JsNumber(7), "j" -> JsString("2")))) shouldBe JsSuccess(
-        A3(7, "2")
-      )
-      format.format.reads(
-        Json.obj(
-          "A3" -> Json.obj("i" -> JsNumber(77), "j" -> JsString("0"))
-        )
-      ) shouldBe JsSuccess(A3(77, "0"))
-      format.format.reads(
-        Json.obj(
-          "A3" -> Json.obj("i" -> JsNumber(777), "j" -> JsString("101"))
-        )
-      ) shouldBe JsSuccess(A3(777, "101"))
+      format.format.reads(Json.obj("A3" -> Json.obj("i" -> JsNumber(7), "j" -> JsString("2")))) shouldBe
+        JsSuccess(A3(7, "2"))
+      format.format.reads(Json.obj("A3" -> Json.obj("i" -> JsNumber(77), "j" -> JsString("0")))) shouldBe
+        JsSuccess(A3(77, "0"))
+      format.format.reads(Json.obj("A3" -> Json.obj("i" -> JsNumber(777), "j" -> JsString("101")))) shouldBe
+        JsSuccess(A3(777, "101"))
 
       format.format.reads(Json.obj("A4" -> Json.obj("i" -> JsNumber(2)))) shouldBe a[JsError]
       format.format.reads(Json.obj("A2" -> Json.obj("i" -> JsString("101")))) shouldBe a[JsError]

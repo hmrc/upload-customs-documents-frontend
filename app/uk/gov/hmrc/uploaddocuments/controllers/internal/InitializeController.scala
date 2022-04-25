@@ -28,28 +28,27 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class InitializeController @Inject()(components: BaseControllerComponents,
-                                     newJourneyCacheRepository: JourneyCacheRepository)
-                                    (implicit ec: ExecutionContext) extends BaseController(components) {
+class InitializeController @Inject()(
+  components: BaseControllerComponents,
+  newJourneyCacheRepository: JourneyCacheRepository)(implicit ec: ExecutionContext)
+    extends BaseController(components) {
 
   // POST /internal/initialize
   final val initialize: Action[JsValue] =
     Action.async(parse.tolerantJson) { implicit request =>
       withJsonBody[FileUploadInitializationRequest] { payload =>
-        whenInSession {
+        whenInSession { implicit journeyId =>
           whenAuthenticatedInBackchannel {
-            val host = HostService.from(request)
+            val host           = HostService(request)
             val journeyContext = FileUploadContext(payload.config, host)
             for {
-              _ <- newJourneyCacheRepository.put(currentJourneyId)(DataKeys.journeyContext, journeyContext)
-              _ <- newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, payload.toFileUploads)
+              _ <- newJourneyCacheRepository.put(journeyId)(DataKeys.journeyContext, journeyContext)
+              _ <- newJourneyCacheRepository.put(journeyId)(DataKeys.uploadedFiles, FileUploads(payload))
             } yield {
-              Created.withHeaders(HeaderNames.LOCATION -> (
-                if (!journeyContext.config.features.showUploadMultiple)
-                  mainRoutes.ChooseSingleFileController.showChooseFile
-                else
-                  mainRoutes.StartController.start
-                ).url)
+              val url = if (!journeyContext.config.features.showUploadMultiple) {
+                mainRoutes.ChooseSingleFileController.showChooseFile.url
+              } else { mainRoutes.StartController.start.url }
+              Created.withHeaders(HeaderNames.LOCATION -> url)
             }
           }
         }

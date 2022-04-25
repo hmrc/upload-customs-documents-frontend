@@ -20,7 +20,7 @@ import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
 import play.api.libs.json._
 
-class SimpleStringFormatsSpec extends AnyWordSpec with Matchers {
+class SimpleStringFormatSpec extends AnyWordSpec with Matchers {
 
   case class A(i: Int)
   val format = SimpleStringFormat[A](s => A(s.drop(1).toInt), a => s"A${a.i}")

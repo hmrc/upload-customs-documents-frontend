@@ -17,7 +17,8 @@
 package uk.gov.hmrc.uploaddocuments.models
 
 import play.api.libs.json._
-import uk.gov.hmrc.uploaddocuments.support.IdentityUtils
+
+import scala.util.matching.Regex
 
 /** Helper trait providing JSON formatter based on the set of enum values. Designed to be mixed in the companion object
   * of the enum type and as typeclass.
@@ -26,29 +27,25 @@ import uk.gov.hmrc.uploaddocuments.support.IdentityUtils
   */
 trait EnumerationFormats[A] {
 
-  import IdentityUtils.identityOf
+  final def identityOf[B](entity: B): String = normalize(entity.getClass.getName)
+  final def normalize(name: String): String  = normalizePattern.findFirstIn(name).getOrElse(name)
+  private final val normalizePattern: Regex  = "([^$.]+)(?=[$.]?$)".r.unanchored
 
   /** Set of enum values recognized by the formatter. */
   val values: Set[A]
 
-  private lazy val valuesMap: Map[String, A] =
-    values.map(value => (identityOf(value), value)).toMap
+  lazy val keys: Set[String] = values.map(identityOf)
 
-  lazy val keys: Set[String] = values.map(value => identityOf(value))
-
-  /** Checks if given string is a valid enum key. */
-  lazy val isValidKey: String => Boolean = keys.contains
+  private lazy val valuesMap: Map[String, A] = keys.zip(values).toMap
 
   /** Optionally returns string key for a given enum value, if recognized or None */
-  def keyOf(value: A): Option[String] =
-    Option(identityOf(value))
-      .filter(isValidKey)
+  def keyOf(value: A): Option[String] = keys.find(_ == identityOf(value))
 
   /** Optionally returns enum for a given key, if exists or None */
   def valueOf(key: String): Option[A] = valuesMap.get(key)
 
   implicit val format: Format[A] = Format(
-    Reads {
+    {
       case JsString(key) =>
         valueOf(key)
           .map(JsSuccess.apply(_))
@@ -56,15 +53,13 @@ trait EnumerationFormats[A] {
 
       case json => JsError(s"Expected json string but got ${json.getClass.getSimpleName}")
     },
-    Writes.apply(value =>
+    Writes { value =>
       keyOf(value)
         .map(JsString.apply)
         .getOrElse(
-          throw new IllegalStateException(
-            s"Unsupported enum value $value, should be one of ${values.mkString(",")}"
-          )
+          throw new IllegalStateException(s"Unsupported enum value $value, should be one of ${values.mkString(",")}")
         )
-    )
+    }
   )
 
   /** Instance of a typeclass declaration */

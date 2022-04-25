@@ -16,20 +16,9 @@
 
 package uk.gov.hmrc.uploaddocuments.journeys
 
-import uk.gov.hmrc.uploaddocuments.models._
-
 object JourneyModel {
 
   /** Minimum time gap to allow overwriting upload status. */
   final val minStatusOverwriteGapInMilliseconds: Long = 1000
-
-  //TODO: Maybe refactor this out to somewhere else? Or just rename the JourneyModel to something more appropriate
-  final def canOverwriteFileUploadStatus(
-                                          fileUpload: FileUpload,
-                                          allowStatusOverwrite: Boolean,
-                                          now: Timestamp
-                                        ): Boolean =
-    fileUpload.isNotReady ||
-      (allowStatusOverwrite && now.isAfter(fileUpload.timestamp, minStatusOverwriteGapInMilliseconds))
 
 }

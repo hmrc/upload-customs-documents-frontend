@@ -5,7 +5,6 @@ import uk.gov.hmrc.uploaddocuments.stubs.{ExternalApiStubs, UpscanInitiateStubs}
 import uk.gov.hmrc.uploaddocuments.support.TestData
 
 import java.time.ZonedDateTime
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStubs with ExternalApiStubs {
 

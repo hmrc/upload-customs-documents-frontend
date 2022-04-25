@@ -28,14 +28,14 @@ case class DuplicateFileUpload(checksum: String, existingFileName: String, dupli
 
 object FileUploadError extends SealedTraitFormats[FileUploadError] {
 
+  def apply(file: ErroredFileUpload): FileUploadError = file match {
+    case dupe: Duplicate    => DuplicateFileUpload(dupe.checksum, dupe.existingFileName, dupe.duplicateFileName)
+    case failed: Failed     => FileVerificationFailed(failed.details)
+    case rejected: Rejected => FileTransmissionFailed(rejected.details)
+  }
   def apply(file: FileUpload): Option[FileUploadError] = file match {
-    case dupe: Duplicate =>
-      Some(DuplicateFileUpload(dupe.checksum, dupe.existingFileName, dupe.duplicateFileName))
-    case failed: Failed =>
-      Some(FileVerificationFailed(failed.details))
-    case rejected: Rejected =>
-      Some(FileTransmissionFailed(rejected.details))
-    case _ => None
+    case error: ErroredFileUpload => Some(FileUploadError(error))
+    case _                        => None
   }
 
   override val formats = Set(

@@ -28,7 +28,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UploadHttpClient @Inject() (
+class UploadHttpClient @Inject()(
   config: Configuration,
   httpAuditing: HttpAuditing,
   wsClient: WSClient,
@@ -39,10 +39,7 @@ class UploadHttpClient @Inject() (
     url: String,
     body: A,
     headers: Seq[(String, String)]
-  )(implicit
-    rds: Writes[A],
-    ec: ExecutionContext
-  ): Future[HttpResponse] =
+  )(implicit rds: Writes[A], ec: ExecutionContext): Future[HttpResponse] =
     execute(buildRequest(url, deduplicate(headers)).withBody(Json.toJson(body)), "POST")
       .map(WSHttpResponse.apply)
 

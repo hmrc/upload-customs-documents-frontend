@@ -34,12 +34,11 @@ import play.api.Configuration
 
 /** Connector to push the results of the file uploads back to the host service. */
 @Singleton
-class FileUploadResultPushConnector @Inject() (
+class FileUploadResultPushConnector @Inject()(
   appConfig: AppConfig,
   http: HttpPost,
   metrics: Metrics,
-  val actorSystem: ActorSystem,
-  configuration: Configuration
+  val actorSystem: ActorSystem
 ) extends HttpAPIMonitor with Retries {
 
   override val kenshooRegistry: MetricRegistry = metrics.defaultRegistry
@@ -51,7 +50,7 @@ class FileUploadResultPushConnector @Inject() (
       monitor(s"ConsumedAPI-push-file-uploads-${request.hostService.userAgent}-POST") {
         Try(new URL(request.url).toExternalForm).fold(
           e => {
-            val msg = s"${e.getClass().getName()} ${e.getMessage()}"
+            val msg = s"${e.getClass.getName} ${e.getMessage}"
             Logger(getClass).error(msg)
             Future.successful(Left(Error(0, msg)))
           },
@@ -60,26 +59,23 @@ class FileUploadResultPushConnector @Inject() (
             val rds = implicitly[HttpReads[HttpResponse]]
             val ehc = request.hostService.populate(hc)
             http
-              .POST[Payload, HttpResponse](endpointUrl, Payload.from(request, appConfig.baseExternalCallbackUrl))(
+              .POST[Payload, HttpResponse](endpointUrl, Payload(request, appConfig.baseExternalCallbackUrl))(
                 wts,
                 rds,
                 ehc,
-                ec
-              )
+                ec)
               .transformWith[Response] {
                 case Success(response) =>
-                  Future.successful(
-                    if (response.status == 204) SuccessResponse
-                    else {
-                      val msg =
-                        s"Failure pushing uploaded files to ${request.url}: ${response.body.take(1024)} ${request.hostService}"
-                      Logger(getClass).error(msg)
-                      Left(Error(response.status, msg))
-                    }
-                  )
+                  if (response.status == 204) Future.successful(SuccessResponse)
+                  else {
+                    val msg =
+                      s"Failure pushing uploaded files to ${request.url}: ${response.body.take(1024)} ${request.hostService}"
+                    Logger(getClass).error(msg)
+                    Future.successful(Left(Error(response.status, msg)))
+                  }
                 case Failure(exception) =>
-                  Logger(getClass).error(exception.getMessage())
-                  Future.successful(Left(Error(0, exception.getMessage())))
+                  Logger(getClass).error(exception.getMessage)
+                  Future.successful(Left(Error(0, exception.getMessage)))
               }
           }
         )
@@ -104,11 +100,11 @@ object FileUploadResultPushConnector {
   val SuccessResponse: Response = Right[FileUploadResultPushConnector.Error, Unit](())
 
   case class Error(status: Int, message: String) {
-    def shouldRetry: Boolean = (status >= 500 && status < 600) || status == 499
+    lazy val shouldRetry: Boolean = (status >= 500 && status < 600) || status == 499
   }
 
   object Request {
-    def from(context: FileUploadContext, fileUploads: FileUploads): Request =
+    def apply(context: FileUploadContext, fileUploads: FileUploads): Request =
       Request(
         context.config.callbackUrl,
         context.config.nonce,
@@ -122,36 +118,26 @@ object FileUploadResultPushConnector {
 
   object Payload {
 
-    def from(request: Request, baseUrl: String): Payload =
+    def apply(request: Request, baseUrl: String): Payload =
       Payload(
         request.nonce,
         request.uploadedFiles
-          .map(file =>
-            file.copy(
-              previewUrl = Some(baseUrl + filePreviewPathFor(file.upscanReference, file.fileName))
-            )
-          ),
+          .map(file => file.copy(previewUrl = Some(baseUrl + filePreviewPathFor(file.upscanReference, file.fileName)))),
         request.context
       )
 
-    private def filePreviewPathFor(refererence: String, fileName: String): String =
+    private def filePreviewPathFor(reference: String, fileName: String): String =
       uk.gov.hmrc.uploaddocuments.controllers.routes.PreviewController
-        .previewFileUploadByReference(refererence, fileName)
+        .previewFileUploadByReference(reference, fileName)
         .url
-
-    def from(config: FileUploadContext, fileUploads: FileUploads, basePreviewUrl: String): Payload =
-      Payload.from(Request.from(config, fileUploads), basePreviewUrl)
 
     implicit val format: Format[Payload] = Json.format[Payload]
   }
 
-  final def shouldRetry(response: Try[Response]): Boolean =
-    response match {
-      case Success(response)  => response.left.exists(_.shouldRetry)
-      case Failure(exception) => false
-    }
+  final val shouldRetry: Try[Response] => Boolean =
+    _.fold(_ => false, _.left.exists(_.shouldRetry))
 
-  final def errorMessage(response: Response): String =
+  final val errorMessage: Response => String = response =>
     s"Error ${response.left.map(e => s"status=${e.status} message=${e.message}").left.getOrElse("")}"
 
 }

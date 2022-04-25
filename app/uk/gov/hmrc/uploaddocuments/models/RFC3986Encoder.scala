@@ -26,22 +26,18 @@ object RFC3986Encoder {
 
   def encode(string: String): String = {
     val bytes = StandardCharsets.UTF_8.encode(
-      CharBuffer.wrap(
-        string
-          .replaceAllLiterally("%", "%25")
-          .replaceAllLiterally("+", "%2B")
-      )
+      CharBuffer.wrap(string.replaceAllLiterally("%", "%25").replaceAllLiterally("+", "%2B"))
     )
     val sb = new StringBuffer(bytes.limit())
-    while (bytes.hasRemaining()) {
-      val b = bytes.get() & 0xff;
+    while (bytes.hasRemaining) {
+      val b = bytes.get() & 0xff
       if (b >= 0x80) {
         sb.append('%')
         sb.append(hexDigits((b >> 4) & 0x0f))
         sb.append(hexDigits((b >> 0) & 0x0f))
       } else
-        sb.append(b.toChar);
+        sb.append(b.toChar)
     }
-    sb.toString()
+    sb.toString
   }
 }

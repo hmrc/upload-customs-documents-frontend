@@ -26,7 +26,7 @@ object SimpleStringFormat {
         case JsString(value) => JsSuccess(fromString(value))
         case json            => JsError(s"Expected json string but got ${json.getClass.getSimpleName}")
       },
-      Writes.apply(entity => JsString(toString(entity)))
+      Writes(entity => JsString(toString(entity)))
     )
 
 }

@@ -30,10 +30,10 @@ class CacheRepository(
   timestampSupport: TimestampSupport
 )(implicit ec: ExecutionContext)
     extends MongoCacheRepository[String](
-      mongoComponent = mongoComponent,
-      collectionName = collectionName,
-      replaceIndexes = true,
-      ttl = ttl,
+      mongoComponent   = mongoComponent,
+      collectionName   = collectionName,
+      replaceIndexes   = true,
+      ttl              = ttl,
       timestampSupport = timestampSupport,
-      cacheIdType = CacheIdType.SimpleCacheId
-    )(ec)
+      cacheIdType      = CacheIdType.SimpleCacheId
+    )

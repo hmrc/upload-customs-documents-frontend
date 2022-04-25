@@ -3,8 +3,6 @@ package uk.gov.hmrc.uploaddocuments.controllers
 import play.api.http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.models._
 
-import scala.concurrent.ExecutionContext.Implicits.global
-
 class FilePostedControllerISpec extends ControllerISpecBase {
 
   "FilePostedController" when {

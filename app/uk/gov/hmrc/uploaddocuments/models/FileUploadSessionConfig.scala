@@ -28,33 +28,32 @@ final case class FileUploadSessionConfig(
   continueUrl: String, // url to continue after uploading the files
   backlinkUrl: String, // backlink url
   callbackUrl: String, // url where to post uploaded files
-  continueAfterYesAnswerUrl: Option[String] =
-    None, // optional url to continue after user selects YES answer in the form
-  continueWhenFullUrl: Option[String] = None, // optional url to continue after all possible files has been uploaded
-  continueWhenEmptyUrl: Option[String] = None, // optional url to continue after none file uploaded
-  minimumNumberOfFiles: Int = defaultMinimumNumberOfFiles,
-  maximumNumberOfFiles: Int = defaultMaximumNumberOfFiles,
-  initialNumberOfEmptyRows: Int = defaultInitialNumberOfEmptyRows,
-  maximumFileSizeBytes: Long = defaultMaximumFileSizeBytes,
-  allowedContentTypes: String = defaultAllowedContentTypes,
-  allowedFileExtensions: Option[String] = None,
-  cargo: Option[JsValue] = None, // opaque data carried through, from and to the host service,
-  newFileDescription: Option[String] = None, // description of the new file added,
-  features: Features = Features(), // upload feature switches
-  content: CustomizedServiceContent = CustomizedServiceContent() // page content customizations
+  continueAfterYesAnswerUrl: Option[String] = None, // optional url to continue after user selects YES answer in the form
+  continueWhenFullUrl: Option[String]       = None, // optional url to continue after all possible files has been uploaded
+  continueWhenEmptyUrl: Option[String]      = None, // optional url to continue after none file uploaded
+  minimumNumberOfFiles: Int                 = defaultMinimumNumberOfFiles,
+  maximumNumberOfFiles: Int                 = defaultMaximumNumberOfFiles,
+  initialNumberOfEmptyRows: Int             = defaultInitialNumberOfEmptyRows,
+  maximumFileSizeBytes: Long                = defaultMaximumFileSizeBytes,
+  allowedContentTypes: String               = defaultAllowedContentTypes,
+  allowedFileExtensions: Option[String]     = None,
+  cargo: Option[JsValue]                    = None, // opaque data carried through, from and to the host service,
+  newFileDescription: Option[String]        = None, // description of the new file added,
+  features: Features                        = Features(), // upload feature switches
+  content: CustomizedServiceContent         = CustomizedServiceContent() // page content customizations
 ) {
 
-  final def getContinueWhenFullUrl: String = continueWhenFullUrl.getOrElse(continueUrl)
-  final def getContinueWhenEmptyUrl: String = continueWhenEmptyUrl.getOrElse(continueUrl)
+  final def getContinueWhenFullUrl: String    = continueWhenFullUrl.getOrElse(continueUrl)
+  final def getContinueWhenEmptyUrl: String   = continueWhenEmptyUrl.getOrElse(continueUrl)
   final def getFilePickerAcceptFilter: String = allowedContentTypes + allowedFileExtensions.map("," + _).getOrElse("")
 
   final def isValid: Boolean =
     isValidCallbackUrl(callbackUrl) &&
       isValidFrontendUrl(continueUrl) &&
       isValidFrontendUrl(backlinkUrl) &&
-      continueWhenFullUrl.map(isValidFrontendUrl).getOrElse(true) &&
-      continueWhenEmptyUrl.map(isValidFrontendUrl).getOrElse(true) &&
-      continueAfterYesAnswerUrl.map(isValidFrontendUrl).getOrElse(true) &&
+      continueWhenFullUrl.forall(isValidFrontendUrl) &&
+      continueWhenEmptyUrl.forall(isValidFrontendUrl) &&
+      continueAfterYesAnswerUrl.forall(isValidFrontendUrl) &&
       allowedContentTypes.nonEmpty &&
       minimumNumberOfFiles >= 0 &&
       maximumNumberOfFiles >= 1 &&
@@ -64,11 +63,11 @@ final case class FileUploadSessionConfig(
 
 object FileUploadSessionConfig {
 
-  final val defaultMinimumNumberOfFiles: Int = 1
-  final val defaultMaximumNumberOfFiles: Int = 10
+  final val defaultMinimumNumberOfFiles: Int     = 1
+  final val defaultMaximumNumberOfFiles: Int     = 10
   final val defaultInitialNumberOfEmptyRows: Int = 3
-  final val defaultMaximumFileSizeBytes = 10 * 1024 * 1024
-  final val defaultAllowedContentTypes = "image/jpeg,image/png,application/pdf,text/plain"
+  final val defaultMaximumFileSizeBytes          = 10 * 1024 * 1024
+  final val defaultAllowedContentTypes           = "image/jpeg,image/png,application/pdf,text/plain"
 
   implicit val format: Format[FileUploadSessionConfig] =
     Format(
@@ -106,14 +105,14 @@ object FileUploadSessionConfig {
         and (JsPath \ "cargo").writeNullable[JsValue]
         and (JsPath \ "newFileDescription").writeNullable[String]
         and (JsPath \ "features").write[Features]
-        and (JsPath \ "content").write[CustomizedServiceContent])(unlift(FileUploadSessionConfig.unapply(_)))
+        and (JsPath \ "content").write[CustomizedServiceContent])(unlift(FileUploadSessionConfig.unapply))
     )
 
   final def isValidFrontendUrl(url: String): Boolean =
     url.nonEmpty && Try(new URL(url))
       .map { url =>
-        val isHttps = url.getProtocol() == "https"
-        val host = url.getHost()
+        val isHttps = url.getProtocol == "https"
+        val host    = url.getHost
         (host == "localhost") || (isHttps && host.endsWith(".gov.uk"))
       }
       .getOrElse(false)
@@ -121,8 +120,8 @@ object FileUploadSessionConfig {
   final def isValidCallbackUrl(url: String): Boolean =
     url.nonEmpty && Try(new URL(url))
       .map { url =>
-        val isHttps = url.getProtocol() == "https"
-        val host = url.getHost()
+        val isHttps = url.getProtocol == "https"
+        val host    = url.getHost
         (host == "localhost") || (isHttps && host.endsWith(".mdtp"))
       }
       .getOrElse(false)

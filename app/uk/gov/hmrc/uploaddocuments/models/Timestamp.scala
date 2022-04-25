@@ -17,6 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.models
 
 import play.api.libs.json.Format
+
 import java.time.format.DateTimeFormatter
 import java.time._
 
@@ -29,8 +30,7 @@ sealed trait Timestamp {
 
   def duration: Long = System.currentTimeMillis() - value
 
-  final override def hashCode(): Int =
-    value.toInt
+  final override def hashCode(): Int = value.toInt
 
   final override def toString: String =
     DateTimeFormatter.ISO_LOCAL_TIME
@@ -39,11 +39,9 @@ sealed trait Timestamp {
 
 object Timestamp {
 
-  final def now: Timestamp =
-    new Strict(System.currentTimeMillis())
+  final def now: Timestamp = Strict(System.currentTimeMillis())
 
-  final def apply(value: Long): Timestamp =
-    new Strict(value)
+  final def apply(value: Long): Timestamp = Strict(value)
 
   object Any extends Timestamp {
     final val value: Long = 0
@@ -55,19 +53,19 @@ object Timestamp {
       true
   }
 
-  final class Strict(val value: Long) extends Timestamp {
-    final override def equals(obj: scala.Any): Boolean =
-      if (obj.isInstanceOf[Any.type]) true
-      else if (obj.isInstanceOf[Timestamp])
-        obj.asInstanceOf[Timestamp].value == value
-      else false
+  final case class Strict(value: Long) extends Timestamp {
+    override def equals(obj: scala.Any): Boolean =
+      obj match {
+        case strict: Strict => strict.value == value
+        case Any            => true
+        case _              => false
+      }
 
-    final def isAfter(other: Timestamp, minGapMillis: Long): Boolean =
-      if (other.isInstanceOf[Timestamp.Any.type])
-        true
-      else
-        (other.value + minGapMillis) < value
-
+    def isAfter(other: Timestamp, minGapMillis: Long): Boolean =
+      other match {
+        case _: Strict => (other.value + minGapMillis) < value
+        case Any       => true
+      }
   }
 
   implicit final val formats: Format[Timestamp] =

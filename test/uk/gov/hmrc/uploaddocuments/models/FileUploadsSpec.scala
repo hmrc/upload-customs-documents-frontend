@@ -24,9 +24,9 @@ class FileUploadsSpec extends UnitSpec {
   val initiatedFileUpload1 = FileUpload.Initiated(Nonce.Any, Timestamp.Any, "foo1")
   val initiatedFileUpload2 = FileUpload.Initiated(Nonce.Any, Timestamp.Any, "foo2")
   val initiatedFileUpload3 = FileUpload.Initiated(Nonce.Any, Timestamp.Any, "foo3")
-  val postedFileUpload1 = FileUpload.Posted(Nonce.Any, Timestamp.Any, "foo1")
-  val postedFileUpload2 = FileUpload.Posted(Nonce.Any, Timestamp.Any, "foo2")
-  val postedFileUpload3 = FileUpload.Posted(Nonce.Any, Timestamp.Any, "foo3")
+  val postedFileUpload1    = FileUpload.Posted(Nonce.Any, Timestamp.Any, "foo1")
+  val postedFileUpload2    = FileUpload.Posted(Nonce.Any, Timestamp.Any, "foo2")
+  val postedFileUpload3    = FileUpload.Posted(Nonce.Any, Timestamp.Any, "foo3")
 
   val acceptedFileUpload = FileUpload.Accepted(
     Nonce(4),
@@ -67,92 +67,35 @@ class FileUploadsSpec extends UnitSpec {
   )
 
   "FileUploads" should {
-    "filter out initiated uploads" in {
-      FileUploads(
-        files = Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "foo"))
-      ).filterOutInitiated shouldBe FileUploads()
-
-      FileUploads(
-        files = Seq(
-          initiatedFileUpload1,
-          initiatedFileUpload2,
-          initiatedFileUpload3
-        )
-      ).filterOutInitiated shouldBe FileUploads()
-
-      FileUploads(
-        files = Seq(
-          postedFileUpload1,
-          initiatedFileUpload2,
-          failedFileUpload,
-          initiatedFileUpload3
-        )
-      ).filterOutInitiated shouldBe FileUploads(files = Seq(postedFileUpload1, failedFileUpload))
-
-      FileUploads(
-        files = Seq(
-          postedFileUpload1,
-          initiatedFileUpload2,
-          rejectedFileUpload
-        )
-      ).filterOutInitiated shouldBe FileUploads(files = Seq(postedFileUpload1, rejectedFileUpload))
-
-      FileUploads(
-        files = Seq(
-          postedFileUpload1,
-          postedFileUpload2,
-          postedFileUpload3
-        )
-      ).filterOutInitiated shouldBe FileUploads(files =
-        Seq(
-          postedFileUpload1,
-          postedFileUpload2,
-          postedFileUpload3
-        )
-      )
-
-    }
+//    "filter out initiated uploads" in {
+//      FileUploads(Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "foo"))).filterOutInitiated shouldBe FileUploads()
+//
+//      FileUploads(Seq(initiatedFileUpload1, initiatedFileUpload2, initiatedFileUpload3)).filterOutInitiated shouldBe FileUploads()
+//
+//      FileUploads(Seq(postedFileUpload1, initiatedFileUpload2, failedFileUpload, initiatedFileUpload3)).filterOutInitiated shouldBe
+//        FileUploads(Seq(postedFileUpload1, failedFileUpload))
+//
+//      FileUploads(Seq(postedFileUpload1, initiatedFileUpload2, rejectedFileUpload)).filterOutInitiated shouldBe
+//        FileUploads(Seq(postedFileUpload1, rejectedFileUpload))
+//
+//      FileUploads(Seq(postedFileUpload1, postedFileUpload2, postedFileUpload3)).filterOutInitiated shouldBe
+//        FileUploads(Seq(postedFileUpload1, postedFileUpload2, postedFileUpload3))
+//    }
 
     "filter accepted uploads" in {
-      FileUploads(
-        files = Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "foo"))
-      ).onlyAccepted shouldBe FileUploads()
+      FileUploads(Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "foo"))).onlyAccepted shouldBe FileUploads()
 
-      FileUploads(
-        files = Seq(
-          initiatedFileUpload1,
-          initiatedFileUpload2,
-          initiatedFileUpload3,
-          acceptedFileUpload
-        )
-      ).onlyAccepted shouldBe FileUploads(Seq(acceptedFileUpload))
+      FileUploads(Seq(initiatedFileUpload1, initiatedFileUpload2, initiatedFileUpload3, acceptedFileUpload)).onlyAccepted shouldBe
+        FileUploads(Seq(acceptedFileUpload))
 
-      FileUploads(
-        files = Seq(
-          postedFileUpload1,
-          acceptedFileUpload,
-          initiatedFileUpload2,
-          initiatedFileUpload3
-        )
-      ).onlyAccepted shouldBe FileUploads(files = Seq(acceptedFileUpload))
+      FileUploads(Seq(postedFileUpload1, acceptedFileUpload, initiatedFileUpload2, initiatedFileUpload3)).onlyAccepted shouldBe
+        FileUploads(Seq(acceptedFileUpload))
 
-      FileUploads(
-        files = Seq(
-          postedFileUpload1,
-          initiatedFileUpload2,
-          acceptedFileUpload,
-          postedFileUpload3
-        )
-      ).onlyAccepted shouldBe FileUploads(files = Seq(acceptedFileUpload))
+      FileUploads(Seq(postedFileUpload1, initiatedFileUpload2, acceptedFileUpload, postedFileUpload3)).onlyAccepted shouldBe
+        FileUploads(Seq(acceptedFileUpload))
 
-      FileUploads(
-        files = Seq(
-          postedFileUpload1,
-          acceptedFileUpload,
-          postedFileUpload2,
-          postedFileUpload3
-        )
-      ).onlyAccepted shouldBe FileUploads(files = Seq(acceptedFileUpload))
+      FileUploads(Seq(postedFileUpload1, acceptedFileUpload, postedFileUpload2, postedFileUpload3)).onlyAccepted shouldBe
+        FileUploads(Seq(acceptedFileUpload))
 
     }
 
@@ -203,23 +146,19 @@ class FileUploadsSpec extends UnitSpec {
       FileUpload.sanitizeFileName("a") shouldBe "a"
       FileUpload.sanitizeFileName("a.a") shouldBe "a.a"
       FileUpload.sanitizeFileName("123456780.abc") shouldBe "123456780.abc"
-      FileUpload.sanitizeFileName(
-        """C:\Users\Public\Pictures\Sample Pictures\Chrysanthemum.jpg"""
-      ) shouldBe "Chrysanthemum.jpg"
-      FileUpload.sanitizeFileName(
-        """C:\Users\Public\Pictures\Sample \u1213Pictures\Chrysanthemum.jpg"""
-      ) shouldBe "Chrysanthemum.jpg"
-      FileUpload.sanitizeFileName(
-        """C:\Users\Public\Pictures\Sample \u1213Pictures\Chrysanthemum\u1213jpg"""
-      ) shouldBe "Chrysanthemum\u1213jpg"
-      FileUpload.sanitizeFileName(
-        """C:\Users\Public\Pictures\Sample \u1213Pictures\0000Chry*[(anth]?)emum\u1213jpg"""
-      ) shouldBe "0000Chry*[(anth]?)emum\u1213jpg"
+      FileUpload.sanitizeFileName("""C:\Users\Public\Pictures\Sample Pictures\Chrysanthemum.jpg""") shouldBe
+        "Chrysanthemum.jpg"
+      FileUpload.sanitizeFileName("""C:\Users\Public\Pictures\Sample \u1213Pictures\Chrysanthemum.jpg""") shouldBe
+        "Chrysanthemum.jpg"
+      FileUpload.sanitizeFileName("""C:\Users\Public\Pictures\Sample \u1213Pictures\Chrysanthemum\u1213jpg""") shouldBe
+        "Chrysanthemum\u1213jpg"
+      FileUpload.sanitizeFileName("""C:\Users\Public\Pictures\Sample \u1213Pictures\0000Chry*[(anth]?)emum\u1213jpg""") shouldBe
+        "0000Chry*[(anth]?)emum\u1213jpg"
     }
 
     "count accepted" in {
       FileUploads(
-        files = Seq(
+        Seq(
           postedFileUpload1,
           acceptedFileUpload,
           initiatedFileUpload2,
@@ -228,13 +167,11 @@ class FileUploadsSpec extends UnitSpec {
           duplicateFileUpload,
           rejectedFileUpload,
           failedFileUpload
-        )
-      ).acceptedCount shouldBe 2
+        )).acceptedCount shouldBe 2
     }
 
     "count initiated or accepted" in {
-      FileUploads(
-        files = Seq(
+      FileUploads(Seq(
           postedFileUpload1,
           acceptedFileUpload,
           initiatedFileUpload2,

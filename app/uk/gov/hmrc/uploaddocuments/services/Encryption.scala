@@ -33,7 +33,7 @@ object Encryption {
   final def encrypt[T](value: T, keyProvider: KeyProvider)(implicit wrts: Writes[T]): String = {
     val plainText = Json.stringify(wrts.writes(value))
     try {
-      val key: Key = keyProvider.keys.headOption.getOrElse(throw new Exception("Missing excryption key"))
+      val key: Key       = keyProvider.keys.headOption.getOrElse(throw new Exception("Missing excryption key"))
       val cipher: Cipher = Cipher.getInstance(key.getAlgorithm)
       cipher.init(Cipher.ENCRYPT_MODE, key, cipher.getParameters)
       new String(
@@ -58,12 +58,13 @@ object Encryption {
             )
             val json = Json.parse(plainText)
             rds.reads(json) match {
-              case JsSuccess(value, path) => value
+              case JsSuccess(value, _) => value
               case JsError(jsonErrors) =>
                 val error =
                   s"Encountered an issue with de-serialising JSON state: ${jsonErrors
-                    .map { case (p, s) =>
-                      s"${if (p.toString().isEmpty()) "" else s"$p -> "}${s.map(_.message).mkString(", ")}"
+                    .map {
+                      case (p, s) =>
+                        s"${if (p.toString().isEmpty) "" else s"$p -> "}${s.map(_.message).mkString(", ")}"
                     }
                     .mkString(", ")}. \nCheck if all your states have relevant entries declared in the *JourneyStateFormats.serializeStateProperties and *JourneyStateFormats.deserializeState functions."
                 Logger(getClass).error(error)
@@ -100,9 +101,7 @@ object KeyProvider {
       .getOrElse(throw new SecurityException(s"Missing required configuration entry: json.encryption.key"))
 
     val previousEncryptionKeys: Seq[String] =
-      Try(config.getStringList("json.encryption.previousKeys"))
-        .map(_.asScala)
-        .getOrElse(Seq.empty)
+      Try(config.getStringList("json.encryption.previousKeys")).fold(_ => Seq.empty, _.asScala)
 
     KeyProvider(currentEncryptionKey +: previousEncryptionKeys)
   }
@@ -110,14 +109,12 @@ object KeyProvider {
   val padding: Array[Byte] = Array.fill[Byte](32)(-1.toByte)
 
   def apply(keyProvider: KeyProvider, context: Option[String]): KeyProvider = new KeyProvider {
-    val secretKeys = context
-      .map { s =>
-        val key: Array[Byte] = (s.getBytes(StandardCharsets.UTF_8) ++ padding).take(32)
-        keyProvider.keys.map { k =>
-          new SecretKeySpec(xor(k.getEncoded(), key), "AES")
-        }
+    val secretKeys = context.fold(keyProvider.keys) { s =>
+      val key: Array[Byte] = (s.getBytes(StandardCharsets.UTF_8) ++ padding).take(32)
+      keyProvider.keys.map { k =>
+        new SecretKeySpec(xor(k.getEncoded, key), "AES")
       }
-      .getOrElse(keyProvider.keys)
+    }
 
     override val keys: Seq[Key] = secretKeys
   }

@@ -47,9 +47,7 @@ class SummaryViewHelper extends RadioItemsHelper with SummaryListRowHelper {
     fileUploads: FileUploads,
     previewFileCall: (String, String) => Call,
     removeFileCall: String => Call
-  )(implicit
-    messages: Messages
-  ): SummaryList = {
+  )(implicit messages: Messages): SummaryList = {
 
     def fileUploadRow(fileUpload: FileUpload.Accepted, index: Int) =
       summaryListRow(

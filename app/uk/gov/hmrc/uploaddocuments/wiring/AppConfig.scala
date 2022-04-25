@@ -44,7 +44,7 @@ trait AppConfig {
     "cymraeg" -> Lang("cy")
   )
 
-  def routeToSwitchLanguage: String => Call =
+  val routeToSwitchLanguage: String => Call =
     (lang: String) => uk.gov.hmrc.uploaddocuments.controllers.routes.LanguageSwitchController.switchToLanguage(lang)
 
   val contactHost: String
@@ -57,26 +57,24 @@ trait AppConfig {
     s"$contactHost/contact/problem_reports_nonjs?newTab=true&service=$contactFormServiceIdentifier&backUrl=$requestUri"
 
   val signOutUrl: String
-  val trace: Boolean = false
   val timeout: Int
   val countdown: Int
   val fileUploadResultPushRetryIntervals: Seq[FiniteDuration]
 }
 
-class AppConfigImpl @Inject() (config: ServicesConfig, configuration: Configuration) extends AppConfig {
+class AppConfigImpl @Inject()(config: ServicesConfig, configuration: Configuration) extends AppConfig {
 
-  override val baseExternalCallbackUrl: String = config.getString("urls.callback.external")
-  override val baseInternalCallbackUrl: String = config.getString("urls.callback.internal")
-  override val authBaseUrl: String = config.baseUrl("auth")
-  override val upscanInitiateBaseUrl: String = config.baseUrl("upscan-initiate")
-  override val mongoSessionExpiration: Duration = config.getDuration("mongodb.session.expiration")
-  override val contactHost: String = config.getString("contact-frontend.host")
+  override val baseExternalCallbackUrl: String      = config.getString("urls.callback.external")
+  override val baseInternalCallbackUrl: String      = config.getString("urls.callback.internal")
+  override val authBaseUrl: String                  = config.baseUrl("auth")
+  override val upscanInitiateBaseUrl: String        = config.baseUrl("upscan-initiate")
+  override val mongoSessionExpiration: Duration     = config.getDuration("mongodb.session.expiration")
+  override val contactHost: String                  = config.getString("contact-frontend.host")
   override val contactFormServiceIdentifier: String = config.getString("feedback-frontend.formIdentifier")
-  override val signOutUrl: String = config.getString("urls.signOut")
-  override val timeout: Int = config.getInt("session.timeoutSeconds")
-  override val countdown: Int = config.getInt("session.countdownInSeconds")
-  override val trace: Boolean = config.getBoolean("trace")
-  override val govukStartUrl: String = config.getString("govuk.start.url")
+  override val signOutUrl: String                   = config.getString("urls.signOut")
+  override val timeout: Int                         = config.getInt("session.timeoutSeconds")
+  override val countdown: Int                       = config.getInt("session.countdownInSeconds")
+  override val govukStartUrl: String                = config.getString("govuk.start.url")
 
   override val fileUploadResultPushRetryIntervals: Seq[FiniteDuration] =
     Retries.getConfIntervals("fileUploadResultPush.retryIntervals", configuration)

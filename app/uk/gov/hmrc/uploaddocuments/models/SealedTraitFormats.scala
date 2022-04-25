@@ -19,7 +19,7 @@ package uk.gov.hmrc.uploaddocuments.models
 import play.api.libs.json._
 import scala.reflect.ClassTag
 
-/** Helper trait providing JSON formatter based on the set of case classse of the sealed trait. Designed to be mixed in
+/** Helper trait providing JSON formatter based on the set of case classes of the sealed trait. Designed to be mixed in
   * the companion object of the sealed trait and as typeclass.
   * @tparam A
   *   sealed trait type
@@ -49,15 +49,13 @@ trait SealedTraitFormats[A] {
         (for {
           (key, value) <- o.fields.headOption
           format       <- formatMap.get(key)
-        } yield format.reads(value).map(_.asInstanceOf[A]))
-          .getOrElse(
-            JsError(s"Failure de-serializing ${Json.stringify(o)}")
-          )
+        } yield format.reads(value))
+          .getOrElse(JsError(s"Failure de-serializing ${Json.stringify(o)}"))
 
       case json => JsError(s"Expected json object but got ${json.getClass.getSimpleName}")
     },
     Writes.apply { value =>
-      val key = value.getClass.getSimpleName()
+      val key = value.getClass.getSimpleName
       formatMap
         .get(key)
         .map { format =>

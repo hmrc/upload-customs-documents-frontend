@@ -26,42 +26,43 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class InitiateUpscanController @Inject()(upscanInitiateConnector: UpscanInitiateConnector,
-                                         components: BaseControllerComponents)
-                                        (implicit ec: ExecutionContext) extends BaseController(components) with UpscanRequestSupport {
+class InitiateUpscanController @Inject()(
+  upscanInitiateConnector: UpscanInitiateConnector,
+  components: BaseControllerComponents
+)(implicit ec: ExecutionContext)
+    extends BaseController(components) with UpscanRequestSupport {
 
   // POST /new/initiate-upscan/:uploadId
   final def initiateNextFileUpload(uploadId: String): Action[AnyContent] =
     Action.async { implicit request =>
-      whenInSession {
+      whenInSession { implicit journeyId =>
         whenAuthenticated {
           withJourneyContext { journeyContext =>
             withUploadedFiles { files =>
               val nonce = Nonce.random
               for {
                 upscanResponse <- upscanInitiateConnector.initiate(
-                  journeyContext.hostService.userAgent,
-                  upscanRequestWhenUploadingMultipleFiles(currentJourneyId)(
-                    nonce.toString,
-                    journeyContext.config.maximumFileSizeBytes
-                  )
-                )
+                                   journeyContext.hostService.userAgent,
+                                   upscanRequestWhenUploadingMultipleFiles(journeyId)(
+                                     nonce.toString,
+                                     journeyContext.config.maximumFileSizeBytes
+                                   )
+                                 )
                 updatedFiles = files + FileUpload.Initiated(
-                  nonce = nonce,
-                  timestamp = Timestamp.now,
-                  reference = upscanResponse.reference,
+                  nonce         = nonce,
+                  timestamp     = Timestamp.now,
+                  reference     = upscanResponse.reference,
                   uploadRequest = Some(upscanResponse.uploadRequest),
-                  uploadId = Some(uploadId)
+                  uploadId      = Some(uploadId)
                 )
-                _ <- components.newJourneyCacheRepository.put(currentJourneyId)(DataKeys.uploadedFiles, updatedFiles)
+                _ <- components.newJourneyCacheRepository.put(journeyId)(DataKeys.uploadedFiles, updatedFiles)
               } yield {
-                val json =
+                Ok(
                   Json.obj(
                     "upscanReference" -> upscanResponse.reference,
                     "uploadId"        -> uploadId,
                     "uploadRequest"   -> UploadRequest.formats.writes(upscanResponse.uploadRequest)
-                  )
-                Ok(json)
+                  ))
               }
             }
           }

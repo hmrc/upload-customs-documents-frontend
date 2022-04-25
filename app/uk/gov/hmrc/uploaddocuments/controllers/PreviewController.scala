@@ -26,14 +26,14 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PreviewController @Inject()(components: BaseControllerComponents,
-                                  val actorSystem: ActorSystem)
-                                 (implicit ec: ExecutionContext) extends BaseController(components) with FileStream {
+class PreviewController @Inject()(components: BaseControllerComponents, val actorSystem: ActorSystem)(
+  implicit ec: ExecutionContext)
+    extends BaseController(components) with FileStream {
 
   // GET /preview/:reference/:fileName
   final def previewFileUploadByReference(reference: String, fileName: String): Action[AnyContent] =
     Action.async { implicit request =>
-      whenInSession {
+      whenInSession { implicit journeyId =>
         whenAuthenticated {
           withUploadedFiles { files =>
             streamFileFromUspcan(reference, files)
@@ -46,17 +46,17 @@ class PreviewController @Inject()(components: BaseControllerComponents,
     files.files.find(_.reference == reference) match {
       case Some(file: FileUpload.Accepted) =>
         getFileStream(
-          url = file.url,
-          fileName = file.fileName,
+          url          = file.url,
+          fileName     = file.fileName,
           fileMimeType = file.fileMimeType,
-          fileSize = file.fileSize,
+          fileSize     = file.fileSize,
           contentDispositionForMimeType = (fileName, fileMimeType) =>
             fileMimeType match {
               case _ =>
                 HeaderNames.CONTENT_DISPOSITION ->
                   s"""inline; filename="${fileName.filter(_.toInt < 128)}"; filename*=utf-8''${RFC3986Encoder
                     .encode(fileName)}"""
-            }
+          }
         )
       case _ => Future.successful(NotFound)
     }

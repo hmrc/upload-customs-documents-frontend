@@ -20,13 +20,12 @@ import play.api.libs.json.Json
 import play.api.libs.json.Format
 
 case class Features(
-  showUploadMultiple: Boolean = true,
-  showLanguageSelection: Boolean = true,
-  showAddAnotherDocumentButton: Boolean = false,
+  showUploadMultiple: Boolean              = true,
+  showLanguageSelection: Boolean           = true,
+  showAddAnotherDocumentButton: Boolean    = false,
   showYesNoQuestionBeforeContinue: Boolean = false
 )
 
 object Features {
-  implicit val format: Format[Features] =
-    Json.using[Json.WithDefaultValues].format[Features]
+  implicit val format: Format[Features] = Json.using[Json.WithDefaultValues].format[Features]
 }

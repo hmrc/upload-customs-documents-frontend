@@ -23,13 +23,13 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ContinueToHostController @Inject()(components: BaseControllerComponents)
-                                        (implicit ec: ExecutionContext) extends BaseController(components) {
+class ContinueToHostController @Inject()(components: BaseControllerComponents)(implicit ec: ExecutionContext)
+    extends BaseController(components) {
 
   // GET /continue-to-host
   final val continueToHost: Action[AnyContent] =
     Action.async { implicit request =>
-      whenInSession {
+      whenInSession { implicit journeyId =>
         whenAuthenticated {
           withJourneyContext { journeyConfig =>
             withUploadedFiles { files =>

@@ -80,8 +80,7 @@ object UpscanNotification {
     message: String
   )
 
-  /** File check failure reason enum, either QUARANTINE, REJECTED, UNKNOWN
-    */
+  /** File check failure reason enum, either QUARANTINE, REJECTED, UNKNOWN */
   sealed trait FailureReason
 
   /** The file has failed virus scanning */
@@ -128,10 +127,10 @@ object UpscanNotification {
   }
 
   val fileStatus = "fileStatus"
-  val READY = "READY"
-  val FAILED = "FAILED"
+  val READY      = "READY"
+  val FAILED     = "FAILED"
 
-  val upscanFileReadyFormat: Format[UpscanFileReady] = Json.format[UpscanFileReady]
+  val upscanFileReadyFormat: Format[UpscanFileReady]   = Json.format[UpscanFileReady]
   val upscanFileFailedFormat: Format[UpscanFileFailed] = Json.format[UpscanFileFailed]
 
   implicit lazy val reads: Reads[UpscanNotification] =
@@ -144,20 +143,14 @@ object UpscanNotification {
     }
 
   def addFileStatus(value: String): JsValue => JsValue = {
-    case o: JsObject =>
-      JsObject(o.value.toSeq.take(1) ++ Seq((fileStatus, JsString(value))) ++ o.value.toSeq.drop(1))
+    case JsObject(o) =>
+      JsObject(o.toSeq.take(1) ++ Seq((fileStatus, JsString(value))) ++ o.toSeq.drop(1))
     case o => o
   }
 
-  implicit lazy val writes: Writes[UpscanNotification] =
-    new Writes[UpscanNotification] {
-      override def writes(o: UpscanNotification): JsValue =
-        o match {
-          case i: UpscanFileReady =>
-            upscanFileReadyFormat.transform(addFileStatus(READY)).writes(i)
-          case i: UpscanFileFailed =>
-            upscanFileFailedFormat.transform(addFileStatus(FAILED)).writes(i)
-        }
-    }
+  implicit lazy val writes: Writes[UpscanNotification] = {
+    case i: UpscanFileReady  => upscanFileReadyFormat.transform(addFileStatus(READY)).writes(i)
+    case i: UpscanFileFailed => upscanFileFailedFormat.transform(addFileStatus(FAILED)).writes(i)
+  }
 
 }

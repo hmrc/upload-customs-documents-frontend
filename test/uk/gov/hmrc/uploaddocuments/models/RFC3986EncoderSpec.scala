@@ -34,5 +34,10 @@ class RFC3986EncoderSpec extends UnitSpec {
       val e1 = RFC3986Encoder.encode(sentence)
       URLDecoder.decode(e1, "utf8") shouldBe sentence
     }
+    "encode non US-ASCII string using percentage encoding defined in RFC 3986, checking '%' and '+'" in {
+      val sentence: String = (0 to 1024).map(_.toChar).foldLeft("")(_ + _) + '%' + '+'
+      val e1 = RFC3986Encoder.encode(sentence)
+      URLDecoder.decode(e1, "utf8") shouldBe sentence
+    }
   }
 }

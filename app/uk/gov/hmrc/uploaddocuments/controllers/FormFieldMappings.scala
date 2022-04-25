@@ -24,16 +24,16 @@ import uk.gov.hmrc.uploaddocuments.models._
 
 object FormFieldMappings {
 
-  val normalizedText: Mapping[String] = of[String].transform(_.replaceAll("\\s", ""), identity)
+  val normalizedText: Mapping[String]          = of[String].transform(_.replaceAll("\\s", ""), identity)
   val uppercaseNormalizedText: Mapping[String] = normalizedText.transform(_.toUpperCase, identity)
-  val validDomain: String = """.*@([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]{2,4})+)"""
+  val validDomain: String                      = """.*@([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]{2,4})+)"""
   val nonAllowedCharTypes =
     List(Character.CONTROL, Character.SURROGATE, Character.FORMAT, Character.PRIVATE_USE)
 
   def nonEmpty(fieldName: String): Constraint[String] =
     Constraint[String]("constraint.required") { s =>
       Option(s)
-        .filter(!_.trim.isEmpty)
+        .filter(_.trim.nonEmpty)
         .fold[ValidationResult](Invalid(ValidationError(s"error.$fieldName.required")))(_ => Valid)
     }
 
@@ -92,7 +92,7 @@ object FormFieldMappings {
     optional(text)
       .verifying(constraint[Option[String]](fieldName, "required", _.isDefined))
       .transform[String](_.get, Option.apply)
-      .verifying(constraint(fieldName, "invalid-option", implicitly[EnumerationFormats[A]].isValidKey))
+      .verifying(constraint(fieldName, "invalid-option", implicitly[EnumerationFormats[A]].keys.contains))
       .transform(implicitly[EnumerationFormats[A]].valueOf(_).get, implicitly[EnumerationFormats[A]].keyOf(_).get)
 
   def booleanMapping(fieldName: String, trueValue: String, falseValue: String): Mapping[Boolean] =

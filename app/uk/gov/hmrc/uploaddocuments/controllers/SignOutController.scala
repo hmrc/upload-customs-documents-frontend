@@ -21,17 +21,13 @@ import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-class SignOutController @Inject()(controllerComponents: MessagesControllerComponents,
-                                  appConfig: AppConfig) extends FrontendController(controllerComponents) {
+class SignOutController @Inject()(controllerComponents: MessagesControllerComponents, appConfig: AppConfig)
+    extends FrontendController(controllerComponents) {
 
   final def signOut(continueUrl: Option[String]): Action[AnyContent] =
     Action { _ =>
-      continueUrl match {
-        case Some(url) =>
-          Redirect(appConfig.signOutUrl, Map("continue" -> Seq(url)))
-        case _ =>
-          Redirect(appConfig.signOutUrl)
-      }
+      continueUrl
+        .fold(Redirect(appConfig.signOutUrl))(url => Redirect(appConfig.signOutUrl, Map("continue" -> Seq(url))))
     }
 
   final def signOutTimeout(continueUrl: Option[String]): Action[AnyContent] =

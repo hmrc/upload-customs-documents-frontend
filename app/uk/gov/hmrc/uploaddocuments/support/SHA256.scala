@@ -22,7 +22,7 @@ object SHA256 {
 
   final def compute(value: String): String = {
     val digest = MessageDigest.getInstance("SHA-256")
-    digest.update(value.toCharArray().map(_.toByte))
+    digest.update(value.toCharArray.map(_.toByte))
     convertBytesToHex(digest.digest())
   }
 

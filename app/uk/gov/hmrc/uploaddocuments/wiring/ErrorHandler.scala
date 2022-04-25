@@ -117,7 +117,8 @@ trait ErrorAuditing extends HttpAuditEvent {
     )
   }
 
-  def auditClientError(request: RequestHeader, statusCode: Int, message: String)(implicit
+  def auditClientError(request: RequestHeader, statusCode: Int, message: String)(
+    implicit
     ec: ExecutionContext
   ): Unit = {
     import play.api.http.Status._

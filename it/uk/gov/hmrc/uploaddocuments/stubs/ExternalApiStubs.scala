@@ -41,7 +41,7 @@ trait ExternalApiStubs {
   }
 
   def givenSomePage(status: Int, path: String): String = {
-    val content: String = UUID.randomUUID().toString()
+    val content: String = UUID.randomUUID().toString
     stubFor(
       get(urlPathEqualTo(path))
         .willReturn(

@@ -2,13 +2,12 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.json.{JsNumber, JsString, Json}
-import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
+import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.{Payload, Request}
 import uk.gov.hmrc.uploaddocuments.controllers.ControllerISpecBase
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
 
 import java.time.ZonedDateTime
-import scala.concurrent.ExecutionContext.Implicits.global
 
 class CallbackFromUpscanControllerISpec extends ControllerISpecBase with ExternalApiStubs {
 
@@ -17,29 +16,22 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
     "POST /internal/callback-from-upscan/journey/:journeyId" should {
       "return 400 if callback body invalid" in {
 
-        val nonce = Nonce.random
+        val nonce   = Nonce.random
         val context = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files =
-          Seq(
+        val fileUploads = FileUploads(
+          files = Seq(
             FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
             FileUpload.Posted(nonce, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-          )
-        )
+          ))
 
         setContext(context)
         setFileUploads(fileUploads)
 
         val result =
           await(
-            backchannelRequestWithoutSessionId(
-              s"/callback-from-upscan/journey/$getJourneyId/$nonce"
-            )
+            backchannelRequestWithoutSessionId(s"/callback-from-upscan/journey/$getJourneyId/$nonce")
               .withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-              .post(
-                Json.obj(
-                  "reference" -> JsString("2b72fe99-8adf-4edb-865e-622ae710f77c")
-                )
-              )
+              .post(Json.obj("reference" -> JsString("2b72fe99-8adf-4edb-865e-622ae710f77c")))
           )
 
         result.status shouldBe 400
@@ -58,10 +50,10 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
 
         givenResultPushEndpoint(
           "/result-post-url",
-          FileUploadResultPushConnector.Payload.from(
-            FileUploadContext(fileUploadSessionConfig),
-            FileUploads(files =
-              Seq(
+          Payload(
+            Request(
+              FileUploadContext(fileUploadSessionConfig),
+              FileUploads(files = Seq(
                 FileUpload.Accepted(
                   nonce,
                   Timestamp.Any,
@@ -85,7 +77,7 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
                   1,
                   Some(Json.obj("bar" -> 1))
                 )
-              )
+              ))
             ),
             "http://base.external.callback"
           ),
@@ -93,8 +85,8 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
         )
 
         val context = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files =
-          Seq(
+        val fileUploads = FileUploads(
+          files = Seq(
             FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
             FileUpload.Posted(nonce, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c"),
             FileUpload.Accepted(
@@ -109,8 +101,7 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
               1,
               Some(Json.obj("bar" -> 1))
             )
-          )
-        )
+          ))
 
         setContext(context)
         setFileUploads(fileUploads)
@@ -119,8 +110,7 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
           await(
             backchannelRequestWithoutSessionId(
               s"/callback-from-upscan/journey/$getJourneyId/$nonce"
-            )
-              .withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+            ).withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
               .post(
                 Json.obj(
                   "reference"   -> JsString("2b72fe99-8adf-4edb-865e-622ae710f77c"),
@@ -140,8 +130,8 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
         result.status shouldBe 204
 
         getContext() shouldBe Some(context)
-        getFileUploads() shouldBe Some(FileUploads(files =
-          Seq(
+        getFileUploads() shouldBe Some(
+          FileUploads(files = Seq(
             FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
             FileUpload.Accepted(
               nonce,
@@ -166,8 +156,7 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
               1,
               Some(Json.obj("bar" -> 1))
             )
-          )
-        ))
+          )))
 
         eventually {
           verifyResultPushHasHappened("/result-post-url", 1)
@@ -179,8 +168,8 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
         val nonce = Nonce.random
 
         val context = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files =
-          Seq(
+        val fileUploads = FileUploads(
+          files = Seq(
             FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
             FileUpload.Posted(nonce, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c"),
             FileUpload.Accepted(
@@ -195,17 +184,14 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
               1,
               Some(Json.obj("bar" -> 1))
             )
-          )
-        )
+          ))
 
         setContext(context)
         setFileUploads(fileUploads)
 
         val result =
           await(
-            backchannelRequestWithoutSessionId(
-              s"/callback-from-upscan/journey/$getJourneyId/$nonce"
-            )
+            backchannelRequestWithoutSessionId(s"/callback-from-upscan/journey/$getJourneyId/$nonce")
               .withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
               .post(
                 Json.obj(
@@ -222,8 +208,8 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
         result.status shouldBe 204
 
         getContext() shouldBe Some(context)
-        getFileUploads() shouldBe Some(FileUploads(files =
-          Seq(
+        getFileUploads() shouldBe Some(
+          FileUploads(files = Seq(
             FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
             FileUpload.Failed(
               nonce,
@@ -231,7 +217,7 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
               "2b72fe99-8adf-4edb-865e-622ae710f77c",
               UpscanNotification.FailureDetails(
                 failureReason = UpscanNotification.QUARANTINE,
-                message = "e.g. This file has a virus"
+                message       = "e.g. This file has a virus"
               )
             ),
             FileUpload.Accepted(
@@ -246,8 +232,7 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
               1,
               Some(Json.obj("bar" -> 1))
             )
-          )
-        ))
+          )))
 
         eventually {
           verifyResultPushHasNotHappened("/result-post-url")
@@ -259,8 +244,8 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
         val nonce = Nonce.random
 
         val context = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files =
-          Seq(
+        val fileUploads = FileUploads(
+          files = Seq(
             FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
             FileUpload.Accepted(
               nonce,
@@ -273,8 +258,7 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
               "application/pdf",
               1
             )
-          )
-        )
+          ))
 
         setContext(context)
         setFileUploads(fileUploads)
@@ -283,8 +267,7 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
           await(
             backchannelRequestWithoutSessionId(
               s"/callback-from-upscan/journey/$getJourneyId/$nonce"
-            )
-              .withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+            ).withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
               .post(
                 Json.obj(
                   "reference"   -> JsString("2b72fe99-8adf-4edb-865e-622ae710f77c"),
@@ -304,8 +287,8 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
         result.status shouldBe 204
 
         getContext() shouldBe Some(context)
-        getFileUploads() shouldBe Some(FileUploads(files =
-          Seq(
+        getFileUploads() shouldBe Some(
+          FileUploads(files = Seq(
             FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
             FileUpload.Accepted(
               nonce,
@@ -318,8 +301,7 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
               "application/pdf",
               1
             )
-          )
-        ))
+          )))
 
         eventually {
           verifyResultPushHasNotHappened("/continue")
@@ -331,12 +313,11 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
         val nonce = Nonce.random
 
         val context = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files =
-          Seq(
+        val fileUploads = FileUploads(
+          files = Seq(
             FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
             FileUpload.Posted(nonce, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-          )
-        )
+          ))
 
         setContext(context)
         setFileUploads(fileUploads)
@@ -345,8 +326,7 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
           await(
             backchannelRequestWithoutSessionId(
               s"/callback-from-upscan/journey/$getJourneyId/${Nonce.random}"
-            )
-              .withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+            ).withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
               .post(
                 Json.obj(
                   "reference"   -> JsString("2b72fe99-8adf-4edb-865e-622ae710f77c"),
@@ -366,12 +346,11 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
         result.status shouldBe 204
 
         getContext() shouldBe Some(context)
-        getFileUploads() shouldBe Some(FileUploads(files =
-          Seq(
+        getFileUploads() shouldBe Some(
+          FileUploads(files = Seq(
             FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
             FileUpload.Posted(nonce, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-          )
-        ))
+          )))
 
         eventually {
           verifyResultPushHasNotHappened("/continue")

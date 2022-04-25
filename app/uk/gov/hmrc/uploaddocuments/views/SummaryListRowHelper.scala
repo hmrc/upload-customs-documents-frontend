@@ -29,11 +29,11 @@ trait SummaryListRowHelper {
     value: String,
     visuallyHiddenText: Option[String],
     action: (Call, String),
-    keyClasses: Option[String] = None,
+    keyClasses: Option[String]   = None,
     valueClasses: Option[String] = None,
-    url: Option[String] = None,
-    line2: Option[String] = None,
-    escape: Boolean = true
+    url: Option[String]          = None,
+    line2: Option[String]        = None,
+    escape: Boolean              = true
   )(implicit messages: Messages): SummaryListRow =
     SummaryListRow(
       key = Key(
@@ -56,32 +56,13 @@ trait SummaryListRowHelper {
         Actions(
           items = Seq(
             ActionItem(
-              href = action._1.url,
-              content = Text(messages(action._2)),
+              href               = action._1.url,
+              content            = Text(messages(action._2)),
               visuallyHiddenText = visuallyHiddenText.map(messages.apply(_))
             )
           ),
           classes = "govuk-!-width-one-third"
         )
       )
-    )
-
-  def summaryListRowNoActions(
-    label: String,
-    value: String,
-    visuallyHiddenText: Option[String],
-    keyClasses: Option[String] = None,
-    valueClasses: Option[String] = None
-  )(implicit messages: Messages): SummaryListRow =
-    SummaryListRow(
-      key = Key(
-        content = Text(messages(label)),
-        classes = keyClasses.getOrElse("govuk-!-width-one-third")
-      ),
-      value = Value(
-        content = HtmlContent(value),
-        classes = valueClasses.getOrElse("govuk-!-width-two-thirds")
-      ),
-      actions = None
     )
 }
