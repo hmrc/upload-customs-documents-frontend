@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.uploaddocuments.controllers
+package uk.gov.hmrc.uploaddocuments.forms
 
 import play.api.data.Form
-import play.api.data.Forms._
-import uk.gov.hmrc.uploaddocuments.models._
+import play.api.data.Forms.{mapping, nonEmptyText, optional, text}
+import uk.gov.hmrc.uploaddocuments.models.{S3UploadError, S3UploadSuccess}
 
 object Forms {
 
@@ -30,18 +30,18 @@ object Forms {
 
   val UpscanUploadSuccessForm = Form[S3UploadSuccess](
     mapping(
-      "key"    -> nonEmptyText,
+      "key" -> nonEmptyText,
       "bucket" -> optional(nonEmptyText)
     )(S3UploadSuccess.apply)(S3UploadSuccess.unapply)
   )
 
   val UpscanUploadErrorForm = Form[S3UploadError](
     mapping(
-      "key"            -> nonEmptyText,
-      "errorCode"      -> text,
-      "errorMessage"   -> text,
+      "key" -> nonEmptyText,
+      "errorCode" -> text,
+      "errorMessage" -> text,
       "errorRequestId" -> optional(text),
-      "errorResource"  -> optional(text)
+      "errorResource" -> optional(text)
     )(S3UploadError.apply)(S3UploadError.unapply)
   )
 

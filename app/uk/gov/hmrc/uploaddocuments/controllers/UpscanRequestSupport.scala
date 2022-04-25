@@ -17,7 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.RequestHeader
-import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateRequest
+import uk.gov.hmrc.uploaddocuments.models.UpscanInitiateRequest
 
 trait UpscanRequestSupport { baseController: BaseController =>
 

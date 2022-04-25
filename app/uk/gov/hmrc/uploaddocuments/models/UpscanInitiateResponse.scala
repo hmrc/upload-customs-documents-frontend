@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.uploaddocuments.connectors
+package uk.gov.hmrc.uploaddocuments.models
 
 import play.api.libs.json.{Format, Json}
-import uk.gov.hmrc.uploaddocuments.models.UploadRequest
 
 /** Response from Upscan Initiate. see: https://github.com/hmrc/upscan-initiate#post-upscanv2initiate
   *

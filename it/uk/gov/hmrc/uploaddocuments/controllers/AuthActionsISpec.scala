@@ -13,80 +13,52 @@ import scala.concurrent.Future
 
 class AuthActionsISpec extends AuthActionISpecSetup {
 
-  "authorisedWithEnrolment" should {
+  "whenAuthenticated" should {
 
-    "authorize when enrolment granted" in {
-      givenAuthorisedForEnrolment(Enrolment("serviceName", "serviceKey", "serviceIdentifierFoo"), required = true)
-      val result = TestController.testAuthorizedWithEnrolment("serviceName", "serviceKey")
-      status(result) shouldBe 200
-      bodyOf(result) should be("12345-credId,serviceIdentifierFoo")
+    "authorize when logged in session exists" in {
+      givenAuthorisedWithoutEnrolments
+      val result = TestController.testWhenAuthenticated
+      status(result) shouldBe OK
+      bodyOf(result) should be("authenticated")
     }
 
-    "redirect to government gateway login when insufficient enrollments" in {
-      givenRequestIsNotAuthorised("InsufficientEnrolments")
-      val result = TestController.testAuthorizedWithEnrolment("serviceName", "serviceKey")
-      status(result) shouldBe 303
-      redirectLocation(result).get should include(
-        "/bas-gateway/sign-in?continue_url=%2F&origin=upload-customs-documents-frontend"
-      )
+    "authorize stride users" in {
+      givenAuthorisedAsStrideUser
+      val result = TestController.testWhenAuthenticated
+      status(result) shouldBe OK
+      bodyOf(result) should be("authenticated")
     }
 
     "redirect to government gateway login when authorization fails" in {
       givenRequestIsNotAuthorised("IncorrectCredentialStrength")
-      val result = TestController.testAuthorizedWithEnrolment("serviceName", "serviceKey")
-      status(result) shouldBe 303
+      val result = TestController.testWhenAuthenticated
+      status(result) shouldBe SEE_OTHER
       redirectLocation(result).get should include(
         "/bas-gateway/sign-in?continue_url=%2F&origin=upload-customs-documents-frontend"
       )
     }
   }
 
-  "authorisedWithoutEnrolment" should {
+  "whenAuthenticatedInBackchannel" should {
 
-    "authorize when insufficient enrollments" in {
+    "authorize when logged in session exists" in {
       givenAuthorisedWithoutEnrolments
-      val result = TestController.testAuhorizedWithoutEnrolment
-      status(result) shouldBe 200
-      bodyOf(result) should be("12345-credId,none")
+      val result = TestController.testWhenAuthenticatedInBackchannel
+      status(result) shouldBe OK
+      bodyOf(result) should be("authenticatedBackchannel")
     }
 
     "authorize stride users" in {
       givenAuthorisedAsStrideUser
-      val result = TestController.testAuhorizedWithoutEnrolment
-      status(result) shouldBe 200
-      bodyOf(result) should be("12345-credId,none")
+      val result = TestController.testWhenAuthenticatedInBackchannel
+      status(result) shouldBe OK
+      bodyOf(result) should be("authenticatedBackchannel")
     }
 
-    "redirect to government gateway login when authorization fails" in {
+    "return forbidden when not authorised" in {
       givenRequestIsNotAuthorised("IncorrectCredentialStrength")
-      val result = TestController.testAuhorizedWithoutEnrolment
-      status(result) shouldBe 303
-      redirectLocation(result).get should include(
-        "/bas-gateway/sign-in?continue_url=%2F&origin=upload-customs-documents-frontend"
-      )
-    }
-  }
-
-  "authorisedWithoutEnrolmentReturningForbidden" should {
-
-    "authorize when insufficient enrollments" in {
-      givenAuthorisedWithoutEnrolments
-      val result = TestController.testAuhorizedWithoutEnrolmentReturningForbidden
-      status(result) shouldBe 200
-      bodyOf(result) should be("12345-credId,none")
-    }
-
-    "authorize stride users" in {
-      givenAuthorisedAsStrideUser
-      val result = TestController.testAuhorizedWithoutEnrolmentReturningForbidden
-      status(result) shouldBe 200
-      bodyOf(result) should be("12345-credId,none")
-    }
-
-    "redirect to government gateway login when authorization fails" in {
-      givenRequestIsNotAuthorised("IncorrectCredentialStrength")
-      val result = TestController.testAuhorizedWithoutEnrolmentReturningForbidden
-      status(result) shouldBe 403
+      val result = TestController.testWhenAuthenticatedInBackchannel
+      status(result) shouldBe FORBIDDEN
     }
   }
 }
@@ -108,20 +80,11 @@ trait AuthActionISpecSetup extends AppISpec {
     implicit val hc: HeaderCarrier = HeaderCarrier()
     implicit val request = FakeRequest().withSession(SessionKeys.authToken -> "Bearer XYZ")
 
-    def testAuthorizedWithEnrolment[A](serviceName: String, identifierKey: String): Result =
-      await(super.authorisedWithEnrolment(serviceName, identifierKey) { case (uid, res) =>
-        Future.successful(Ok(uid.getOrElse("none") + "," + res.getOrElse("none")))
-      })
+    def testWhenAuthenticated: Result =
+      await(super.whenAuthenticated { Future.successful(Ok("authenticated")) })
 
-    def testAuhorizedWithoutEnrolment[A]: Result =
-      await(super.authorisedWithoutEnrolment { case (uid, res) =>
-        Future.successful(Ok(uid.getOrElse("none") + "," + res.getOrElse("none")))
-      })
-
-    def testAuhorizedWithoutEnrolmentReturningForbidden[A]: Result =
-      await(super.authorisedWithoutEnrolmentReturningForbidden { case (uid, res) =>
-        Future.successful(Ok(uid.getOrElse("none") + "," + res.getOrElse("none")))
-      })
+    def testWhenAuthenticatedInBackchannel: Result =
+      await(super.whenAuthenticatedInBackchannel { Future.successful(Ok("authenticatedBackchannel")) })
   }
 
 }

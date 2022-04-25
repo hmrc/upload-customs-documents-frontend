@@ -17,12 +17,12 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.uploaddocuments.views.FileUploadViews
+import uk.gov.hmrc.uploaddocuments.views.html.StartView
 
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class StartController @Inject()(views: FileUploadViews, components: BaseControllerComponents)
+class StartController @Inject()(view: StartView, components: BaseControllerComponents)
     extends BaseController(components) {
 
   // GET /
@@ -31,7 +31,7 @@ class StartController @Inject()(views: FileUploadViews, components: BaseControll
       if (preferUploadMultipleFiles)
         Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles)
       else
-        Ok(views.startView(routes.ChooseMultipleFilesController.showChooseMultipleFiles))
+        Ok(view(routes.ChooseMultipleFilesController.showChooseMultipleFiles))
     }
 
 }

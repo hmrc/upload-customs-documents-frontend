@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.uploaddocuments.connectors
+package uk.gov.hmrc.uploaddocuments.models
 
 import play.api.libs.json.{Format, Json}
 

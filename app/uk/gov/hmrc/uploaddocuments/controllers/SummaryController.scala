@@ -18,7 +18,8 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.data.Form
 import play.api.mvc.{Action, AnyContent, Call, Request}
-import uk.gov.hmrc.uploaddocuments.controllers.Forms.YesNoChoiceForm
+import uk.gov.hmrc.uploaddocuments.forms.Forms
+import uk.gov.hmrc.uploaddocuments.forms.Forms.YesNoChoiceForm
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
 import uk.gov.hmrc.uploaddocuments.views.html.{SummaryNoChoiceView, SummaryView}
 

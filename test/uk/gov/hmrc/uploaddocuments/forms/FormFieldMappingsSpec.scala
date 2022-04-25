@@ -14,22 +14,34 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.uploaddocuments.controllers
+package uk.gov.hmrc.uploaddocuments.forms
 
-import play.api.data.validation.{Invalid, Valid}
+import play.api.data.FormError
 import uk.gov.hmrc.uploaddocuments.support.{FormMappingMatchers, UnitSpec}
 
 class FormFieldMappingsSpec extends UnitSpec with FormMappingMatchers {
 
   "FormFieldMappings" should {
 
-    "validate all constraints" in {
-      FormFieldMappings.all(FormFieldMappings.nonEmpty("foo")).apply("a") shouldBe Valid
-      FormFieldMappings.all(FormFieldMappings.nonEmpty("foo")).apply("") shouldBe a[Invalid]
-      FormFieldMappings
-        .all(FormFieldMappings.nonEmpty("foo1"), FormFieldMappings.nonEmpty("foo2"))
-        .apply("") shouldBe a[Invalid]
+    "for YesNoForm" should {
+
+      lazy val booleanMapping = FormFieldMappings.booleanMapping("field", "yes", "no")
+
+      "error when no boolean answer supplied" in {
+        booleanMapping.bind(Map("" -> "")) shouldBe Left(List(FormError("", List("error.field.required"), List())))
+      }
+
+      "error when not valid boolean answer supplied" in {
+        booleanMapping.bind(Map("" -> "notValid")) shouldBe Left(List(FormError("", List("error.field.required"), List())))
+      }
+
+      "true when trueValue" in {
+        booleanMapping.bind(Map("" -> "yes")) shouldBe Right(true)
+      }
+
+      "false when falseValue" in {
+        booleanMapping.bind(Map("" -> "no")) shouldBe Right(false)
+      }
     }
   }
-
 }

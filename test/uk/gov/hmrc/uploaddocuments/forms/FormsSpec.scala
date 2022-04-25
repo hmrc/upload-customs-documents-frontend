@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.uploaddocuments.controllers
+package uk.gov.hmrc.uploaddocuments.forms
 
-import uk.gov.hmrc.uploaddocuments.support.UnitSpec
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.support.FormValidator
+import uk.gov.hmrc.uploaddocuments.support.{FormValidator, UnitSpec}
 
 class FormsSpec extends UnitSpec with FormValidator {
 
