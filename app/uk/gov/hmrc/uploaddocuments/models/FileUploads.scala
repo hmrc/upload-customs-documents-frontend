@@ -17,7 +17,6 @@
 package uk.gov.hmrc.uploaddocuments.models
 
 import play.api.libs.json.{Format, JsValue, Json}
-import uk.gov.hmrc.uploaddocuments.journeys.JourneyModel.minStatusOverwriteGapInMilliseconds
 import uk.gov.hmrc.uploaddocuments.support.HtmlCleaner
 
 import java.time.ZonedDateTime
@@ -63,6 +62,8 @@ sealed trait FileUpload {
   val timestamp: Timestamp
   val reference: String
   val isReady: Boolean
+
+  final val minStatusOverwriteGapInMilliseconds: Long = 1000
   final def canOverwriteFileUploadStatus(now: Timestamp): Boolean =
     !isReady || now.isAfter(timestamp, minStatusOverwriteGapInMilliseconds)
 }

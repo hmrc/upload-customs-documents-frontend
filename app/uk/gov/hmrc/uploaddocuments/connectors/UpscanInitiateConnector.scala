@@ -17,13 +17,14 @@
 package uk.gov.hmrc.uploaddocuments.connectors
 
 import java.net.URL
-
 import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
+
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.http.HttpReads.Implicits._
+import uk.gov.hmrc.uploaddocuments.models.{UpscanInitiateRequest, UpscanInitiateResponse}
 
 import scala.concurrent.{ExecutionContext, Future}
 

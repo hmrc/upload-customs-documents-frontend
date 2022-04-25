@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.uploaddocuments.repository
 
-import uk.gov.hmrc.mongo.cache.DataKey
+import uk.gov.hmrc.mongo.cache.{CacheIdType, DataKey, MongoCacheRepository}
 import uk.gov.hmrc.mongo.{MongoComponent, TimestampSupport}
-import uk.gov.hmrc.uploaddocuments.controllers.BaseController
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
@@ -31,11 +30,13 @@ class JourneyCacheRepository @Inject()(
   timestampSupport: TimestampSupport,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext)
-    extends CacheRepository(
+    extends MongoCacheRepository(
       mongoComponent   = mongoComponent,
       collectionName   = "upload-customs-documents-journeys",
       ttl              = appConfig.mongoSessionExpiration,
-      timestampSupport = timestampSupport
+      timestampSupport = timestampSupport,
+      replaceIndexes   = true,
+      cacheIdType      = CacheIdType.SimpleCacheId
     )
 
 object JourneyCacheRepository {

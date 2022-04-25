@@ -4,6 +4,7 @@ import play.api.Application
 import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
 import uk.gov.hmrc.uploaddocuments.support.AppISpec
 import uk.gov.hmrc.http._
+import uk.gov.hmrc.uploaddocuments.models.{UpscanInitiateRequest, UpscanInitiateResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import uk.gov.hmrc.uploaddocuments.stubs.DataStreamStubs

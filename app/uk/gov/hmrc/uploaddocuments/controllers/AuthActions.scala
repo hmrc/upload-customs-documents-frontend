@@ -16,65 +16,32 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.mvc.{Request, Result}
-import uk.gov.hmrc.auth.core.AuthProvider.GovernmentGateway
-import uk.gov.hmrc.auth.core.AuthProvider.PrivilegedApplication
+import play.api.Logger
+import play.api.mvc.{Request, Result, Results}
+import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
 import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve._
 import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.AuthRedirects
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.support.CallOps
 
 import scala.concurrent.{ExecutionContext, Future}
-import play.api.mvc.Results
-import play.api.Logger
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 trait AuthActions extends AuthorisedFunctions with AuthRedirects {
 
-  protected def authorisedWithEnrolment[A](serviceName: String, identifierKey: String)(
-    body: ((Option[String], Option[String])) => Future[Result]
-  )(implicit request: Request[A], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] =
-    authorised(Enrolment(serviceName) and AuthProviders(GovernmentGateway))
-      .retrieve(credentials and authorisedEnrolments) {
-        case credentials ~ enrolments =>
-          val id = for {
-            enrolment  <- enrolments.getEnrolment(serviceName)
-            identifier <- enrolment.getIdentifier(identifierKey)
-          } yield body((credentials.map(_.providerId), Some(identifier.value)))
-          id.getOrElse(throw InsufficientEnrolments())
-      }
-      .recover(handleFailure)
-
-  protected def authorisedWithoutEnrolment[A](
-    body: ((Option[String], Option[String])) => Future[Result]
-  )(implicit request: Request[A], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] =
-    authorised(AuthProviders(GovernmentGateway, PrivilegedApplication))
-      .retrieve(credentials)(credentials => body((credentials.map(_.providerId), None)))
-      .recover(handleFailure)
-
-  protected def authorisedWithoutEnrolmentReturningForbidden[A](
-    body: ((Option[String], Option[String])) => Future[Result]
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Result] =
-    authorised(AuthProviders(GovernmentGateway, PrivilegedApplication))
-      .retrieve(credentials)(credentials => body((credentials.map(_.providerId), None)))
-      .recover {
-        case e: AuthorisationException =>
-          Logger(getClass).warn(s"Access forbidden because of ${e.getMessage}")
-          Results.Forbidden
-      }
-
-  protected def whenAuthenticated[A](
-    body: => Future[Result]
-  )(implicit request: Request[A], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] =
+  protected def whenAuthenticated[A](body: => Future[Result])
+                                    (implicit request: Request[A], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] =
     authorised(AuthProviders(GovernmentGateway, PrivilegedApplication))
       .retrieve(credentials)(_ => body)
-      .recover(handleFailure)
+      .recover {
+        case _: AuthorisationException =>
+          val continueUrl = CallOps.localFriendlyUrl(env, config)(request.uri, request.host)
+          toGGLogin(continueUrl)
+      }
 
-  protected def whenAuthenticatedInBackchannel[A](
-    body: => Future[Result]
-  )(implicit request: Request[A], ec: ExecutionContext): Future[Result] = {
+  protected def whenAuthenticatedInBackchannel[A](body: => Future[Result])
+                                                 (implicit request: Request[A], ec: ExecutionContext): Future[Result] = {
     implicit val hc = HeaderCarrierConverter.fromRequest(request) // required to process Session-ID from the cookie
     authorised(AuthProviders(GovernmentGateway, PrivilegedApplication))
       .retrieve(credentials)(_ => body)
@@ -84,11 +51,4 @@ trait AuthActions extends AuthorisedFunctions with AuthRedirects {
           Results.Forbidden
       }
   }
-
-  protected def handleFailure(implicit request: Request[_]): PartialFunction[Throwable, Result] = {
-    case _: AuthorisationException =>
-      val continueUrl = CallOps.localFriendlyUrl(env, config)(request.uri, request.host)
-      toGGLogin(continueUrl)
-  }
-
 }

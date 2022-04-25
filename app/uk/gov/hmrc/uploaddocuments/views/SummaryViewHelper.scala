@@ -27,7 +27,7 @@ import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryList
 import play.api.mvc.Call
 
 @Singleton
-class SummaryViewHelper extends RadioItemsHelper with SummaryListRowHelper {
+class SummaryViewHelper extends SummaryListRowHelper {
 
   def uploadAnotherFileItems(form: Form[_])(implicit messages: Messages): Seq[RadioItem] =
     Seq(

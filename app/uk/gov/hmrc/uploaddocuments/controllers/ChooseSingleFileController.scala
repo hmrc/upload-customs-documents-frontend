@@ -17,7 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent, Request}
-import uk.gov.hmrc.uploaddocuments.connectors.{UpscanInitiateConnector, UpscanInitiateResponse}
+import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
