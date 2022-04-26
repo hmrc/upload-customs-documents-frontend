@@ -25,6 +25,7 @@ import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileUp
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.services.ScheduleAfter
 import uk.gov.hmrc.uploaddocuments.views.html.WaitingForFileVerificationView
+import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -34,15 +35,10 @@ class FileVerificationController @Inject()(
   components: BaseControllerComponents,
   waitingView: WaitingForFileVerificationView,
   actorSystem: ActorSystem
-)(implicit ec: ExecutionContext)
+)(implicit ec: ExecutionContext, appConfig: AppConfig)
     extends BaseController(components) {
 
   implicit val scheduler: Scheduler = actorSystem.scheduler
-
-  // TODO: This should be refactored into AppConf so that it can be changed on the fly
-  /** Initial time to wait for callback arrival. */
-  final val INITIAL_CALLBACK_WAIT_TIME_SECONDS = 2
-  final val intervalInMiliseconds: Long        = 500
 
   // GET /file-verification?key
   def showWaitingForFileVerification(key: Option[String]): Action[AnyContent] =
@@ -53,8 +49,8 @@ class FileVerificationController @Inject()(
           whenInSession { implicit journeyId =>
             whenAuthenticated {
               withJourneyContext { journeyContext =>
-                val timeoutNanoTime: Long = System.nanoTime() + INITIAL_CALLBACK_WAIT_TIME_SECONDS * 1000000000L
-                waitForUpscanResponse(upscanReference, journeyId, intervalInMiliseconds, timeoutNanoTime)(
+                val timeoutNanoTime: Long = System.nanoTime() + appConfig.upscanInitialWaitTime.toNanos
+                waitForUpscanResponse(upscanReference, journeyId, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
                   {
                     case _: FileUpload.Accepted => Future(Redirect(routes.SummaryController.showSummary))
                     case _                      => Future(Redirect(routes.ChooseSingleFileController.showChooseFile))
@@ -149,8 +145,8 @@ class FileVerificationController @Inject()(
             components.newJourneyCacheRepository
               .put(journeyId)(DataKeys.uploadedFiles, updatedFileUploads)
               .flatMap { _ =>
-                val timeoutNanoTime: Long = System.nanoTime() + INITIAL_CALLBACK_WAIT_TIME_SECONDS * 1000000000L
-                waitForUpscanResponse(upscanReference, journeyId, intervalInMiliseconds, timeoutNanoTime)(
+                val timeoutNanoTime: Long = System.nanoTime() + appConfig.upscanInitialWaitTime.toNanos
+                waitForUpscanResponse(upscanReference, journeyId, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
                   _ => Future(Created),
                   Future(Accepted)
                 ).map(_.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*"))
