@@ -12,6 +12,7 @@ import uk.gov.hmrc.uploaddocuments.stubs.{AuthStubs, DataStreamStubs}
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadSessionConfig, Nonce}
 
 abstract class BaseISpec
     extends UnitSpec with WireMockSupport with AuthStubs with DataStreamStubs with MetricsTestSupport {
@@ -69,5 +70,13 @@ abstract class BaseISpec
 
   implicit def hc(implicit request: FakeRequest[_]): HeaderCarrier =
     HeaderCarrierConverter.fromRequestAndSession(request, request.session)
+
+  final val fileUploadSessionConfig =
+    FileUploadSessionConfig(
+      nonce       = Nonce.random,
+      continueUrl = s"$wireMockBaseUrlAsString/continue-url",
+      backlinkUrl = s"$wireMockBaseUrlAsString/backlink-url",
+      callbackUrl = s"$wireMockBaseUrlAsString/result-post-url"
+    )
 
 }
