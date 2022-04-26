@@ -32,6 +32,19 @@ trait TestData {
 
   val journeyId = "testJourneyId"
 
+  val fileUploadSessionConfig =
+    FileUploadSessionConfig(
+      nonce       = Nonce.random,
+      continueUrl = s"/continue-url",
+      backlinkUrl = s"/backlink-url",
+      callbackUrl = s"/result-post-url"
+    )
+
+  implicit val journeyContext = FileUploadContext(
+    fileUploadSessionConfig,
+    HostService.Any
+  )
+
   val nonEmptyFileUploads = FileUploads(files =
     Seq(
       FileUpload.Accepted(

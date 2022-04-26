@@ -17,7 +17,9 @@
 package uk.gov.hmrc.uploaddocuments.services
 
 import akka.actor.{ActorSystem, Scheduler}
+import play.api.i18n.Messages
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.uploaddocuments.controllers.routes
 import uk.gov.hmrc.uploaddocuments.journeys.TestData
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.support.UnitSpec
@@ -33,6 +35,7 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
   implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
   implicit val hc = HeaderCarrier()
   implicit val jid = journeyId
+  implicit val messages = mock[Messages]
 
   implicit val scheduler: Scheduler = ActorSystem("FileVerificationTestsActor").scheduler
 
@@ -102,6 +105,96 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
               mockWithFiles(journeyId)(Some(FileUploads(Seq(postedFileSameReference)))).repeat(6)
 
               await(actual) shouldBe "TimedOut"
+            }
+          }
+        }
+      }
+    }
+
+    "calling .getFileVerificationStatus()" when {
+
+      "Journey is not found" must {
+
+        "return None" in {
+
+          mockWithFiles(journeyId)(None)
+          await(TestFileVerificationService.getFileVerificationStatus("foo")) shouldBe None
+        }
+      }
+
+      "Journey is found" when {
+
+        "file is not found" must {
+
+          "return None" in {
+
+            mockWithFiles(journeyId)(Some(FileUploads()))
+            await(TestFileVerificationService.getFileVerificationStatus("foo")) shouldBe None
+          }
+        }
+
+        "file is found" when {
+
+          "content.allowedFilesTypesHint has been set in the context" must {
+
+            "return FileVerificationStatus with the expected hint as the allowedFileTypesHint" in {
+
+              val hint = "Hint"
+              val context = journeyContext.copy(config = fileUploadSessionConfig.copy(content = CustomizedServiceContent(
+                allowedFilesTypesHint = Some(hint)
+              )))
+
+              mockWithFiles(journeyId)(Some(FileUploads(Seq(acceptedFileUpload))))
+
+              await(TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)) shouldBe Some(
+                FileVerificationStatus(
+                  fileUpload = acceptedFileUpload,
+                  filePreviewUrl = routes.PreviewController.previewFileUploadByReference,
+                  maximumFileSizeBytes = journeyContext.config.maximumFileSizeBytes.toInt,
+                  allowedFileTypesHint = hint
+                )
+              )
+            }
+          }
+
+          "content.allowedFilesTypesHint has NOT been set in the context" when {
+
+            "allowedFileExtensions has been set in the context" must {
+
+              "return FileVerificationStatus with the expected file extensions as the allowedFileTypesHint" in {
+
+                val extensions = "Extensions"
+                val context = journeyContext.copy(config = fileUploadSessionConfig.copy(allowedFileExtensions = Some(extensions)))
+
+                mockWithFiles(journeyId)(Some(FileUploads(Seq(acceptedFileUpload))))
+
+                await(TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)) shouldBe
+                  Some(
+                    FileVerificationStatus(
+                      fileUpload = acceptedFileUpload,
+                      filePreviewUrl = routes.PreviewController.previewFileUploadByReference,
+                      maximumFileSizeBytes = journeyContext.config.maximumFileSizeBytes.toInt,
+                      allowedFileTypesHint = extensions
+                    )
+                  )
+              }
+            }
+
+            "allowedFileExtensions not been set in the context" must {
+
+              "return FileVerificationStatus with the allowedContentTypes as the allowedFileTypesHint" in {
+
+                mockWithFiles(journeyId)(Some(FileUploads(Seq(acceptedFileUpload))))
+
+                await(TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)) shouldBe Some(
+                  FileVerificationStatus(
+                    fileUpload = acceptedFileUpload,
+                    filePreviewUrl = routes.PreviewController.previewFileUploadByReference,
+                    maximumFileSizeBytes = journeyContext.config.maximumFileSizeBytes.toInt,
+                    allowedFileTypesHint = journeyContext.config.allowedContentTypes
+                  )
+                )
+              }
             }
           }
         }

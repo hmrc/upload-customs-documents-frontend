@@ -34,7 +34,7 @@ trait MockFileUploadService extends MockFactory {
           case Some(value) =>
             mock.productElement(1).asInstanceOf[FileUploads => Future[T]](value)
           case None =>
-            mock.productElement(0).asInstanceOf[Future[T]]
+            mock.productElement(0).asInstanceOf[() => Future[T]]()
         }
       }
   }

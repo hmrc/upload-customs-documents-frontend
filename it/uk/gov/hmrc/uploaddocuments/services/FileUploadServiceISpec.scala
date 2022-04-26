@@ -76,7 +76,7 @@ class FileUploadServiceISpec extends AppISpec with LogCapturing with BeforeAndAf
 
         await(repo.collection.countDocuments().toFuture()) shouldBe 0
 
-        await(testFileUploadService.getFiles()(journeyId)) shouldBe None
+        await(testFileUploadService.getFiles(journeyId)) shouldBe None
       }
 
       "return an empty FileUploads when no files exist" in {
@@ -86,7 +86,7 @@ class FileUploadServiceISpec extends AppISpec with LogCapturing with BeforeAndAf
         await(testFileUploadService.putFiles(FileUploads())(journeyId))
         await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
-        await(testFileUploadService.getFiles()(journeyId)) shouldBe Some(FileUploads())
+        await(testFileUploadService.getFiles(journeyId)) shouldBe Some(FileUploads())
       }
 
       "return non-empty FileUploads when files exist" in {
@@ -98,7 +98,7 @@ class FileUploadServiceISpec extends AppISpec with LogCapturing with BeforeAndAf
         await(testFileUploadService.putFiles(files)(journeyId))
         await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
-        await(testFileUploadService.getFiles()(journeyId)) shouldBe Some(files)
+        await(testFileUploadService.getFiles(journeyId)) shouldBe Some(files)
       }
     }
 
@@ -143,7 +143,7 @@ class FileUploadServiceISpec extends AppISpec with LogCapturing with BeforeAndAf
           await(testFileUploadService.markFileAsPosted(key)(journeyId)) shouldBe a[Some[CacheItem]]
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
-          await(testFileUploadService.getFiles()(journeyId)) shouldBe Some(
+          await(testFileUploadService.getFiles(journeyId)) shouldBe Some(
             FileUploads(Seq(
               acceptedFileUpload,
               FileUpload.Posted(Nonce.Any, Timestamp.Any, key)
@@ -172,7 +172,7 @@ class FileUploadServiceISpec extends AppISpec with LogCapturing with BeforeAndAf
 
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
-          await(testFileUploadService.getFiles()(journeyId)) shouldBe Some(files)
+          await(testFileUploadService.getFiles(journeyId)) shouldBe Some(files)
         }
       }
 
@@ -206,7 +206,7 @@ class FileUploadServiceISpec extends AppISpec with LogCapturing with BeforeAndAf
           await(testFileUploadService.markFileAsRejected(s3Errors(key))(journeyId, FileUploadContext(fileUploadSessionConfig))) shouldBe a[Some[CacheItem]]
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
-          await(testFileUploadService.getFiles()(journeyId)) shouldBe Some(
+          await(testFileUploadService.getFiles(journeyId)) shouldBe Some(
             FileUploads(Seq(
               acceptedFileUpload,
               FileUpload.Rejected(Nonce.Any, Timestamp.Any, key, s3Errors(key))
@@ -234,7 +234,7 @@ class FileUploadServiceISpec extends AppISpec with LogCapturing with BeforeAndAf
 
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
-          await(testFileUploadService.getFiles()(journeyId)) shouldBe Some(files)
+          await(testFileUploadService.getFiles(journeyId)) shouldBe Some(files)
         }
       }
 

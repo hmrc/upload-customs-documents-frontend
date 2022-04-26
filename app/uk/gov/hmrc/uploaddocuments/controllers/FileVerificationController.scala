@@ -20,10 +20,8 @@ import akka.actor.{ActorSystem, Scheduler}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, Request}
 import play.mvc.Http.HeaderNames
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileUploads, FileVerificationStatus, Timestamp}
-import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
-import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, FileVerificationService, ScheduleAfter}
+import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext}
+import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, FileVerificationService}
 import uk.gov.hmrc.uploaddocuments.views.html.WaitingForFileVerificationView
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
@@ -35,7 +33,8 @@ class FileVerificationController @Inject()(
                                             components: BaseControllerComponents,
                                             waitingView: WaitingForFileVerificationView,
                                             actorSystem: ActorSystem,
-                                            fileVerificationService: FileVerificationService
+                                            fileVerificationService: FileVerificationService,
+                                            fileUploadService: FileUploadService
                                           )(implicit ec: ExecutionContext, appConfig: AppConfig)
   extends BaseController(components) {
 
@@ -77,26 +76,12 @@ class FileVerificationController @Inject()(
     Action.async { implicit request =>
       whenInSession { implicit journeyId =>
         whenAuthenticated {
-          withJourneyContext { journeyContext =>
-            withUploadedFiles {
-              _.files.find(_.reference == reference) match {
-                case Some(file) =>
-                  Future(
-                    Ok(
-                      Json.toJson(
-                        FileVerificationStatus(
-                          fileUpload           = file,
-                          filePreviewUrl       = routes.PreviewController.previewFileUploadByReference,
-                          maximumFileSizeBytes = journeyContext.config.maximumFileSizeBytes.toInt,
-                          allowedFileTypesHint = journeyContext.config.content.allowedFilesTypesHint
-                            .orElse(journeyContext.config.allowedFileExtensions)
-                            .getOrElse(journeyContext.config.allowedContentTypes)
-                        )
-                      )
-                    )
-                  )
-                case None => Future(NotFound)
-              }
+          withJourneyContext { implicit journeyContext =>
+            fileVerificationService.getFileVerificationStatus(reference).map {
+              case Some(verificationStatus) =>
+                Ok(Json.toJson(verificationStatus))
+              case None =>
+                NotFound
             }
           }
         }
@@ -110,22 +95,14 @@ class FileVerificationController @Inject()(
       key match {
         case None => Future(BadRequest)
         case Some(upscanReference) =>
-          withUploadedFiles { files =>
-            val updatedFileUploads = FileUploads(files.files.map {
-              case FileUpload.Initiated(nonce, _, `upscanReference`, _, _) =>
-                FileUpload.Posted(nonce, Timestamp.now, upscanReference)
-              case u => u
-            })
-            components.newJourneyCacheRepository
-              .put(journeyId)(DataKeys.uploadedFiles, updatedFileUploads)
-              .flatMap { _ =>
-                val timeoutNanoTime: Long = System.nanoTime() + appConfig.upscanInitialWaitTime.toNanos
-                fileVerificationService.waitForUpscanResponse(upscanReference, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
-                  _ => Future(Created),
-                  Future(Accepted)
-                ).map(_.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*"))
-              }
-          }
+          fileUploadService.markFileAsPosted(upscanReference)
+            .flatMap { _ =>
+              val timeoutNanoTime: Long = System.nanoTime() + appConfig.upscanInitialWaitTime.toNanos
+              fileVerificationService.waitForUpscanResponse(upscanReference, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
+                _ => Future(Created),
+                Future(Accepted)
+              ).map(_.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*"))
+            }
       }
     }
 }
