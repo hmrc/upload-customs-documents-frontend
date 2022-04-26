@@ -30,6 +30,8 @@ trait TestData {
 
   val reasonText = "our supplier went bankrupt"
 
+  val journeyId = "testJourneyId"
+
   val nonEmptyFileUploads = FileUploads(files =
     Seq(
       FileUpload.Accepted(

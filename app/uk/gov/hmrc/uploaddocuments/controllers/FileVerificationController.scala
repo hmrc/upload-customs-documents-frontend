@@ -23,7 +23,7 @@ import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileUploads, FileVerificationStatus, Timestamp}
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
-import uk.gov.hmrc.uploaddocuments.services.ScheduleAfter
+import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, FileVerificationService, ScheduleAfter}
 import uk.gov.hmrc.uploaddocuments.views.html.WaitingForFileVerificationView
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
@@ -32,11 +32,12 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class FileVerificationController @Inject()(
-  components: BaseControllerComponents,
-  waitingView: WaitingForFileVerificationView,
-  actorSystem: ActorSystem
-)(implicit ec: ExecutionContext, appConfig: AppConfig)
-    extends BaseController(components) {
+                                            components: BaseControllerComponents,
+                                            waitingView: WaitingForFileVerificationView,
+                                            actorSystem: ActorSystem,
+                                            fileVerificationService: FileVerificationService
+                                          )(implicit ec: ExecutionContext, appConfig: AppConfig)
+  extends BaseController(components) {
 
   implicit val scheduler: Scheduler = actorSystem.scheduler
 
@@ -50,7 +51,7 @@ class FileVerificationController @Inject()(
             whenAuthenticated {
               withJourneyContext { journeyContext =>
                 val timeoutNanoTime: Long = System.nanoTime() + appConfig.upscanInitialWaitTime.toNanos
-                waitForUpscanResponse(upscanReference, journeyId, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
+                fileVerificationService.waitForUpscanResponse(upscanReference, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
                   {
                     case _: FileUpload.Accepted => Future(Redirect(routes.SummaryController.showSummary))
                     case _                      => Future(Redirect(routes.ChooseSingleFileController.showChooseFile))
@@ -61,33 +62,6 @@ class FileVerificationController @Inject()(
             }
           }
       }
-    }
-
-  /** Wait for Upscan Response until timeout. */
-  final def waitForUpscanResponse[T](
-    upscanReference: String,
-    journeyId: String,
-    intervalInMiliseconds: Long,
-    timeoutNanoTime: Long
-  )(
-    readyResult: FileUpload => Future[T],
-    ifTimeout: => Future[T])(implicit rc: HeaderCarrier, scheduler: Scheduler, ec: ExecutionContext): Future[T] =
-    components.newJourneyCacheRepository.get(journeyId)(DataKeys.uploadedFiles) flatMap {
-      case Some(files) =>
-        files.files.find(_.reference == upscanReference) match {
-          case Some(file) if file.isReady                     => readyResult(file)
-          case Some(_) if System.nanoTime() > timeoutNanoTime => ifTimeout
-          case Some(_) =>
-            ScheduleAfter(intervalInMiliseconds) {
-              waitForUpscanResponse(upscanReference, journeyId, intervalInMiliseconds * 2, timeoutNanoTime)(
-                readyResult,
-                ifTimeout
-              )
-            }
-          case None => throw new MatchError("err")
-        }
-      case _ =>
-        throw new Exception("err")
     }
 
   private def renderWaitingView(context: FileUploadContext, reference: String)(implicit request: Request[_]) =
@@ -146,7 +120,7 @@ class FileVerificationController @Inject()(
               .put(journeyId)(DataKeys.uploadedFiles, updatedFileUploads)
               .flatMap { _ =>
                 val timeoutNanoTime: Long = System.nanoTime() + appConfig.upscanInitialWaitTime.toNanos
-                waitForUpscanResponse(upscanReference, journeyId, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
+                fileVerificationService.waitForUpscanResponse(upscanReference, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
                   _ => Future(Created),
                   Future(Accepted)
                 ).map(_.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*"))

@@ -1,0 +1,55 @@
+/*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.gov.hmrc.uploaddocuments.services
+
+import akka.actor.Scheduler
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
+
+import javax.inject.Inject
+import scala.concurrent.{ExecutionContext, Future}
+
+class FileVerificationService @Inject()(fileUploadService: FileUploadService)
+                                       (implicit ec: ExecutionContext) extends LoggerUtil {
+
+  final def waitForUpscanResponse[T](upscanReference: String,
+                                     intervalInMiliseconds: Long,
+                                     timeoutNanoTime: Long)
+                                    (readyResult: FileUpload => Future[T],
+                                     ifTimeout: => Future[T])
+                                    (implicit rc: HeaderCarrier, scheduler: Scheduler, ec: ExecutionContext, journeyId: String): Future[T] =
+
+    fileUploadService.withFiles[T](throw new Exception("No JourneyID found for supplied journeyID")) {
+      _.files.find(_.reference == upscanReference) match {
+        case Some(file) if file.isReady =>
+          info(s"[waitForUpscanResponse] Response received from Upscan for reference: '$upscanReference' and file is ready")
+          readyResult(file)
+        case Some(_) if System.nanoTime() > timeoutNanoTime =>
+          info(s"[waitForUpscanResponse] Timed out waiting for a response from Upscan for reference: '$upscanReference'")
+          ifTimeout
+        case Some(_) =>
+          info(s"[waitForUpscanResponse] Waiting $intervalInMiliseconds milliseconds for a response from Upscan for reference: '$upscanReference'")
+          ScheduleAfter(intervalInMiliseconds) {
+            waitForUpscanResponse(upscanReference, intervalInMiliseconds * 2, timeoutNanoTime)(readyResult, ifTimeout)
+          }
+        case None =>
+          error(s"[waitForUpscanResponse] No file found for the supplied upscanReference: '$upscanReference'")
+          throw new MatchError(s"No file found for the supplied upscanReference: '$upscanReference'")
+      }
+    }
+}
