@@ -32,7 +32,7 @@ class SummaryController @Inject()(
   viewNoChoice: SummaryNoChoiceView,
   components: BaseControllerComponents
 )(implicit ec: ExecutionContext)
-    extends BaseController(components) with UpscanRequestSupport {
+    extends BaseController(components) {
 
   // GET /summary
   final val showSummary: Action[AnyContent] =

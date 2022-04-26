@@ -17,9 +17,8 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent, Request}
-import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.services.InitiateUpscanService
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import uk.gov.hmrc.uploaddocuments.views.html.UploadSingleFileView
 
@@ -28,11 +27,11 @@ import scala.concurrent.ExecutionContext
 
 @Singleton
 class ChooseSingleFileController @Inject()(
-  upscanInitiateConnector: UpscanInitiateConnector,
+  initiateUpscanService: InitiateUpscanService,
   components: BaseControllerComponents,
   view: UploadSingleFileView
 )(implicit ec: ExecutionContext)
-    extends BaseController(components) with UpscanRequestSupport with LoggerUtil {
+    extends BaseController(components) with LoggerUtil {
 
   // GET /choose-file
   // TODO: The way this works now is it renders the Rejection message but then wipes the state and re-initiates an upload
@@ -44,35 +43,15 @@ class ChooseSingleFileController @Inject()(
       whenInSession { implicit journeyId =>
         whenAuthenticated {
           withJourneyContext { journeyContext =>
-            withUploadedFiles { files =>
-              val nonce = Nonce.random
-
-              val oFailedFile = files.erroredFileUpload
-              val oError      = oFailedFile.flatMap(FileUploadError(_))
-
-              val initiateRequest =
-                upscanRequest(journeyId)(nonce.toString, journeyContext.config.maximumFileSizeBytes)
-
-              for {
-                upscanResponse <- upscanInitiateConnector
-                                   .initiate(journeyContext.hostService.userAgent, initiateRequest)
-                updatedFiles = updateFileUploads(nonce, upscanResponse, files)
-                _ <- components.newJourneyCacheRepository.put(journeyId)(DataKeys.uploadedFiles, updatedFiles)
-              } yield Ok(renderView(journeyContext, upscanResponse, updatedFiles, oError))
+            initiateUpscanService.initiateNextSingleFileUpload(journeyContext).map {
+              case None => Redirect(components.appConfig.govukStartUrl)
+              case Some((upscanResponse, updatedFiles, oError)) =>
+                Ok(renderView(journeyContext, upscanResponse, updatedFiles, oError))
             }
           }
         }
       }
     }
-
-  private def updateFileUploads(nonce: Nonce, initiateResponse: UpscanInitiateResponse, files: FileUploads) =
-    files.onlyAccepted + FileUpload.Initiated(
-      nonce         = nonce,
-      timestamp     = Timestamp.now,
-      reference     = initiateResponse.reference,
-      uploadRequest = Some(initiateResponse.uploadRequest),
-      uploadId      = None
-    )
 
   def renderView(
     journeyConfig: FileUploadContext,

@@ -10,6 +10,10 @@ object TestData {
 
   val journeyId = "testJourneyId"
 
+  val fileUploadContext = FileUploadContext(
+    FileUploadSessionConfig(Nonce(0), "/continue-url", "/backlink-url", "callback-url")
+  )
+
   val fileUploadInitiated = FileUpload.Initiated(
     Nonce(1),
     Timestamp.Any,

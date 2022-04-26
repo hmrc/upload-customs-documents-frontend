@@ -18,19 +18,18 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
-import uk.gov.hmrc.uploaddocuments.models.{FileUpload, Nonce, Timestamp, UploadRequest}
-import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.models.UploadRequest
+import uk.gov.hmrc.uploaddocuments.services.InitiateUpscanService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class InitiateUpscanController @Inject()(
-  upscanInitiateConnector: UpscanInitiateConnector,
+  upscanInitiateService: InitiateUpscanService,
   components: BaseControllerComponents
 )(implicit ec: ExecutionContext)
-    extends BaseController(components) with UpscanRequestSupport {
+    extends BaseController(components) {
 
   // POST /new/initiate-upscan/:uploadId
   final def initiateNextFileUpload(uploadId: String): Action[AnyContent] =
@@ -38,36 +37,18 @@ class InitiateUpscanController @Inject()(
       whenInSession { implicit journeyId =>
         whenAuthenticated {
           withJourneyContext { journeyContext =>
-            withUploadedFiles { files =>
-              val nonce = Nonce.random
-              for {
-                upscanResponse <- upscanInitiateConnector.initiate(
-                                   journeyContext.hostService.userAgent,
-                                   upscanRequestWhenUploadingMultipleFiles(journeyId)(
-                                     nonce.toString,
-                                     journeyContext.config.maximumFileSizeBytes
-                                   )
-                                 )
-                updatedFiles = files + FileUpload.Initiated(
-                  nonce         = nonce,
-                  timestamp     = Timestamp.now,
-                  reference     = upscanResponse.reference,
-                  uploadRequest = Some(upscanResponse.uploadRequest),
-                  uploadId      = Some(uploadId)
-                )
-                _ <- components.newJourneyCacheRepository.put(journeyId)(DataKeys.uploadedFiles, updatedFiles)
-              } yield {
+            upscanInitiateService.initiateNextMultiFileUpload(journeyContext, uploadId).map {
+              case Some(upscanResponse) =>
                 Ok(
                   Json.obj(
                     "upscanReference" -> upscanResponse.reference,
                     "uploadId"        -> uploadId,
                     "uploadRequest"   -> UploadRequest.formats.writes(upscanResponse.uploadRequest)
                   ))
-              }
+              case None => BadRequest
             }
           }
         }
       }
     }
-
 }

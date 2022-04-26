@@ -45,8 +45,7 @@ case class FileUploads(files: Seq[FileUpload] = Seq.empty) {
   def hasFileWithDescription(description: String): Boolean =
     files.exists { case a: FileUpload.Accepted => a.safeDescription.contains(description); case _ => false }
 
-  lazy val erroredFileUpload: Option[FileUpload] =
-    files.find { case _: ErroredFileUpload => true; case _ => false }
+  lazy val tofileUploadErrors: Seq[FileUploadError] = files.collect { case e: ErroredFileUpload => FileUploadError(e) }
 
 }
 
@@ -86,6 +85,15 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
       uploadTimestamp = uploadedFile.uploadTimestamp,
       cargo           = uploadedFile.cargo,
       description     = uploadedFile.description
+    )
+  def apply(nonce: Nonce, uploadId: Option[String])(
+    upscanResponse: UpscanInitiateResponse): FileUpload.Initiated =
+    FileUpload.Initiated(
+      nonce         = nonce,
+      timestamp     = Timestamp.now,
+      reference     = upscanResponse.reference,
+      uploadRequest = Some(upscanResponse.uploadRequest),
+      uploadId      = uploadId
     )
 
   final val isWindowPathHaving: Regex = "[a-zA-Z]:.*\\\\(.+)".r("name")

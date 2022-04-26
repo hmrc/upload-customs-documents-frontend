@@ -16,11 +16,9 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.data.Form
-import play.api.mvc.{Action, AnyContent, Result}
+import play.api.mvc.{Action, AnyContent}
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.forms.Forms
-import uk.gov.hmrc.uploaddocuments.models.{FileUploads, S3UploadSuccess}
 import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
