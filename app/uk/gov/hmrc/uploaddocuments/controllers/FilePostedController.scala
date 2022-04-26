@@ -16,42 +16,39 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.mvc.{Action, AnyContent}
+import play.api.data.Form
+import play.api.mvc.{Action, AnyContent, Result}
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.forms.Forms
-import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploads, Timestamp}
-import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.models.{FileUploads, S3UploadSuccess}
+import uk.gov.hmrc.uploaddocuments.services.FileUploadService
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FilePostedController @Inject()(components: BaseControllerComponents)(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+class FilePostedController @Inject()(components: BaseControllerComponents,
+                                     fileUploadService: FileUploadService)
+                                    (implicit ec: ExecutionContext) extends BaseController(components) with LoggerUtil {
 
   // GET /journey/:journeyId/file-posted
   final def asyncMarkFileUploadAsPosted(implicit journeyId: JourneyId): Action[AnyContent] =
     Action.async { implicit request =>
-      withUploadedFiles { files =>
-        Forms.UpscanUploadSuccessForm.bindFromRequest
-          .fold(
-            formWithErrors =>
-              Future(
-                Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles).withFormError(formWithErrors)),
-            s3UploadSuccess => {
-              val now = Timestamp.now
-              val updatedFileUploads =
-                FileUploads(files.files.map {
-                  case fu @ FileUpload(nonce, s3UploadSuccess.key) if fu.canOverwriteFileUploadStatus(now) =>
-                    FileUpload.Posted(nonce, Timestamp.now, s3UploadSuccess.key)
-                  case u => u
-                })
-              components.newJourneyCacheRepository
-                .put(journeyId)(DataKeys.uploadedFiles, updatedFileUploads)
-                .map(_ => Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*"))
+      Forms.UpscanUploadSuccessForm
+        .bindFromRequest
+        .fold(
+          formWithErrors =>
+            Future.successful(Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles).withFormError(formWithErrors))
+          ,
+          s3UploadSuccess =>
+            fileUploadService.markFileAsPosted(s3UploadSuccess.key).map {
+              case Some(_) =>
+                Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
+              case None =>
+                BadRequest
             }
-          )
-      }
+        )
     }
 
   // OPTIONS /journey/:journeyId/file-posted
