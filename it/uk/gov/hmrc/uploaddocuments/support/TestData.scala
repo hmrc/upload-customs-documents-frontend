@@ -63,4 +63,12 @@ object TestData {
 
   val nonEmptyFileUploads = FileUploads(files = Seq(acceptedFileUpload))
 
+  def s3Errors(fileKey: String) = S3UploadError(
+    key = fileKey,
+    errorCode = "ErrCode123",
+    errorMessage = "Rejected",
+    errorRequestId = None,
+    errorResource = None
+  )
+
 }

@@ -83,14 +83,6 @@ trait ControllerISpecBase extends ServerISpec {
 
   final def hostUserAgent: String = HostService.Any.userAgent
 
-  final val fileUploadSessionConfig =
-    FileUploadSessionConfig(
-      nonce       = Nonce.random,
-      continueUrl = s"$wireMockBaseUrlAsString/continue-url",
-      backlinkUrl = s"$wireMockBaseUrlAsString/backlink-url",
-      callbackUrl = s"$wireMockBaseUrlAsString/result-post-url"
-    )
-
   final def FILES_LIMIT: Int = fileUploadSessionConfig.maximumNumberOfFiles
 
   final def setContext(context: FileUploadContext = FileUploadContext(fileUploadSessionConfig)): CacheItem =

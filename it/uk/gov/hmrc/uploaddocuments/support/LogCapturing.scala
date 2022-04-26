@@ -41,5 +41,5 @@ trait LogCapturing { _: UnitSpec =>
   }
 
   def logExists(msg: String)(logs: List[ILoggingEvent]): Assertion =
-    assert(logs.exists(_.getMessage.contains(msg)))
+    assert(logs.exists(_.getMessage.contains(msg)), s"$msg was not found within logs")
 }
