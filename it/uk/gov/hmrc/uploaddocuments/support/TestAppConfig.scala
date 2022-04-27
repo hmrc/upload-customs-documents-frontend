@@ -1,6 +1,8 @@
 package uk.gov.hmrc.uploaddocuments.support
 
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
+
+import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
 import scala.concurrent.duration._
 
@@ -24,5 +26,8 @@ case class TestAppConfig(
 
   override val fileUploadResultPushRetryIntervals: Seq[FiniteDuration] =
     Seq(FiniteDuration(10, "ms"), FiniteDuration(20, "ms"))
+
+  override val upscanInitialWaitTime: Duration = Duration(2, TimeUnit.SECONDS)
+  override val upscanWaitInterval: Duration = Duration(500, TimeUnit.MILLISECONDS)
 
 }

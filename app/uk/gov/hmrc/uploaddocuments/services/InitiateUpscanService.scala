@@ -41,7 +41,7 @@ class InitiateUpscanService @Inject()(
     val nonce = randomNonce
     val initiateRequest =
       upscanRequestWhenUploadingMultipleFiles(nonce, journeyContext.config.maximumFileSizeBytes)
-    fileUploadService.getFiles() flatMap {
+    fileUploadService.getFiles flatMap {
       case None =>
         error("[initiateNextMultiFileUpload] No files exist for the supplied journeyID")
         debug(s"[initiateNextMultiFileUpload] journeyId: '$journeyId'")
@@ -62,7 +62,7 @@ class InitiateUpscanService @Inject()(
     hc: HeaderCarrier): Future[Option[(UpscanInitiateResponse, FileUploads, Option[FileUploadError])]] = {
     val nonce           = randomNonce
     val initiateRequest = upscanRequest(nonce, journeyContext.config.maximumFileSizeBytes)
-    fileUploadService.getFiles() flatMap {
+    fileUploadService.getFiles flatMap {
       case None =>
         error("[initiateNextSingleFileUpload] No files exist for the supplied journeyID")
         debug(s"[initiateNextSingleFileUpload] journeyId: '$journeyId'")

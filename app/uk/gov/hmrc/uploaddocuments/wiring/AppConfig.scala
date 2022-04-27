@@ -60,6 +60,8 @@ trait AppConfig {
   val timeout: Int
   val countdown: Int
   val fileUploadResultPushRetryIntervals: Seq[FiniteDuration]
+  val upscanInitialWaitTime: Duration
+  val upscanWaitInterval: Duration
 }
 
 class AppConfigImpl @Inject()(config: ServicesConfig, configuration: Configuration) extends AppConfig {
@@ -78,4 +80,8 @@ class AppConfigImpl @Inject()(config: ServicesConfig, configuration: Configurati
 
   override val fileUploadResultPushRetryIntervals: Seq[FiniteDuration] =
     Retries.getConfIntervals("fileUploadResultPush.retryIntervals", configuration)
+
+  override val upscanInitialWaitTime: Duration = Duration.apply(config.getString("upscan.initialCallbackWaitTime"))
+  override val upscanWaitInterval: Duration = Duration.apply(config.getString("upscan.waitInterval"))
+
 }

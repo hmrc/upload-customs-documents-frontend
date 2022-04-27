@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 class FileUploadService @Inject()(repo: JourneyCacheRepository)
                                  (implicit ec: ExecutionContext) extends LoggerUtil with UploadLog {
 
-  def getFiles()(implicit journeyId: String): Future[Option[FileUploads]] =
+  def getFiles(implicit journeyId: String): Future[Option[FileUploads]] =
     repo.get(journeyId)(DataKeys.uploadedFiles)
 
   def putFiles(files: FileUploads)(implicit journeyId: String): Future[CacheItem] =
@@ -45,21 +45,21 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository)
       case Some(files) => f(files)
     }
 
-  def markFileAsPosted(upscanKey: String)
+  def markFileAsPosted(key: String)
                       (implicit journeyId: String): Future[Option[CacheItem]] =
 
     withFiles[Option[CacheItem]](Future.successful(None)) { files =>
 
       val updatedFileUploads =
         FileUploads(files.files.map {
-          case file@FileUpload(nonce, key) if file.canOverwriteFileUploadStatus(Timestamp.now) && key == upscanKey =>
+          case file@FileUpload(nonce, `key`) if file.canOverwriteFileUploadStatus(Timestamp.now) =>
             FileUpload.Posted(nonce, Timestamp.now, key)
           case file => file
         })
 
       if(updatedFileUploads == files) {
         warn(s"[markFileAsPosted] No file with the supplied journeyID & key was updated and marked as posted")
-        debug(s"[markFileAsPosted] No file with the supplied journeyID: '$journeyId' & key: '$upscanKey' was updated and marked as posted")
+        debug(s"[markFileAsPosted] No file with the supplied journeyID: '$journeyId' & key: '$key' was updated and marked as posted")
         Future.successful(None)
       } else {
         putFiles(updatedFileUploads).map(Some(_))
