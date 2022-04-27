@@ -34,11 +34,11 @@ import scala.concurrent.{ExecutionContext, Future}
 class UpscanInitiateConnector @Inject()(appConfig: AppConfig, http: HttpGet with HttpPost, metrics: Metrics)
     extends HttpAPIMonitor {
 
-  val baseUrl: String      = appConfig.upscanInitiateBaseUrl
+  lazy val baseUrl: String      = appConfig.upscanInitiateBaseUrl
   val upscanInitiatev2Path = "/upscan/v2/initiate"
   val userAgent            = "upload-customs-documents-frontend"
 
-  override val kenshooRegistry: MetricRegistry = metrics.defaultRegistry
+  override lazy val kenshooRegistry: MetricRegistry = metrics.defaultRegistry
 
   def initiate(
     hostUserAgent: String,

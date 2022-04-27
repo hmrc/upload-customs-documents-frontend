@@ -21,16 +21,13 @@ import play.api.mvc.Action
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, routes => mainRoutes}
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class InitializeController @Inject()(
-  components: BaseControllerComponents,
-  newJourneyCacheRepository: JourneyCacheRepository)(implicit ec: ExecutionContext)
+class InitializeController @Inject()(components: BaseControllerComponents)(implicit ec: ExecutionContext)
     extends BaseController(components) {
 
   // POST /internal/initialize
@@ -42,8 +39,8 @@ class InitializeController @Inject()(
             val host           = HostService(request)
             val journeyContext = FileUploadContext(payload.config, host)
             for {
-              _ <- newJourneyCacheRepository.put(journeyId)(DataKeys.journeyContext, journeyContext)
-              _ <- newJourneyCacheRepository.put(journeyId)(DataKeys.uploadedFiles, FileUploads(payload))
+              _ <- components.newJourneyCacheRepository.put(journeyId)(DataKeys.journeyContext, journeyContext)
+              _ <- components.newJourneyCacheRepository.put(journeyId)(DataKeys.uploadedFiles, FileUploads(payload))
             } yield {
               val url = if (!journeyContext.config.features.showUploadMultiple) {
                 mainRoutes.ChooseSingleFileController.showChooseFile.url

@@ -19,7 +19,7 @@ package uk.gov.hmrc.uploaddocuments.services
 import org.mongodb.scala.bson.BsonDocument
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.mongo.cache.CacheItem
-import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileUploads, Nonce, S3UploadError, Timestamp}
+import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileUploads, Nonce, Timestamp}
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.support.TestData._

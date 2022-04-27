@@ -29,15 +29,15 @@ import scala.concurrent.{ExecutionContext, Future}
 class FileUploadService @Inject()(repo: JourneyCacheRepository)
                                  (implicit ec: ExecutionContext) extends LoggerUtil with UploadLog {
 
-  private[services] def getFiles()(implicit journeyId: String): Future[Option[FileUploads]] =
+  def getFiles()(implicit journeyId: String): Future[Option[FileUploads]] =
     repo.get(journeyId)(DataKeys.uploadedFiles)
 
-  private[services] def putFiles(files: FileUploads)(implicit journeyId: String): Future[CacheItem] =
+  def putFiles(files: FileUploads)(implicit journeyId: String): Future[CacheItem] =
     repo.put(journeyId)(DataKeys.uploadedFiles, files)
 
   def withFiles[T](journeyNotFoundResult: => Future[T])(f: FileUploads => Future[T])
                   (implicit journeyId: String): Future[T] =
-    getFiles() flatMap {
+    getFiles flatMap {
       case None =>
         error("[withFiles] No files exist for the supplied journeyID")
         debug(s"[withFiles] journeyId: '$journeyId'")

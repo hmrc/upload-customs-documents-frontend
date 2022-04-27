@@ -31,7 +31,7 @@ class RemoveController @Inject()(
   fileUploadResultPushConnector: FileUploadResultPushConnector,
   components: BaseControllerComponents
 )(implicit ec: ExecutionContext)
-    extends BaseController(components) with UpscanRequestSupport {
+    extends BaseController(components) {
 
   // GET /uploaded/:reference/remove
   final def removeFileUploadByReference(reference: String): Action[AnyContent] =

@@ -30,7 +30,6 @@ import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
-import play.api.Configuration
 
 /** Connector to push the results of the file uploads back to the host service. */
 @Singleton

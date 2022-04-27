@@ -28,8 +28,10 @@ import uk.gov.hmrc.uploaddocuments.connectors.FrontendAuthConnector
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 import uk.gov.hmrc.uploaddocuments.support.SHA256
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
+import uk.gov.hmrc.uploaddocuments.support.JsEnabled.COOKIE_JSENABLED
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
@@ -41,15 +43,15 @@ class BaseControllerComponents @Inject()(
   val environment: Environment,
   val configuration: Configuration,
   val messagesControllerComponents: MessagesControllerComponents,
-  val newJourneyCacheRepository: JourneyCacheRepository
+  val newJourneyCacheRepository: JourneyCacheRepository,
+  val journeyContextService: JourneyContextService,
+  val fileUploadService: FileUploadService
 )
 
 abstract class BaseController(
   val components: BaseControllerComponents
 ) extends MessagesBaseController with Utf8MimeTypes with WithJsonBody with I18nSupport with AuthActions {
   type JourneyId = String
-
-  final val COOKIE_JSENABLED = "jsenabled"
 
   final def config: Configuration        = components.configuration
   final def env: Environment             = components.environment
