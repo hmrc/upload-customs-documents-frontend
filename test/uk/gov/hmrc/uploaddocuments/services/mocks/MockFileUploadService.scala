@@ -16,8 +16,9 @@
 
 package uk.gov.hmrc.uploaddocuments.services
 
-import org.scalamock.handlers.CallHandler3
+import org.scalamock.handlers.{CallHandler1, CallHandler2, CallHandler3}
 import org.scalamock.scalatest.MockFactory
+import uk.gov.hmrc.mongo.cache.CacheItem
 import uk.gov.hmrc.uploaddocuments.models.FileUploads
 
 import scala.concurrent.Future
@@ -25,6 +26,12 @@ import scala.concurrent.Future
 trait MockFileUploadService extends MockFactory {
 
   val mockFileUploadService = mock[FileUploadService]
+
+  def mockGetFiles(journeyId: String)(response: Future[Option[FileUploads]]): CallHandler1[String, Future[Option[FileUploads]]] =
+    (mockFileUploadService.getFiles(_: String)).expects(journeyId).returning(response)
+
+  def mockPutFiles(journeyId: String, request: FileUploads)(response: Future[CacheItem]): CallHandler2[FileUploads, String, Future[CacheItem]] =
+    (mockFileUploadService.putFiles(_: FileUploads)(_: String)).expects(request, journeyId).returning(response)
 
   def mockWithFiles[T](journeyId: String)(files: Option[FileUploads]): CallHandler3[Future[T], FileUploads => Future[T], String, Future[T]] = {
     (mockFileUploadService.withFiles[T](_: Future[T])(_: FileUploads => Future[T])(_: String))
