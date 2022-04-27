@@ -1,5 +1,6 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
+import play.api.http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
 
@@ -9,49 +10,79 @@ class ChooseSingleFileControllerISpec extends ControllerISpecBase with UpscanIni
 
   "ChooseSingleFileController" when {
 
-    "GET /choose-file" should {
+    "GET /choose-file" when {
 
-      "show the upload page of first document" in {
+      "The maximum number of files has not been uploaded" must {
 
-        setContext()
-        setFileUploads()
+        "show the upload page of first document" in {
 
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-        val callbackUrl =
-          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
-        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+          setContext()
+          setFileUploads()
 
-        val result = await(request("/choose-file").get())
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+          val callbackUrl =
+            appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+          givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
-        result.status shouldBe 200
-        result.body should include(htmlEscapedPageTitle("view.upload-file.first.title"))
-        result.body should include(htmlEscapedMessage("view.upload-file.first.heading"))
+          val result = await(request("/choose-file").get())
 
-        getFileUploads() shouldBe Some(FileUploads(files =
-          Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d", Some(UploadRequest(
-            href = "https://bucketName.s3.eu-west-2.amazonaws.com",
-            fields = Map(
-              "Content-Type"            -> "application/xml",
-              "acl"                     -> "private",
-              "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-              "policy"                  -> "xxxxxxxx==",
-              "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
-              "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
-              "x-amz-date"              -> "yyyyMMddThhmmssZ",
-              "x-amz-meta-callback-url" -> callbackUrl,
-              "x-amz-signature"         -> "xxxx",
-              "success_action_redirect" -> "https://myservice.com/nextPage",
-              "error_action_redirect"   -> "https://myservice.com/errorPage"
+          result.status shouldBe 200
+          result.body should include(htmlEscapedPageTitle("view.upload-file.first.title"))
+          result.body should include(htmlEscapedMessage("view.upload-file.first.heading"))
+
+          getFileUploads() shouldBe Some(FileUploads(files =
+            Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d", Some(UploadRequest(
+              href = "https://bucketName.s3.eu-west-2.amazonaws.com",
+              fields = Map(
+                "Content-Type" -> "application/xml",
+                "acl" -> "private",
+                "key" -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                "policy" -> "xxxxxxxx==",
+                "x-amz-algorithm" -> "AWS4-HMAC-SHA256",
+                "x-amz-credential" -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
+                "x-amz-date" -> "yyyyMMddThhmmssZ",
+                "x-amz-meta-callback-url" -> callbackUrl,
+                "x-amz-signature" -> "xxxx",
+                "success_action_redirect" -> "https://myservice.com/nextPage",
+                "error_action_redirect" -> "https://myservice.com/errorPage"
+              )
+            ))))
+          ))
+        }
+
+        "show the upload next file page and add initiate request" in {
+
+          setContext()
+          setFileUploads(
+            FileUploads(
+              Seq(
+                FileUpload.Accepted(
+                  Nonce.Any,
+                  Timestamp.Any,
+                  "f029444f-415c-4dec-9cf2-36774ec63ab8",
+                  "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
+                  ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+                  "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+                  "test.pdf",
+                  "application/pdf",
+                  4567890
+                )
+              )
             )
-          ))))
-        ))
-      }
+          )
 
-      "show the upload next file page and add initiate request" in {
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+          val callbackUrl =
+            appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+          givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
-        setContext()
-        setFileUploads(
-          FileUploads(
+          val result = await(request("/choose-file").get())
+
+          result.status shouldBe 200
+          result.body should include(htmlEscapedPageTitle("view.upload-file.next.title"))
+          result.body should include(htmlEscapedMessage("view.upload-file.next.heading"))
+
+          getFileUploads() shouldBe Some(FileUploads(files =
             Seq(
               FileUpload.Accepted(
                 Nonce.Any,
@@ -63,53 +94,43 @@ class ChooseSingleFileControllerISpec extends ControllerISpecBase with UpscanIni
                 "test.pdf",
                 "application/pdf",
                 4567890
-              )
+              ),
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d", Some(UploadRequest(
+                href = "https://bucketName.s3.eu-west-2.amazonaws.com",
+                fields = Map(
+                  "Content-Type" -> "application/xml",
+                  "acl" -> "private",
+                  "key" -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                  "policy" -> "xxxxxxxx==",
+                  "x-amz-algorithm" -> "AWS4-HMAC-SHA256",
+                  "x-amz-credential" -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
+                  "x-amz-date" -> "yyyyMMddThhmmssZ",
+                  "x-amz-meta-callback-url" -> callbackUrl,
+                  "x-amz-signature" -> "xxxx",
+                  "success_action_redirect" -> "https://myservice.com/nextPage",
+                  "error_action_redirect" -> "https://myservice.com/errorPage"
+                )
+              )))
             )
-          )
-        )
+          ))
+        }
+      }
 
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-        val callbackUrl =
-          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
-        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+      "The maximum number of files has been uploaded" must {
 
-        val result = await(request("/choose-file").get())
+        "redirect and render the Summary view" in {
 
-        result.status shouldBe 200
-        result.body should include(htmlEscapedPageTitle("view.upload-file.next.title"))
-        result.body should include(htmlEscapedMessage("view.upload-file.next.heading"))
+          setContext()
+          setFileUploads(nFileUploads(FILES_LIMIT))
 
-        getFileUploads() shouldBe Some(FileUploads(files =
-          Seq(
-            FileUpload.Accepted(
-              Nonce.Any,
-              Timestamp.Any,
-              "f029444f-415c-4dec-9cf2-36774ec63ab8",
-              "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
-              ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-              "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-              "test.pdf",
-              "application/pdf",
-              4567890
-            ),
-            FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d", Some(UploadRequest(
-              href = "https://bucketName.s3.eu-west-2.amazonaws.com",
-              fields = Map(
-                "Content-Type"            -> "application/xml",
-                "acl"                     -> "private",
-                "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                "policy"                  -> "xxxxxxxx==",
-                "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
-                "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
-                "x-amz-date"              -> "yyyyMMddThhmmssZ",
-                "x-amz-meta-callback-url" -> callbackUrl,
-                "x-amz-signature"         -> "xxxx",
-                "success_action_redirect" -> "https://myservice.com/nextPage",
-                "error_action_redirect"   -> "https://myservice.com/errorPage"
-              )
-            )))
-          )
-        ))
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+          val result = await(request("/choose-file").get())
+
+          result.status shouldBe 200
+          result.body should include(htmlEscapedPageTitle("view.summary.plural.title", FILES_LIMIT.toString))
+          result.body should include(htmlEscapedMessage("view.summary.plural.heading", FILES_LIMIT.toString))
+        }
       }
     }
   }

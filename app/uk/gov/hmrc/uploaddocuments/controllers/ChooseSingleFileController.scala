@@ -23,7 +23,7 @@ import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import uk.gov.hmrc.uploaddocuments.views.html.UploadSingleFileView
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ChooseSingleFileController @Inject()(
@@ -43,10 +43,16 @@ class ChooseSingleFileController @Inject()(
       whenInSession { implicit journeyId =>
         whenAuthenticated {
           withJourneyContext { journeyContext =>
-            initiateUpscanService.initiateNextSingleFileUpload(journeyContext).map {
-              case None => Redirect(components.appConfig.govukStartUrl)
-              case Some((upscanResponse, updatedFiles, oError)) =>
-                Ok(renderView(journeyContext, upscanResponse, updatedFiles, oError))
+            withUploadedFiles { files =>
+              if(files.acceptedCount < journeyContext.config.maximumNumberOfFiles) {
+                initiateUpscanService.initiateNextSingleFileUpload(journeyContext).map {
+                  case None => Redirect(components.appConfig.govukStartUrl)
+                  case Some((upscanResponse, updatedFiles, oError)) =>
+                    Ok(renderView(journeyContext, upscanResponse, updatedFiles, oError))
+                }
+              } else {
+                Future.successful(Redirect(routes.SummaryController.showSummary))
+              }
             }
           }
         }
