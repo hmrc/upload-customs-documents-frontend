@@ -5,19 +5,19 @@
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>logs/upload-customs-documents-frontend.log</file>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%date{ISO8601} level=[%level] logger=[%logger] thread=[%thread] message=[%message] %replace(exception=[%xException]){'^exception=\[\]$',''}%n</pattern>
+            <pattern>[%highlight(%.-4level)] %message %replace(exception=[%xException]){'^exception=\[\]$',''} %date{ISO8601} %n</pattern>
         </encoder>
     </appender>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%date{ISO8601} level=[%level] logger=[%logger] thread=[%thread] rid=[%X{X-Request-ID}] user=[%X{Authorization}] message=[%message] %replace(exception=[%xException]){'^exception=\[\]$',''}%n</pattern>
+            <pattern>[%highlight(%.-4level)] %message %replace(exception=[%xException]){'^exception=\[\]$',''} %date{ISO8601} %n</pattern>
         </encoder>
     </appender>
 
     <appender name="STDOUT_IGNORE_NETTY" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>%date{ISO8601} level=[%level] logger=[%logger] thread=[%thread] rid=[not-available] user=[not-available] message=[%message] %replace(exception=[%xException]){'^exception=\[\]$',''}%n</pattern>
+            <pattern>[%highlight(%.-4level)] %message %replace(exception=[%xException]){'^exception=\[\]$',''} %date{ISO8601} %n</pattern>
         </encoder>
     </appender>
 
@@ -44,7 +44,7 @@
         <appender-ref ref="STDOUT_IGNORE_NETTY" />
     </logger>
 
-    <logger name="application" level="ERROR"/>
+    <logger name="application" level="DEBUG"/>
 
     <logger name="uk.gov" level="INFO"/>
 
@@ -60,11 +60,11 @@
 
     <logger name="uk.gov.hmrc.audit" level="ERROR"/>
 
-    <logger name="uk.gov.hmrc.uploaddocuments" level="INFO"/>
+    <logger name="uk.gov.hmrc.uploaddocuments" level="DEBUG"/>
 
     <logger name="uk.gov.hmrc.uploaddocuments.services" level="DEBUG"/>
 
-    <logger name="uk.gov.hmrc.uploaddocuments.repository" level="ERROR"/>
+    <logger name="uk.gov.hmrc.uploaddocuments.repository" level="DEBUG"/>
 
     <logger name="akka" level="ERROR"/>
 

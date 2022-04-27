@@ -40,11 +40,8 @@ class FilePostedController @Inject()(components: BaseControllerComponents,
             Future.successful(Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles).withFormError(formWithErrors))
           ,
           s3UploadSuccess =>
-            fileUploadService.markFileAsPosted(s3UploadSuccess.key).map {
-              case Some(_) =>
-                Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
-              case None =>
-                BadRequest
+            fileUploadService.markFileAsPosted(s3UploadSuccess.key).map { _ =>
+              Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
             }
         )
     }
