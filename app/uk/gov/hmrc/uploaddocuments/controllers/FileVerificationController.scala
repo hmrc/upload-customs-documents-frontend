@@ -21,7 +21,7 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, Request}
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext}
-import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, FileVerificationService}
+import uk.gov.hmrc.uploaddocuments.services.FileVerificationService
 import uk.gov.hmrc.uploaddocuments.views.html.WaitingForFileVerificationView
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
@@ -33,8 +33,7 @@ class FileVerificationController @Inject()(
                                             components: BaseControllerComponents,
                                             waitingView: WaitingForFileVerificationView,
                                             actorSystem: ActorSystem,
-                                            fileVerificationService: FileVerificationService,
-                                            fileUploadService: FileUploadService
+                                            fileVerificationService: FileVerificationService
                                           )(implicit ec: ExecutionContext, appConfig: AppConfig)
   extends BaseController(components) {
 

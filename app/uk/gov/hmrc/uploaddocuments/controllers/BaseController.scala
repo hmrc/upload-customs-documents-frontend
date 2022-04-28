@@ -59,21 +59,37 @@ abstract class BaseController(
 
   final protected def controllerComponents: MessagesControllerComponents = components.messagesControllerComponents
 
-  final def journeyIdFromSession(implicit rh: RequestHeader): Option[JourneyId] =
-    decodeHeaderCarrier(rh).sessionId.map(_.value).map(SHA256.compute)
+  private val journeyIdPathParamRegex = ".*?/journey/([a-fA-F0-9]+?)/.*".r
+
+  final def journeyId(implicit rh: RequestHeader): Option[String] =
+    journeyId(decodeHeaderCarrier(rh), rh)
+
+  private def journeyIdFromPath(implicit rh: RequestHeader) =
+    rh.path match {
+      case journeyIdPathParamRegex(id) => Some(id)
+      case _                           => None
+    }
+
+  private def journeyId(hc: HeaderCarrier, rh: RequestHeader): Option[String] =
+    journeyIdFromPath(rh).orElse(hc.sessionId.map(_.value).map(SHA256.compute))
 
   final implicit def context(implicit rh: RequestHeader): HeaderCarrier = {
     val hc = decodeHeaderCarrier(rh)
-    journeyIdFromSession.fold(hc)(jid => hc.withExtraHeaders("FileUploadJourney" -> jid))
+    journeyId(hc, rh)
+      .map(jid => hc.withExtraHeaders("FileUploadJourney" -> jid))
+      .getOrElse(hc)
   }
 
   private def decodeHeaderCarrier(rh: RequestHeader): HeaderCarrier =
     HeaderCarrierConverter.fromRequestAndSession(rh, rh.session)
 
   final def whenInSession(
-    body: JourneyId => Future[Result]
-  )(implicit request: Request[_]): Future[Result] =
-    journeyIdFromSession.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
+                           body: JourneyId => Future[Result]
+                         )(implicit request: Request[_]): Future[Result] =
+    journeyId match {
+      case None => Future.successful(Redirect(components.appConfig.govukStartUrl))
+      case Some(jId)    => body(jId)
+    }
 
   final def withJourneyContext(
     body: FileUploadContext => Future[Result]

@@ -55,7 +55,9 @@ class FileRejectedController @Inject()(components: BaseControllerComponents,
   final val markFileUploadAsRejectedAsync: Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession { implicit journeyId =>
-        rejectedAsyncLogicWithStatus(Created)
+        whenAuthenticated {
+          rejectedAsyncLogicWithStatus(Created)
+        }
       }
     }
 
@@ -66,20 +68,18 @@ class FileRejectedController @Inject()(components: BaseControllerComponents,
     }
 
   private def rejectedAsyncLogicWithStatus(status: => Result)(implicit request: Request[AnyContent], journeyId: JourneyId): Future[Result] =
-    whenAuthenticated {
-      withJourneyContext { implicit journeyContext =>
-        Forms.UpscanUploadErrorForm.bindFromRequest
-          .fold(
-            formWithErrors =>
-              Future.successful(
-                Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles).withFormError(formWithErrors)
-              ),
-            s3UploadError =>
-              fileUploadService.markFileAsRejected(s3UploadError).map(_ =>
-                status.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
-              )
-          )
-      }
+    withJourneyContext { implicit journeyContext =>
+      Forms.UpscanUploadErrorForm.bindFromRequest
+        .fold(
+          formWithErrors =>
+            Future.successful(
+              Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles).withFormError(formWithErrors)
+            ),
+          s3UploadError =>
+            fileUploadService.markFileAsRejected(s3UploadError).map(_ =>
+              status.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
+            )
+        )
     }
 
   // OPTIONS /journey/:journeyId/file-rejected

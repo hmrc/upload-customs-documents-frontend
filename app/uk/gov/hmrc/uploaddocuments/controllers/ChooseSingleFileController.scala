@@ -48,7 +48,8 @@ class ChooseSingleFileController @Inject()(
                 initiateUpscanService.initiateNextSingleFileUpload(journeyContext).map {
                   case None => Redirect(components.appConfig.govukStartUrl)
                   case Some((upscanResponse, updatedFiles, oError)) =>
-                    Ok(renderView(journeyContext, upscanResponse, updatedFiles, oError))
+                    val view = renderView(journeyContext, upscanResponse, updatedFiles, oError)
+                    oError.fold(Ok(view))(_ => BadRequest(view))
                 }
               } else {
                 Future.successful(Redirect(routes.SummaryController.showSummary))

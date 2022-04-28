@@ -1,6 +1,6 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.http.HeaderNames
+import play.api.http.{HeaderNames, Status}
 import play.api.libs.json.Json
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
@@ -13,7 +13,7 @@ class FileRejectedControllerISpec extends ControllerISpecBase with UpscanInitiat
 
     "GET /file-rejected" should {
 
-      "show upload document again with new Upscan Initiate request" in {
+      "show upload document again with new Upscan Initiate request (Rendering a Bad Request with errors)" in {
 
         setContext()
         setFileUploads(FileUploads(files =
@@ -44,7 +44,7 @@ class FileRejectedControllerISpec extends ControllerISpecBase with UpscanInitiat
           ).get()
         )
 
-        result.status shouldBe 200
+        result.status shouldBe Status.BAD_REQUEST
         result.body should include(htmlEscapedPageTitle("view.upload-file.next.title"))
         result.body should include(htmlEscapedMessage("view.upload-file.next.heading"))
 
