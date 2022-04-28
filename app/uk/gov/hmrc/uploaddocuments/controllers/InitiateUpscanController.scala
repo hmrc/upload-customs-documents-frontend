@@ -31,7 +31,7 @@ class InitiateUpscanController @Inject()(
 )(implicit ec: ExecutionContext)
     extends BaseController(components) {
 
-  // POST /new/initiate-upscan/:uploadId
+  // POST /initiate-upscan/:uploadId
   final def initiateNextFileUpload(uploadId: String): Action[AnyContent] =
     Action.async { implicit request =>
       whenInSession { implicit journeyId =>

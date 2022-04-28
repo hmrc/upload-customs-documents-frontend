@@ -82,12 +82,9 @@ abstract class BaseController(
     HeaderCarrierConverter.fromRequestAndSession(rh, rh.session)
 
   final def whenInSession(
-                           body: JourneyId => Future[Result]
-                         )(implicit request: Request[_]): Future[Result] =
-    journeyId match {
-      case None => Future.successful(Redirect(components.appConfig.govukStartUrl))
-      case Some(jId)    => body(jId)
-    }
+    body: JourneyId => Future[Result]
+  )(implicit request: Request[_]): Future[Result] =
+    journeyIdFromSession.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
 
   final def withJourneyContext(
     body: FileUploadContext => Future[Result]
