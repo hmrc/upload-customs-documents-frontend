@@ -47,7 +47,7 @@ class JourneyContextServiceISpec extends AppISpec with LogCapturing with BeforeA
         await(testjourneyContextService.putJourneyContext(fileUploadContext)(journeyId))
 
         await(repo.collection.countDocuments().toFuture()) shouldBe 1
-        await(repo.get(journeyId)(DataKeys.journeyContext)) shouldBe Some(fileUploadContext)
+        await(repo.get(journeyId.value)(DataKeys.journeyContext)) shouldBe Some(fileUploadContext)
       }
 
       "update when existing journey present" in {
@@ -62,7 +62,7 @@ class JourneyContextServiceISpec extends AppISpec with LogCapturing with BeforeA
         await(testjourneyContextService.putJourneyContext(updatedRecord)(journeyId))
 
         await(repo.collection.countDocuments().toFuture()) shouldBe 1
-        await(repo.get(journeyId)(DataKeys.journeyContext)) shouldBe Some(updatedRecord)
+        await(repo.get(journeyId.value)(DataKeys.journeyContext)) shouldBe Some(updatedRecord)
       }
     }
 

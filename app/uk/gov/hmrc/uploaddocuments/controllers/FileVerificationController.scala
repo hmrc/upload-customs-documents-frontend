@@ -20,7 +20,7 @@ import akka.actor.{ActorSystem, Scheduler}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, Request}
 import play.mvc.Http.HeaderNames
-import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext}
+import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, JourneyId}
 import uk.gov.hmrc.uploaddocuments.services.FileVerificationService
 import uk.gov.hmrc.uploaddocuments.views.html.WaitingForFileVerificationView
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig

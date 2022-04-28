@@ -31,7 +31,7 @@ class WipeOutController @Inject()(components: BaseControllerComponents)(implicit
     Action.async { implicit request =>
       whenInSession { implicit journeyId =>
         whenAuthenticatedInBackchannel {
-          components.newJourneyCacheRepository.deleteEntity(journeyId).map(_ => NoContent)
+          components.newJourneyCacheRepository.deleteEntity(journeyId.value).map(_ => NoContent)
         }
       }
     }

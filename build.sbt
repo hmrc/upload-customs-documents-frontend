@@ -1,3 +1,4 @@
+import play.sbt.routes.RoutesKeys
 import sbt.Tests.{Group, SubProcess}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin._
 
@@ -7,6 +8,7 @@ lazy val root = (project in file("."))
     organization := "uk.gov.hmrc",
     scalaVersion := "2.12.15",
     PlayKeys.playDefaultPort := 10110,
+    RoutesKeys.routesImport += "uk.gov.hmrc.uploaddocuments.models.JourneyId",
     TwirlKeys.templateImports ++= Seq(
       "play.twirl.api.HtmlFormat",
       "uk.gov.hmrc.govukfrontend.views.html.components._",

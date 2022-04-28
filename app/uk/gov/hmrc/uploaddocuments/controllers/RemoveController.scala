@@ -20,7 +20,7 @@ import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.Response
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads, JourneyId}
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 
 import javax.inject.{Inject, Singleton}
@@ -71,11 +71,11 @@ class RemoveController @Inject()(
       }
     }
 
-  def removeFile(files: FileUploads, reference: String, journeyId: String, journeyContext: FileUploadContext)(
+  def removeFile(files: FileUploads, reference: String, journeyId: JourneyId, journeyContext: FileUploadContext)(
     implicit hc: HeaderCarrier): Future[(Response, FileUploads)] = {
     val updatedFiles = files.copy(files = files.files.filterNot(_.reference == reference))
     for {
-      _ <- components.newJourneyCacheRepository.put(journeyId)(DataKeys.uploadedFiles, updatedFiles)
+      _ <- components.newJourneyCacheRepository.put(journeyId.value)(DataKeys.uploadedFiles, updatedFiles)
       result <- fileUploadResultPushConnector.push(FileUploadResultPushConnector.Request(journeyContext, updatedFiles))
     } yield (result, updatedFiles)
   }

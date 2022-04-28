@@ -19,7 +19,7 @@ package uk.gov.hmrc.uploaddocuments.services
 import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
-import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileUploadError, FileUploads, Nonce, UpscanInitiateResponse}
+import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileUploadError, FileUploads, JourneyId, Nonce, UpscanInitiateResponse}
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
@@ -37,7 +37,7 @@ class InitiateUpscanService @Inject()(
   def initiateNextMultiFileUpload(
     journeyContext: FileUploadContext,
     uploadId: String
-  )(implicit journeyId: String, rh: RequestHeader, hc: HeaderCarrier): Future[Option[UpscanInitiateResponse]] = {
+  )(implicit journeyId: JourneyId, rh: RequestHeader, hc: HeaderCarrier): Future[Option[UpscanInitiateResponse]] = {
     val nonce = randomNonce
     val initiateRequest =
       upscanRequestWhenUploadingMultipleFiles(nonce, journeyContext.config.maximumFileSizeBytes)
@@ -57,7 +57,7 @@ class InitiateUpscanService @Inject()(
   def initiateNextSingleFileUpload(
     journeyContext: FileUploadContext
   )(
-    implicit journeyId: String,
+    implicit journeyId: JourneyId,
     rh: RequestHeader,
     hc: HeaderCarrier): Future[Option[(UpscanInitiateResponse, FileUploads, Option[FileUploadError])]] = {
     val nonce           = randomNonce

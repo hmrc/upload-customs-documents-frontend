@@ -44,7 +44,7 @@ class CallbackFromUpscanController @Inject()(
             //      My assumption would be, that whenever we get a response from Upscan it should udpate the stored record.
             val uploads = updateFileUploads(payload, Nonce(nonce), files, journeyContext)
             for {
-              _ <- components.newJourneyCacheRepository.put(journeyId)(DataKeys.uploadedFiles, uploads)
+              _ <- components.newJourneyCacheRepository.put(journeyId.value)(DataKeys.uploadedFiles, uploads)
               _ <- if (uploads.acceptedCount != files.acceptedCount) {
                     fileUploadResultPushConnector.push(FileUploadResultPushConnector.Request(journeyContext, uploads))
                   } else Future.successful(Right((): Unit))
