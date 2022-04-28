@@ -52,7 +52,7 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository)
 
       val updatedFileUploads =
         FileUploads(files.files.map {
-          case _@FileUpload.Initiated(nonce, _, `key`, _, _) =>
+          case FileUpload.Initiated(nonce, _, `key`, _, _) =>
             FileUpload.Posted(nonce, Timestamp.now, key)
           case file => file
         })
