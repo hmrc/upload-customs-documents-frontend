@@ -62,7 +62,10 @@ abstract class BaseController(
   private val journeyIdPathParamRegex = ".*?/journey/([a-fA-F0-9]+?)/.*".r
 
   final def journeyId(implicit rh: RequestHeader): Option[String] =
-    journeyId(decodeHeaderCarrier(rh), rh)
+    journeyIdFromPath(rh).orElse(journeyIdFromSession)
+
+  final def journeyIdFromSession(implicit rh: RequestHeader): Option[JourneyId] =
+    decodeHeaderCarrier(rh).sessionId.map(_.value).map(SHA256.compute)
 
   private def journeyIdFromPath(implicit rh: RequestHeader) =
     rh.path match {
@@ -70,14 +73,9 @@ abstract class BaseController(
       case _                           => None
     }
 
-  private def journeyId(hc: HeaderCarrier, rh: RequestHeader): Option[String] =
-    journeyIdFromPath(rh).orElse(hc.sessionId.map(_.value).map(SHA256.compute))
-
   final implicit def context(implicit rh: RequestHeader): HeaderCarrier = {
     val hc = decodeHeaderCarrier(rh)
-    journeyId(hc, rh)
-      .map(jid => hc.withExtraHeaders("FileUploadJourney" -> jid))
-      .getOrElse(hc)
+    journeyId(rh).fold(hc)(jid => hc.withExtraHeaders("FileUploadJourney" -> jid))
   }
 
   private def decodeHeaderCarrier(rh: RequestHeader): HeaderCarrier =
