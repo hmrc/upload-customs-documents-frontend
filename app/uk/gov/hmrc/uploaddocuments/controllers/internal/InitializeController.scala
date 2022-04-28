@@ -21,13 +21,15 @@ import play.api.mvc.Action
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, routes => mainRoutes}
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class InitializeController @Inject()(components: BaseControllerComponents)(implicit ec: ExecutionContext)
+class InitializeController @Inject()(components: BaseControllerComponents,
+                                     fileUploadService: FileUploadService,
+                                     journeyContextService: JourneyContextService)(implicit ec: ExecutionContext)
     extends BaseController(components) {
 
   // POST /internal/initialize
@@ -36,15 +38,15 @@ class InitializeController @Inject()(components: BaseControllerComponents)(impli
       withJsonBody[FileUploadInitializationRequest] { payload =>
         whenInSession { implicit journeyId =>
           whenAuthenticatedInBackchannel {
-            val host           = HostService(request)
-            val journeyContext = FileUploadContext(payload.config, host)
             for {
-              _ <- components.newJourneyCacheRepository.put(journeyId.value)(DataKeys.journeyContext, journeyContext)
-              _ <- components.newJourneyCacheRepository.put(journeyId.value)(DataKeys.uploadedFiles, FileUploads(payload))
+              _ <- journeyContextService.putJourneyContext(FileUploadContext(payload.config, HostService(request)))
+              _ <- fileUploadService.putFiles(FileUploads(payload))
             } yield {
-              val url = if (!journeyContext.config.features.showUploadMultiple) {
+              val url = if (payload.config.features.showUploadMultiple) {
+                mainRoutes.StartController.start.url
+              } else {
                 mainRoutes.ChooseSingleFileController.showChooseFile.url
-              } else { mainRoutes.StartController.start.url }
+              }
               Created.withHeaders(HeaderNames.LOCATION -> url)
             }
           }
