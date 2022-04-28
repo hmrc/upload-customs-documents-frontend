@@ -59,12 +59,23 @@ abstract class BaseController(
 
   final protected def controllerComponents: MessagesControllerComponents = components.messagesControllerComponents
 
+  private val journeyIdPathParamRegex = ".*?/journey/([a-fA-F0-9]+?)/.*".r
+
+  final def journeyId(implicit rh: RequestHeader): Option[String] =
+    journeyIdFromPath(rh).orElse(journeyIdFromSession)
+
   final def journeyIdFromSession(implicit rh: RequestHeader): Option[JourneyId] =
     decodeHeaderCarrier(rh).sessionId.map(_.value).map(SHA256.compute)
 
+  private def journeyIdFromPath(implicit rh: RequestHeader) =
+    rh.path match {
+      case journeyIdPathParamRegex(id) => Some(id)
+      case _                           => None
+    }
+
   final implicit def context(implicit rh: RequestHeader): HeaderCarrier = {
     val hc = decodeHeaderCarrier(rh)
-    journeyIdFromSession.fold(hc)(jid => hc.withExtraHeaders("FileUploadJourney" -> jid))
+    journeyId(rh).fold(hc)(jid => hc.withExtraHeaders("FileUploadJourney" -> jid))
   }
 
   private def decodeHeaderCarrier(rh: RequestHeader): HeaderCarrier =
