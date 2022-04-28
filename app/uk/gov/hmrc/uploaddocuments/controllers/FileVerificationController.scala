@@ -95,14 +95,11 @@ class FileVerificationController @Inject()(
       key match {
         case None => Future(BadRequest)
         case Some(upscanReference) =>
-          fileUploadService.markFileAsPosted(upscanReference)
-            .flatMap { _ =>
-              val timeoutNanoTime: Long = System.nanoTime() + appConfig.upscanInitialWaitTime.toNanos
-              fileVerificationService.waitForUpscanResponse(upscanReference, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
-                _ => Future(Created),
-                Future(Accepted)
-              ).map(_.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*"))
-            }
+          val timeoutNanoTime: Long = System.nanoTime() + appConfig.upscanInitialWaitTime.toNanos
+          fileVerificationService.waitForUpscanResponse(upscanReference, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
+            _ => Future(Created),
+            Future(Accepted)
+          ).map(_.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*"))
       }
     }
 }

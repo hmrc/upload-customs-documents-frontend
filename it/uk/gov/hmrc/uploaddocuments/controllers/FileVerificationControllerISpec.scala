@@ -1,5 +1,6 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
+import play.api.http.Status
 import uk.gov.hmrc.uploaddocuments.models._
 
 import java.time.ZonedDateTime
@@ -155,13 +156,13 @@ class FileVerificationControllerISpec extends ControllerISpecBase {
     }
 
     "GET /journey/:journeyId/file-verification" should {
-      "set current file upload status as posted and return 202 NoContent" in {
+
+      "set return 202 Accepted (when no response yet received)" in {
 
         val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files =
           Seq(
-            FileUpload.Initiated(Nonce.Any, Timestamp.Any, upscanRef1),
-            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2)
+            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef1)
           )
         )
 
@@ -173,18 +174,39 @@ class FileVerificationControllerISpec extends ControllerISpecBase {
         val result1 =
           await(requestWithoutSessionId(s"/journey/$getJourneyId/file-verification?key=$upscanRef1").get())
 
-        result1.status shouldBe 202
+        result1.status shouldBe Status.ACCEPTED
         result1.body.isEmpty shouldBe true
+      }
 
+      "set return 201 Created (when a response is ready)" in {
 
-        getFileUploads() shouldBe Some(
-          FileUploads(files =
-            Seq(
-              FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef1),
-              FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2)
+        val context = FileUploadContext(fileUploadSessionConfig)
+        val fileUploads = FileUploads(files =
+          Seq(
+            FileUpload.Accepted(
+              Nonce.Any,
+              Timestamp.Any,
+              upscanRef1,
+              "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
+              ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+              "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+              "test.pdf",
+              "application/pdf",
+              4567890
             )
           )
         )
+
+        setContext(context)
+        setFileUploads(fileUploads)
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result1 =
+          await(requestWithoutSessionId(s"/journey/$getJourneyId/file-verification?key=$upscanRef1").get())
+
+        result1.status shouldBe Status.CREATED
+        result1.body.isEmpty shouldBe true
       }
     }
   }
