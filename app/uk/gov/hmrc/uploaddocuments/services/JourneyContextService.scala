@@ -16,21 +16,33 @@
 
 package uk.gov.hmrc.uploaddocuments.services
 
+import play.api.mvc.Result
+import play.api.mvc.Results.Redirect
 import uk.gov.hmrc.mongo.cache.CacheItem
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, JourneyId}
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads, JourneyId}
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
+import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class JourneyContextService @Inject()(repo: JourneyCacheRepository) {
+class JourneyContextService @Inject()(repo: JourneyCacheRepository)
+                                     (implicit ec: ExecutionContext, appConfig: AppConfig) extends LoggerUtil {
 
   def getJourneyContext()(implicit journeyId: JourneyId): Future[Option[FileUploadContext]] =
     repo.get(journeyId.value)(DataKeys.journeyContext)
 
-  def putJourneyContext(journeyContext: FileUploadContext)
-                                         (implicit journeyId: JourneyId): Future[CacheItem] =
+  def putJourneyContext(journeyContext: FileUploadContext)(implicit journeyId: JourneyId): Future[CacheItem] =
     repo.put(journeyId.value)(DataKeys.journeyContext, journeyContext)
+
+  def withJourneyContext[T](journeyNotFoundResult: => Future[T])(f: FileUploadContext => Future[T])
+                           (implicit journeyId: JourneyId): Future[T] =
+    getJourneyContext.flatMap(_.fold {
+      error("[withFiles] No files exist for the supplied journeyID")
+      debug(s"[withFiles] journeyId: '$journeyId'")
+      journeyNotFoundResult
+    }(f))
 }

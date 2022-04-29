@@ -21,60 +21,58 @@ import play.api.mvc.{Action, AnyContent, Call, Request}
 import uk.gov.hmrc.uploaddocuments.forms.Forms
 import uk.gov.hmrc.uploaddocuments.forms.Forms.YesNoChoiceForm
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
+import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 import uk.gov.hmrc.uploaddocuments.views.html.UploadMultipleFilesView
+import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ChooseMultipleFilesController @Inject()(
-  components: BaseControllerComponents,
-  uploadMultipleFilesView: UploadMultipleFilesView
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+class ChooseMultipleFilesController @Inject()(components: BaseControllerComponents,
+                                              uploadMultipleFilesView: UploadMultipleFilesView,
+                                              override val journeyContextService: JourneyContextService,
+                                              override val fileUploadService: FileUploadService)
+                                             (implicit ec: ExecutionContext) extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper {
 
   // GET /choose-files
-  final val showChooseMultipleFiles: Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession { implicit journeyId =>
-        whenAuthenticated {
-          if (!preferUploadMultipleFiles) {
-            Future(Redirect(routes.ChooseSingleFileController.showChooseFile))
-          } else {
-            withJourneyContext { journeyConfig =>
-              withUploadedFiles { files =>
-                Future(Ok(renderView(journeyConfig, files, YesNoChoiceForm)))
-              }
+  final val showChooseMultipleFiles: Action[AnyContent] = Action.async { implicit request =>
+    whenInSession { implicit journeyId =>
+      whenAuthenticated {
+        if (!preferUploadMultipleFiles) {
+          Future(Redirect(routes.ChooseSingleFileController.showChooseFile))
+        } else {
+          withJourneyContext { journeyConfig =>
+            withFileUploads { files =>
+              Future(Ok(renderView(journeyConfig, files, YesNoChoiceForm)))
             }
           }
         }
       }
     }
+  }
 
   // POST /choose-files
-  final val continueWithYesNo: Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession { implicit journeyId =>
-        whenAuthenticated {
-          withJourneyContext { journeyConfig =>
-            withUploadedFiles { files =>
-              Forms.YesNoChoiceForm.bindFromRequest
-                .fold(
-                  formWithErrors => Future(Ok(renderView(journeyConfig, files, formWithErrors))), {
-                    case true =>
-                      Future(
-                        Redirect(
-                          journeyConfig.config.continueAfterYesAnswerUrl.getOrElse(journeyConfig.config.backlinkUrl)
-                        )
-                      )
-                    case false => Future(Redirect(routes.ContinueToHostController.continueToHost))
-                  }
-                )
-            }
+  final val continueWithYesNo: Action[AnyContent] = Action.async { implicit request =>
+    whenInSession { implicit journeyId =>
+      whenAuthenticated {
+        withJourneyContext { journeyConfig =>
+          withFileUploads { files =>
+            Forms.YesNoChoiceForm.bindFromRequest
+              .fold(
+                formWithErrors => Future.successful(BadRequest(renderView(journeyConfig, files, formWithErrors))),
+                {
+                  case true =>
+                    Future.successful(Redirect(journeyConfig.config.continueAfterYesAnswerUrl.getOrElse(journeyConfig.config.backlinkUrl)))
+                  case false =>
+                    Future.successful(Redirect(routes.ContinueToHostController.continueToHost))
+                }
+              )
           }
         }
       }
     }
+  }
 
   private def renderView(context: FileUploadContext, files: FileUploads, form: Form[Boolean])(
     implicit request: Request[_]) =

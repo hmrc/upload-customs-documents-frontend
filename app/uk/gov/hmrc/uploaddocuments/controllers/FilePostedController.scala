@@ -32,25 +32,25 @@ class FilePostedController @Inject()(components: BaseControllerComponents,
                                     (implicit ec: ExecutionContext) extends BaseController(components) with LoggerUtil {
 
   // GET /journey/:journeyId/file-posted
-  final def asyncMarkFileUploadAsPosted(implicit journeyId: JourneyId): Action[AnyContent] =
-    Action.async { implicit request =>
-      Forms.UpscanUploadSuccessForm
-        .bindFromRequest
-        .fold(
-          formWithErrors =>
-            Future.successful(Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles).withFormError(formWithErrors))
-          ,
-          s3UploadSuccess =>
-            fileUploadService.markFileAsPosted(s3UploadSuccess.key).map { _ =>
-              Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
-            }
-        )
-    }
+  final def asyncMarkFileUploadAsPosted(implicit journeyId: JourneyId): Action[AnyContent] = Action.async { implicit request =>
+    Forms.UpscanUploadSuccessForm
+      .bindFromRequest
+      .fold(
+        _ => {
+          error("[asyncMarkFileUploadAsPosted] Query Parameters from Upscan could not be bound to form")
+          debug(s"[asyncMarkFileUploadAsPosted] Query Params Received: ${request.queryString}")
+          Future.successful(BadRequest)
+        },
+        s3UploadSuccess =>
+          fileUploadService.markFileAsPosted(s3UploadSuccess.key).map { _ =>
+            Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
+          }
+      )
+  }
 
   // OPTIONS /journey/:journeyId/file-posted
-  final def preflightUpload(journeyId: JourneyId): Action[AnyContent] =
-    Action {
-      Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
-    }
+  final def preflightUpload(journeyId: JourneyId): Action[AnyContent] = Action {
+    Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
+  }
 
 }

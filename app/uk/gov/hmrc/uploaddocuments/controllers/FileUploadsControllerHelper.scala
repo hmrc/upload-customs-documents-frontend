@@ -16,21 +16,18 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.uploaddocuments.views.html.StartView
+import play.api.mvc.Result
+import uk.gov.hmrc.uploaddocuments.models.{FileUploads, JourneyId}
+import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 
-import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
-@Singleton
-class StartController @Inject()(view: StartView,
-                                components: BaseControllerComponents) extends BaseController(components) {
+trait FileUploadsControllerHelper { baseController: BaseController =>
 
-  // GET /
-  final val start: Action[AnyContent] = Action { implicit request =>
-    if (preferUploadMultipleFiles)
-      Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles)
-    else
-      Ok(view(routes.ChooseMultipleFilesController.showChooseMultipleFiles))
-  }
+  val fileUploadService: FileUploadService
+
+  def withFileUploads(body: FileUploads => Future[Result])
+                     (implicit ec: ExecutionContext, journeyId: JourneyId): Future[Result] =
+    fileUploadService.withFiles(Future.successful(Redirect(baseController.components.appConfig.govukStartUrl)))(body)
 
 }

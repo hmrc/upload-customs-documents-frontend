@@ -21,26 +21,27 @@ import play.api.mvc.{Action, AnyContent}
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.connectors.FileStream
 import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploads, RFC3986Encoder}
+import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PreviewController @Inject()(components: BaseControllerComponents, val actorSystem: ActorSystem)(
-  implicit ec: ExecutionContext)
-    extends BaseController(components) with FileStream {
+class PreviewController @Inject()(components: BaseControllerComponents,
+                                  val actorSystem: ActorSystem,
+                                  override val fileUploadService: FileUploadService)
+                                 (implicit ec: ExecutionContext) extends BaseController(components) with FileStream with FileUploadsControllerHelper {
 
   // GET /preview/:reference/:fileName
-  final def previewFileUploadByReference(reference: String, fileName: String): Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession { implicit journeyId =>
-        whenAuthenticated {
-          withUploadedFiles { files =>
-            streamFileFromUspcan(reference, files)
-          }
+  final def previewFileUploadByReference(reference: String, fileName: String): Action[AnyContent] = Action.async { implicit request =>
+    whenInSession { implicit journeyId =>
+      whenAuthenticated {
+        withFileUploads { files =>
+          streamFileFromUspcan(reference, files)
         }
       }
     }
+  }
 
   private def streamFileFromUspcan(reference: String, files: FileUploads) =
     files.files.find(_.reference == reference) match {
@@ -56,7 +57,7 @@ class PreviewController @Inject()(components: BaseControllerComponents, val acto
                 HeaderNames.CONTENT_DISPOSITION ->
                   s"""inline; filename="${fileName.filter(_.toInt < 128)}"; filename*=utf-8''${RFC3986Encoder
                     .encode(fileName)}"""
-          }
+            }
         )
       case _ => Future.successful(NotFound)
     }

@@ -61,7 +61,7 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
 
         "throw Match Error" in new TestFixture {
 
-          mockWithFiles(journeyId)(Some(FileUploads()))
+          mockWithFiles(journeyId)(Future.successful(Some(FileUploads())))
 
           intercept[MatchError](await(actual))
         }
@@ -75,7 +75,7 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
 
             "execute the whenReady result" in new TestFixture {
 
-              mockWithFiles(journeyId)(Some(FileUploads(Seq(acceptedFileUpload))))
+              mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
               await(actual) shouldBe s"ResponseReceived for ${acceptedFileUpload.reference}"
             }
@@ -87,8 +87,8 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
 
               val postedFileSameReference = fileUploadPosted.copy(reference = acceptedFileUpload.reference)
 
-              mockWithFiles(journeyId)(Some(FileUploads(Seq(postedFileSameReference)))).repeat(3)
-              mockWithFiles(journeyId)(Some(FileUploads(Seq(acceptedFileUpload))))
+              mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(postedFileSameReference))))).repeat(3)
+              mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
               await(actual) shouldBe s"ResponseReceived for ${acceptedFileUpload.reference}"
             }
@@ -103,7 +103,7 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
 
               val postedFileSameReference = fileUploadPosted.copy(reference = acceptedFileUpload.reference)
 
-              mockWithFiles(journeyId)(Some(FileUploads(Seq(postedFileSameReference)))).repeat(6)
+              mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(postedFileSameReference))))).repeat(6)
 
               await(actual) shouldBe "TimedOut"
             }
@@ -118,7 +118,7 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
 
         "return None" in {
 
-          mockWithFiles(journeyId)(None)
+          mockWithFiles(journeyId)(Future.successful(None))
           await(TestFileVerificationService.getFileVerificationStatus("foo")) shouldBe None
         }
       }
@@ -129,7 +129,7 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
 
           "return None" in {
 
-            mockWithFiles(journeyId)(Some(FileUploads()))
+            mockWithFiles(journeyId)(Future.successful(Some(FileUploads())))
             await(TestFileVerificationService.getFileVerificationStatus("foo")) shouldBe None
           }
         }
@@ -145,7 +145,7 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
                 allowedFilesTypesHint = Some(hint)
               )))
 
-              mockWithFiles(journeyId)(Some(FileUploads(Seq(acceptedFileUpload))))
+              mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
               await(TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)) shouldBe Some(
                 FileVerificationStatus(
@@ -167,7 +167,7 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
                 val extensions = "Extensions"
                 val context = journeyContext.copy(config = fileUploadSessionConfig.copy(allowedFileExtensions = Some(extensions)))
 
-                mockWithFiles(journeyId)(Some(FileUploads(Seq(acceptedFileUpload))))
+                mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
                 await(TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)) shouldBe
                   Some(
@@ -185,7 +185,7 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
 
               "return FileVerificationStatus with the allowedContentTypes as the allowedFileTypesHint" in {
 
-                mockWithFiles(journeyId)(Some(FileUploads(Seq(acceptedFileUpload))))
+                mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
                 await(TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)) shouldBe Some(
                   FileVerificationStatus(

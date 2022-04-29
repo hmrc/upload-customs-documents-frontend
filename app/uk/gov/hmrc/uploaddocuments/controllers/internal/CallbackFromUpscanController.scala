@@ -18,26 +18,26 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 
 import play.api.libs.json.JsValue
 import play.api.mvc.Action
-import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents}
+import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, FileUploadsControllerHelper, JourneyContextControllerHelper}
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.services.FileUploadService
+import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class CallbackFromUpscanController @Inject()(components: BaseControllerComponents,
-                                             fileUploadService: FileUploadService)
-                                            (implicit ec: ExecutionContext) extends BaseController(components) {
+                                             override val journeyContextService: JourneyContextService,
+                                             override val fileUploadService: FileUploadService)
+                                            (implicit ec: ExecutionContext) extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper {
 
   // POST /callback-from-upscan/journey/:journeyId/:nonce
-  final def callbackFromUpscan(journeyId: JourneyId, nonce: String): Action[JsValue] =
-    Action.async(parse.tolerantJson) { implicit request =>
-      withJsonBody[UpscanNotification] { payload =>
-        implicit val journey: JourneyId = journeyId
-        withJourneyContext { implicit journeyContext =>
-          fileUploadService.markFileWithUpscanResponseAndNotifyHost(payload, Nonce(nonce)).map { _ => NoContent }
-        }
+  final def callbackFromUpscan(journeyId: JourneyId, nonce: String): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+    withJsonBody[UpscanNotification] { payload =>
+      implicit val journey: JourneyId = journeyId
+      withJourneyContext { implicit journeyContext =>
+        fileUploadService.markFileWithUpscanResponseAndNotifyHost(payload, Nonce(nonce)).map { _ => NoContent }
       }
     }
+  }
 }
