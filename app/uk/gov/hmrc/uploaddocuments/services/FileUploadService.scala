@@ -119,7 +119,6 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository,
           case UpscanFileReady(_, url, uploadDetails) =>
             fileUploads.files
               .collectFirst {
-                // check for existing Accepted file uploads with duplicated checksum
                 case file: FileUpload.Accepted
                   if file.checksum == uploadDetails.checksum && file.reference != notification.reference =>
                   FileUpload.Duplicate(
@@ -146,7 +145,6 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository,
                 )
               }
           case UpscanFileFailed(_, failureDetails) =>
-            // update status of the file with matching nonce
             logFailure(context, failureDetails, fileUpload.timestamp)
             FileUpload.Failed(fileUpload.nonce, Timestamp.now, fileUpload.reference, failureDetails)
         }
