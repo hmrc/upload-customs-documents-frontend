@@ -19,6 +19,7 @@ package uk.gov.hmrc.uploaddocuments.controllers
 import play.api.mvc.{Action, AnyContent, Request, Result}
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.forms.Forms
+import uk.gov.hmrc.uploaddocuments.models.JourneyId
 import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 import uk.gov.hmrc.uploaddocuments.support.UploadLog
 
@@ -83,7 +84,7 @@ class FileRejectedController @Inject()(components: BaseControllerComponents,
     }
 
   // OPTIONS /journey/:journeyId/file-rejected
-  final def preflightUpload(journeyId: String): Action[AnyContent] =
+  final def preflightUpload(journeyId: JourneyId): Action[AnyContent] =
     Action {
       Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
     }

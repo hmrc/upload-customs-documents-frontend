@@ -29,14 +29,14 @@ import scala.concurrent.{ExecutionContext, Future}
 class FileUploadService @Inject()(repo: JourneyCacheRepository)
                                  (implicit ec: ExecutionContext) extends LoggerUtil with UploadLog {
 
-  def getFiles(implicit journeyId: String): Future[Option[FileUploads]] =
-    repo.get(journeyId)(DataKeys.uploadedFiles)
+  def getFiles(implicit journeyId: JourneyId): Future[Option[FileUploads]] =
+    repo.get(journeyId.value)(DataKeys.uploadedFiles)
 
-  def putFiles(files: FileUploads)(implicit journeyId: String): Future[CacheItem] =
-    repo.put(journeyId)(DataKeys.uploadedFiles, files)
+  def putFiles(files: FileUploads)(implicit journeyId: JourneyId): Future[CacheItem] =
+    repo.put(journeyId.value)(DataKeys.uploadedFiles, files)
 
   def withFiles[T](journeyNotFoundResult: => Future[T])(f: FileUploads => Future[T])
-                  (implicit journeyId: String): Future[T] =
+                  (implicit journeyId: JourneyId): Future[T] =
     getFiles flatMap {
       case None =>
         error("[withFiles] No files exist for the supplied journeyID")
@@ -46,7 +46,7 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository)
     }
 
   def markFileAsPosted(key: String)
-                      (implicit journeyId: String): Future[Option[CacheItem]] =
+                      (implicit journeyId: JourneyId): Future[Option[CacheItem]] =
 
     withFiles[Option[CacheItem]](Future.successful(None)) { files =>
 
@@ -67,7 +67,7 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository)
     }
 
   def markFileAsRejected(s3UploadError: S3UploadError)
-                        (implicit journeyId: String, journeyContext: FileUploadContext): Future[Option[CacheItem]] =
+                        (implicit journeyId: JourneyId, journeyContext: FileUploadContext): Future[Option[CacheItem]] =
 
     withFiles[Option[CacheItem]](Future.successful(None)) { files =>
 

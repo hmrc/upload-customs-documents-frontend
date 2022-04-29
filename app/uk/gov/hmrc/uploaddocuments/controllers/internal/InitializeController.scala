@@ -39,8 +39,8 @@ class InitializeController @Inject()(components: BaseControllerComponents)(impli
             val host           = HostService(request)
             val journeyContext = FileUploadContext(payload.config, host)
             for {
-              _ <- components.newJourneyCacheRepository.put(journeyId)(DataKeys.journeyContext, journeyContext)
-              _ <- components.newJourneyCacheRepository.put(journeyId)(DataKeys.uploadedFiles, FileUploads(payload))
+              _ <- components.newJourneyCacheRepository.put(journeyId.value)(DataKeys.journeyContext, journeyContext)
+              _ <- components.newJourneyCacheRepository.put(journeyId.value)(DataKeys.uploadedFiles, FileUploads(payload))
             } yield {
               val url = if (!journeyContext.config.features.showUploadMultiple) {
                 mainRoutes.ChooseSingleFileController.showChooseFile.url

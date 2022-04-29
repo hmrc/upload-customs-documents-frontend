@@ -26,6 +26,7 @@ import uk.gov.hmrc.mongo.cache.CacheItem
 import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
 import uk.gov.hmrc.uploaddocuments.models.FileUploadSessionConfig.defaultMaximumFileSizeBytes
 import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.services.mocks.MockFileUploadService
 import uk.gov.hmrc.uploaddocuments.support.JsEnabled.COOKIE_JSENABLED
 import uk.gov.hmrc.uploaddocuments.support.UnitSpec
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
@@ -47,7 +48,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
   }
   val nonce: Nonce     = Nonce(1)
   val maximumFileBytes = 2
-  val journeyId        = "testJourneyId"
+  val journeyId        = JourneyId("testJourneyId")
   val uploadId         = "uploadId"
   val cacheItem        = CacheItem("id", Json.obj(), Instant.now, Instant.now)
   val upscanResponse   = UpscanInitiateResponse("reference", UploadRequest("href", Map.empty[String, String]))

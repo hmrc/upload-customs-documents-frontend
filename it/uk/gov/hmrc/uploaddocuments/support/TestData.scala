@@ -8,7 +8,7 @@ object TestData {
 
   val today = LocalDate.now
 
-  val journeyId = "testJourneyId"
+  val journeyId = JourneyId("testJourneyId")
 
   val fileUploadContext = FileUploadContext(
     FileUploadSessionConfig(Nonce(0), "/continue-url", "/backlink-url", "callback-url")

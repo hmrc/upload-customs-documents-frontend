@@ -17,7 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.services
 
 import uk.gov.hmrc.mongo.cache.CacheItem
-import uk.gov.hmrc.uploaddocuments.models.FileUploadContext
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, JourneyId}
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 
@@ -27,10 +27,10 @@ import scala.concurrent.Future
 @Singleton
 class JourneyContextService @Inject()(repo: JourneyCacheRepository) {
 
-  def getJourneyContext()(implicit journeyId: String): Future[Option[FileUploadContext]] =
-    repo.get(journeyId)(DataKeys.journeyContext)
+  def getJourneyContext()(implicit journeyId: JourneyId): Future[Option[FileUploadContext]] =
+    repo.get(journeyId.value)(DataKeys.journeyContext)
 
   def putJourneyContext(journeyContext: FileUploadContext)
-                                         (implicit journeyId: String): Future[CacheItem] =
-    repo.put(journeyId)(DataKeys.journeyContext, journeyContext)
+                                         (implicit journeyId: JourneyId): Future[CacheItem] =
+    repo.put(journeyId.value)(DataKeys.journeyContext, journeyContext)
 }

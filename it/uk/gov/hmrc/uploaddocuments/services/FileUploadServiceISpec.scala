@@ -19,7 +19,7 @@ package uk.gov.hmrc.uploaddocuments.services
 import org.mongodb.scala.bson.BsonDocument
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.mongo.cache.CacheItem
-import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileUploads, Nonce, Timestamp}
+import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileUploads, JourneyId, Nonce, Timestamp}
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.support.TestData._
@@ -51,7 +51,7 @@ class FileUploadServiceISpec extends AppISpec with LogCapturing with BeforeAndAf
         await(testFileUploadService.putFiles(nonEmptyFileUploads)(journeyId))
 
         await(repo.collection.countDocuments().toFuture()) shouldBe 1
-        await(repo.get(journeyId)(DataKeys.uploadedFiles)) shouldBe Some(nonEmptyFileUploads)
+        await(repo.get(journeyId.value)(DataKeys.uploadedFiles)) shouldBe Some(nonEmptyFileUploads)
       }
 
       "update when existing file present" in {
@@ -66,7 +66,7 @@ class FileUploadServiceISpec extends AppISpec with LogCapturing with BeforeAndAf
         await(testFileUploadService.putFiles(updatedRecord)(journeyId))
 
         await(repo.collection.countDocuments().toFuture()) shouldBe 1
-        await(repo.get(journeyId)(DataKeys.uploadedFiles)) shouldBe Some(updatedRecord)
+        await(repo.get(journeyId.value)(DataKeys.uploadedFiles)) shouldBe Some(updatedRecord)
       }
     }
 
@@ -182,7 +182,7 @@ class FileUploadServiceISpec extends AppISpec with LogCapturing with BeforeAndAf
 
           withCaptureOfLoggingFrom(testFileUploadService.logger) { logs =>
 
-            await(testFileUploadService.markFileAsPosted("invalidKey")("invalidJourneyId")) shouldBe None
+            await(testFileUploadService.markFileAsPosted("invalidKey")(JourneyId("invalidJourneyId"))) shouldBe None
 
             logExists("[withFiles] No files exist for the supplied journeyID")(logs)
             logExists("[withFiles] journeyId: 'invalidJourneyId'")(logs)
@@ -244,7 +244,7 @@ class FileUploadServiceISpec extends AppISpec with LogCapturing with BeforeAndAf
 
           withCaptureOfLoggingFrom(testFileUploadService.logger) { logs =>
 
-            await(testFileUploadService.markFileAsRejected(s3Errors("invalidKey"))("invalidJourneyId", FileUploadContext(fileUploadSessionConfig))) shouldBe None
+            await(testFileUploadService.markFileAsRejected(s3Errors("invalidKey"))(JourneyId("invalidJourneyId"), FileUploadContext(fileUploadSessionConfig))) shouldBe None
 
             logExists("[withFiles] No files exist for the supplied journeyID")(logs)
             logExists("[withFiles] journeyId: 'invalidJourneyId'")(logs)

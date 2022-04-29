@@ -25,7 +25,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody}
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.connectors.FrontendAuthConnector
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads, JourneyId}
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
@@ -51,7 +51,6 @@ class BaseControllerComponents @Inject()(
 abstract class BaseController(
   val components: BaseControllerComponents
 ) extends MessagesBaseController with Utf8MimeTypes with WithJsonBody with I18nSupport with AuthActions {
-  type JourneyId = String
 
   final def config: Configuration        = components.configuration
   final def env: Environment             = components.environment
@@ -61,21 +60,21 @@ abstract class BaseController(
 
   private val journeyIdPathParamRegex = ".*?/journey/([a-fA-F0-9]+?)/.*".r
 
-  final def journeyId(implicit rh: RequestHeader): Option[String] =
+  final def journeyId(implicit rh: RequestHeader): Option[JourneyId] =
     journeyIdFromPath(rh).orElse(journeyIdFromSession)
 
   final def journeyIdFromSession(implicit rh: RequestHeader): Option[JourneyId] =
-    decodeHeaderCarrier(rh).sessionId.map(_.value).map(SHA256.compute)
+    decodeHeaderCarrier(rh).sessionId.map(_.value).map(SHA256.compute).map(JourneyId.apply)
 
   private def journeyIdFromPath(implicit rh: RequestHeader) =
     rh.path match {
-      case journeyIdPathParamRegex(id) => Some(id)
+      case journeyIdPathParamRegex(id) => Some(JourneyId.apply(id))
       case _                           => None
     }
 
   final implicit def context(implicit rh: RequestHeader): HeaderCarrier = {
     val hc = decodeHeaderCarrier(rh)
-    journeyId(rh).fold(hc)(jid => hc.withExtraHeaders("FileUploadJourney" -> jid))
+    journeyId(rh).fold(hc)(jid => hc.withExtraHeaders("FileUploadJourney" -> jid.value))
   }
 
   private def decodeHeaderCarrier(rh: RequestHeader): HeaderCarrier =
@@ -89,14 +88,14 @@ abstract class BaseController(
   final def withJourneyContext(
     body: FileUploadContext => Future[Result]
   )(implicit ec: ExecutionContext, journeyId: JourneyId): Future[Result] =
-    components.newJourneyCacheRepository.get(journeyId)(DataKeys.journeyContext) flatMap {
+    components.newJourneyCacheRepository.get(journeyId.value)(DataKeys.journeyContext) flatMap {
       _.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
     }
 
   final def withUploadedFiles(
     body: FileUploads => Future[Result]
   )(implicit ec: ExecutionContext, journeyId: JourneyId): Future[Result] =
-    components.newJourneyCacheRepository.get(journeyId)(DataKeys.uploadedFiles) flatMap {
+    components.newJourneyCacheRepository.get(journeyId.value)(DataKeys.uploadedFiles) flatMap {
       _.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
     }
 
