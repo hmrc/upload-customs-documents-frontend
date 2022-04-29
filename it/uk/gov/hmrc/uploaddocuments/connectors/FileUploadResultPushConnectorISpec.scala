@@ -5,7 +5,7 @@ import play.api.libs.json.{JsNumber, JsString, Json}
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
-import uk.gov.hmrc.uploaddocuments.support.AppISpec
+import uk.gov.hmrc.uploaddocuments.support.{AppISpec, TestData}
 
 import java.time.ZonedDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -15,6 +15,8 @@ import scala.util.Success
 class FileUploadResultPushConnectorISpec extends FileUploadResultPushConnectorISpecSetup {
 
   override implicit val defaultTimeout: FiniteDuration = 10.seconds
+
+  implicit val jid: JourneyId = TestData.journeyId
 
   import FileUploadResultPushConnector._
 

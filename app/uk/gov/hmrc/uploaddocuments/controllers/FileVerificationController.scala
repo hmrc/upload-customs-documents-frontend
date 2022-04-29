@@ -89,7 +89,7 @@ class FileVerificationController @Inject()(
 
   // GET /journey/:journeyId/file-verification?key
   final def asyncWaitingForFileVerification(journeyId: JourneyId, key: Option[String]): Action[AnyContent] =
-    Action.async { implicit request =>
+    Action.async {
       implicit val journey: JourneyId = journeyId
       key match {
         case None => Future(BadRequest)

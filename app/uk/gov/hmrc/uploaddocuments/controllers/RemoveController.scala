@@ -40,7 +40,7 @@ class RemoveController @Inject()(
         whenAuthenticated {
           withJourneyContext { journeyContext =>
             withUploadedFiles { files =>
-              removeFile(files, reference, journeyId, journeyContext).map {
+              removeFile(files, reference, journeyContext).map {
                 case (Left(_), _) => InternalServerError
                 case (Right(_), updatedFilesWithFileRemoved) =>
                   if (updatedFilesWithFileRemoved.isEmpty) {
@@ -62,7 +62,7 @@ class RemoveController @Inject()(
         whenAuthenticated {
           withJourneyContext { journeyContext =>
             withUploadedFiles { files =>
-              removeFile(files, reference, journeyId, journeyContext).map { _ =>
+              removeFile(files, reference, journeyContext).map { _ =>
                 NoContent
               }
             }
@@ -71,8 +71,8 @@ class RemoveController @Inject()(
       }
     }
 
-  def removeFile(files: FileUploads, reference: String, journeyId: JourneyId, journeyContext: FileUploadContext)(
-    implicit hc: HeaderCarrier): Future[(Response, FileUploads)] = {
+  def removeFile(files: FileUploads, reference: String, journeyContext: FileUploadContext)(
+    implicit hc: HeaderCarrier, journeyId: JourneyId): Future[(Response, FileUploads)] = {
     val updatedFiles = files.copy(files = files.files.filterNot(_.reference == reference))
     for {
       _ <- components.newJourneyCacheRepository.put(journeyId.value)(DataKeys.uploadedFiles, updatedFiles)
