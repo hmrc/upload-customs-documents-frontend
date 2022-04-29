@@ -22,7 +22,7 @@ import play.api.mvc._
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.play.bootstrap.controller.{Utf8MimeTypes, WithJsonBody}
+import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.connectors.FrontendAuthConnector
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads, JourneyId}
@@ -50,7 +50,7 @@ class BaseControllerComponents @Inject()(
 
 abstract class BaseController(
   val components: BaseControllerComponents
-) extends MessagesBaseController with Utf8MimeTypes with WithJsonBody with I18nSupport with AuthActions {
+) extends FrontendBaseController with I18nSupport with AuthActions {
 
   final def config: Configuration        = components.configuration
   final def env: Environment             = components.environment
@@ -58,31 +58,12 @@ abstract class BaseController(
 
   final protected def controllerComponents: MessagesControllerComponents = components.messagesControllerComponents
 
-  private val journeyIdPathParamRegex = ".*?/journey/([a-fA-F0-9]+?)/.*".r
-
-  final def journeyId(implicit rh: RequestHeader): Option[JourneyId] =
-    journeyIdFromPath(rh).orElse(journeyIdFromSession)
-
-  final def journeyIdFromSession(implicit rh: RequestHeader): Option[JourneyId] =
-    decodeHeaderCarrier(rh).sessionId.map(_.value).map(SHA256.compute).map(JourneyId.apply)
-
-  private def journeyIdFromPath(implicit rh: RequestHeader) =
-    rh.path match {
-      case journeyIdPathParamRegex(id) => Some(JourneyId.apply(id))
-      case _                           => None
-    }
-
-  final implicit def context(implicit rh: RequestHeader): HeaderCarrier = {
-    val hc = decodeHeaderCarrier(rh)
-    journeyId(rh).fold(hc)(jid => hc.withExtraHeaders("FileUploadJourney" -> jid.value))
-  }
-
-  private def decodeHeaderCarrier(rh: RequestHeader): HeaderCarrier =
-    HeaderCarrierConverter.fromRequestAndSession(rh, rh.session)
+  final def journeyIdFromSession(implicit hc: HeaderCarrier): Option[JourneyId] =
+    hc.sessionId.map(_.value).map(SHA256.compute).map(JourneyId.apply)
 
   final def whenInSession(
     body: JourneyId => Future[Result]
-  )(implicit request: Request[_]): Future[Result] =
+  )(implicit hc: HeaderCarrier): Future[Result] =
     journeyIdFromSession.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
 
   final def withJourneyContext(

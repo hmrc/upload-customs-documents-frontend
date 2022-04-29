@@ -18,7 +18,6 @@ package uk.gov.hmrc.uploaddocuments.services
 
 import akka.actor.Scheduler
 import play.api.i18n.Messages
-import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.uploaddocuments.controllers.routes
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
@@ -26,15 +25,14 @@ import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class FileVerificationService @Inject()(fileUploadService: FileUploadService)
-                                       (implicit ec: ExecutionContext) extends LoggerUtil {
+class FileVerificationService @Inject()(fileUploadService: FileUploadService) extends LoggerUtil {
 
   def waitForUpscanResponse[T](upscanReference: String,
                                intervalInMiliseconds: Long,
                                timeoutNanoTime: Long)
                               (readyResult: FileUpload => Future[T],
                                ifTimeout: => Future[T])
-                              (implicit rc: HeaderCarrier, scheduler: Scheduler, ec: ExecutionContext, journeyId: JourneyId): Future[T] =
+                              (implicit scheduler: Scheduler, ec: ExecutionContext, journeyId: JourneyId): Future[T] =
 
     fileUploadService.withFiles[T](throw new Exception("No JourneyID found for supplied journeyID")) {
       _.files.find(_.reference == upscanReference) match {

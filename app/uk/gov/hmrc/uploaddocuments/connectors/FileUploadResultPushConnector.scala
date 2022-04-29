@@ -23,7 +23,7 @@ import play.api.Logger
 import play.api.libs.json.{Format, JsValue, Json, Writes}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads, HostService, Nonce, UploadedFile}
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads, HostService, JourneyId, Nonce, UploadedFile}
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import java.net.URL
@@ -44,7 +44,7 @@ class FileUploadResultPushConnector @Inject()(
 
   import FileUploadResultPushConnector._
 
-  def push(request: Request)(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[Response] =
+  def push(request: Request)(implicit hc: HeaderCarrier, jid: JourneyId, ec: ExecutionContext): Future[Response] =
     retry(appConfig.fileUploadResultPushRetryIntervals: _*)(shouldRetry, errorMessage) {
       monitor(s"ConsumedAPI-push-file-uploads-${request.hostService.userAgent}-POST") {
         Try(new URL(request.url).toExternalForm).fold(
@@ -56,7 +56,7 @@ class FileUploadResultPushConnector @Inject()(
           endpointUrl => {
             val wts = implicitly[Writes[FileUploadResultPushConnector.Payload]]
             val rds = implicitly[HttpReads[HttpResponse]]
-            val ehc = request.hostService.populate(hc)
+            val ehc = request.hostService.populate(hc.withExtraHeaders("FileUploadJourney" -> jid.value))
             http
               .POST[Payload, HttpResponse](endpointUrl, Payload(request, appConfig.baseExternalCallbackUrl))(
                 wts,
