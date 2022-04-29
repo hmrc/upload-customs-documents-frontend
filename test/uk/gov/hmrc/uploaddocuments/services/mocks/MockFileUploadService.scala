@@ -31,7 +31,7 @@ trait MockFileUploadService extends MockFactory {
   def mockGetFiles(journeyId: JourneyId)(response: Future[Option[FileUploads]]): CallHandler1[JourneyId, Future[Option[FileUploads]]] =
     (mockFileUploadService.getFiles(_: JourneyId)).expects(journeyId).returning(response)
 
-  def mockPutFiles(journeyId: JourneyId, request: FileUploads)(response: Future[CacheItem]): CallHandler2[FileUploads, JourneyId, Future[CacheItem]] =
+  def mockPutFiles(journeyId: JourneyId, request: FileUploads)(response: Future[FileUploads]): CallHandler2[FileUploads, JourneyId, Future[FileUploads]] =
     (mockFileUploadService.putFiles(_: FileUploads)(_: JourneyId)).expects(request, journeyId).returning(response)
 
   def mockWithFiles[T](journeyId: JourneyId)(files: Option[FileUploads]): CallHandler3[Future[T], FileUploads => Future[T], JourneyId, Future[T]] = {

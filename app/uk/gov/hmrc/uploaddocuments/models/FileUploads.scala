@@ -61,10 +61,6 @@ sealed trait FileUpload {
   val timestamp: Timestamp
   val reference: String
   val isReady: Boolean
-
-  final val minStatusOverwriteGapInMilliseconds: Long = 1000
-  final def canOverwriteFileUploadStatus(now: Timestamp): Boolean =
-    !isReady || now.isAfter(timestamp, minStatusOverwriteGapInMilliseconds)
 }
 sealed trait ErroredFileUpload extends FileUpload
 
