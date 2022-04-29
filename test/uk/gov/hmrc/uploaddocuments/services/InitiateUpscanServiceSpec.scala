@@ -50,7 +50,6 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
   val maximumFileBytes = 2
   val journeyId        = JourneyId("testJourneyId")
   val uploadId         = "uploadId"
-  val cacheItem        = CacheItem("id", Json.obj(), Instant.now, Instant.now)
   val upscanResponse   = UpscanInitiateResponse("reference", UploadRequest("href", Map.empty[String, String]))
 
   val fileUploadContext =
@@ -164,7 +163,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
 
             mockGetFiles(journeyId)(Future.successful(Some(files)))
             mockInitiate(upscanRequest, Future.successful(upscanResponse))
-            mockPutFiles(journeyId, updatedFiles)(cacheItem)
+            mockPutFiles(journeyId, updatedFiles)(Future.successful(updatedFiles))
 
             val result =
               testService.initiateNextSingleFileUpload(fileUploadContext)(journeyId, fakeRequest, HeaderCarrier())
@@ -179,7 +178,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
 
             mockGetFiles(journeyId)(Future.successful(Some(files)))
             mockInitiate(upscanRequest, Future.successful(upscanResponse))
-            mockPutFiles(journeyId, updatedFiles)(cacheItem)
+            mockPutFiles(journeyId, updatedFiles)(Future.successful(updatedFiles))
 
             val result =
               testService.initiateNextSingleFileUpload(fileUploadContext)(journeyId, fakeRequest, HeaderCarrier())
@@ -194,7 +193,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
 
             mockGetFiles(journeyId)(Future.successful(Some(files)))
             mockInitiate(upscanRequest, Future.successful(upscanResponse))
-            mockPutFiles(journeyId, updatedFiles)(cacheItem)
+            mockPutFiles(journeyId, updatedFiles)(Future.successful(updatedFiles))
 
             val result =
               testService.initiateNextSingleFileUpload(fileUploadContext)(journeyId, fakeRequest, HeaderCarrier())
@@ -209,7 +208,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
 
             mockGetFiles(journeyId)(Future.successful(Some(files)))
             mockInitiate(upscanRequest, Future.successful(upscanResponse))
-            mockPutFiles(journeyId, updatedFiles)(cacheItem)
+            mockPutFiles(journeyId, updatedFiles)(Future.successful(updatedFiles))
 
             val result =
               testService.initiateNextSingleFileUpload(fileUploadContext)(journeyId, fakeRequest, HeaderCarrier())
@@ -272,7 +271,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
 
             mockGetFiles(journeyId)(Future.successful(Some(files)))
             mockInitiate(upscanRequest, Future.successful(upscanResponse))
-            mockPutFiles(journeyId, updatedFiles)(cacheItem)
+            mockPutFiles(journeyId, updatedFiles)(Future.successful(updatedFiles))
 
             val result = testService
               .initiateNextMultiFileUpload(fileUploadContext, uploadId)(journeyId, fakeRequest, HeaderCarrier())
@@ -287,7 +286,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
 
             mockGetFiles(journeyId)(Future.successful(Some(files)))
             mockInitiate(upscanRequest, Future.successful(upscanResponse))
-            mockPutFiles(journeyId, updatedFiles)(cacheItem)
+            mockPutFiles(journeyId, updatedFiles)(Future.successful(updatedFiles))
 
             val result = testService
               .initiateNextMultiFileUpload(fileUploadContext, uploadId)(journeyId, fakeRequest, HeaderCarrier())

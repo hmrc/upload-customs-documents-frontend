@@ -1,5 +1,6 @@
 package uk.gov.hmrc.uploaddocuments.support
 
+import uk.gov.hmrc.uploaddocuments.models.UpscanNotification.{FailureDetails, FailureReason, QUARANTINE, UploadDetails}
 import uk.gov.hmrc.uploaddocuments.models._
 
 import java.time.{LocalDate, ZonedDateTime}
@@ -73,6 +74,26 @@ object TestData {
     errorMessage = "Rejected",
     errorRequestId = None,
     errorResource = None
+  )
+
+  def upscanFileReady(upscanRef: String, checksum: String = "checksum") = UpscanFileReady(
+    reference = upscanRef,
+    downloadUrl = "/download",
+    uploadDetails = UploadDetails(
+      uploadTimestamp = ZonedDateTime.now(),
+      checksum = checksum,
+      fileName = "file.png",
+      fileMimeType = "png",
+      size = 4
+    )
+  )
+
+  def upscanFailed(upscanRef: String) = UpscanFileFailed(
+    reference = upscanRef,
+    failureDetails = FailureDetails(
+      QUARANTINE,
+      "Virus Detected"
+    )
   )
 
 }

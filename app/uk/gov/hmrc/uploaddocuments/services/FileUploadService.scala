@@ -16,7 +16,9 @@
 
 package uk.gov.hmrc.uploaddocuments.services
 
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.cache.CacheItem
+import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
@@ -26,14 +28,15 @@ import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class FileUploadService @Inject()(repo: JourneyCacheRepository)
+class FileUploadService @Inject()(repo: JourneyCacheRepository,
+                                  fileUploadResultPushConnector: FileUploadResultPushConnector)
                                  (implicit ec: ExecutionContext) extends LoggerUtil with UploadLog {
 
   def getFiles(implicit journeyId: JourneyId): Future[Option[FileUploads]] =
     repo.get(journeyId.value)(DataKeys.uploadedFiles)
 
-  def putFiles(files: FileUploads)(implicit journeyId: JourneyId): Future[CacheItem] =
-    repo.put(journeyId.value)(DataKeys.uploadedFiles, files)
+  def putFiles(files: FileUploads)(implicit journeyId: JourneyId): Future[FileUploads] =
+    repo.put(journeyId.value)(DataKeys.uploadedFiles, files).map(_ => files)
 
   def withFiles[T](journeyNotFoundResult: => Future[T])(f: FileUploads => Future[T])
                   (implicit journeyId: JourneyId): Future[T] =
@@ -46,9 +49,9 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository)
     }
 
   def markFileAsPosted(key: String)
-                      (implicit journeyId: JourneyId): Future[Option[CacheItem]] =
+                      (implicit journeyId: JourneyId): Future[Option[FileUploads]] =
 
-    withFiles[Option[CacheItem]](Future.successful(None)) { files =>
+    withFiles[Option[FileUploads]](Future.successful(None)) { files =>
 
       val updatedFileUploads =
         FileUploads(files.files.map {
@@ -62,14 +65,14 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository)
         debug(s"[markFileAsPosted] No file with the supplied journeyID: '$journeyId' & key: '$key' was updated and marked as posted")
         Future.successful(None)
       } else {
-        putFiles(updatedFileUploads).map(Some(_))
+        putFiles(updatedFileUploads).map(_ => Some(updatedFileUploads))
       }
     }
 
   def markFileAsRejected(s3UploadError: S3UploadError)
-                        (implicit journeyId: JourneyId, journeyContext: FileUploadContext): Future[Option[CacheItem]] =
+                        (implicit journeyId: JourneyId, journeyContext: FileUploadContext): Future[Option[FileUploads]] =
 
-    withFiles[Option[CacheItem]](Future.successful(None)) { files =>
+    withFiles[Option[FileUploads]](Future.successful(None)) { files =>
 
       logFailure(journeyContext, s3UploadError)
 
@@ -87,4 +90,65 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository)
         putFiles(updatedFileUploads).map(Some(_))
       }
     }
+
+  def markFileWithUpscanResponseAndNotifyHost(notification: UpscanNotification,
+                                              requestNonce: Nonce)
+                                             (implicit context: FileUploadContext, journeyId: JourneyId, hc: HeaderCarrier): Future[Option[FileUploads]] = {
+
+    withFiles[Option[FileUploads]](Future.successful(None)) { fileUploads =>
+      for {
+        updateFiles <- putFiles(updateFileUploadsWithUpscanResponse(notification, requestNonce, fileUploads))
+        _ = if(fileUploads.files == updateFiles.files) {
+          warn("[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan")
+          debug(s"[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan. journeyId: '$journeyId', upscanRef: '${notification.reference}'")
+        }
+        _ <- if (updateFiles.acceptedCount != fileUploads.acceptedCount) {
+          fileUploadResultPushConnector.push(FileUploadResultPushConnector.Request(context, updateFiles))
+        } else Future.successful(Right((): Unit))
+      } yield Some(updateFiles)
+    }
+  }
+
+  private def updateFileUploadsWithUpscanResponse(notification: UpscanNotification,
+                                                  requestNonce: Nonce,
+                                                  fileUploads: FileUploads)
+                                                 (implicit context: FileUploadContext, journeyId: JourneyId) = {
+    FileUploads(fileUploads.files.map {
+      case fileUpload if fileUpload.nonce == requestNonce =>
+        notification match {
+          case UpscanFileReady(_, url, uploadDetails) =>
+            fileUploads.files
+              .collectFirst {
+                case file: FileUpload.Accepted
+                  if file.checksum == uploadDetails.checksum && file.reference != notification.reference =>
+                  FileUpload.Duplicate(
+                    fileUpload.nonce,
+                    Timestamp.now,
+                    fileUpload.reference,
+                    uploadDetails.checksum,
+                    existingFileName = file.fileName,
+                    duplicateFileName = uploadDetails.fileName)
+              }
+              .getOrElse {
+                logSuccess(context, uploadDetails, fileUpload.timestamp)
+                FileUpload.Accepted(
+                  fileUpload.nonce,
+                  Timestamp.now,
+                  fileUpload.reference,
+                  url,
+                  uploadDetails.uploadTimestamp,
+                  uploadDetails.checksum,
+                  FileUpload.sanitizeFileName(uploadDetails.fileName),
+                  uploadDetails.fileMimeType,
+                  uploadDetails.size,
+                  description = context.config.newFileDescription
+                )
+              }
+          case UpscanFileFailed(_, failureDetails) =>
+            logFailure(context, failureDetails, fileUpload.timestamp)
+            FileUpload.Failed(fileUpload.nonce, Timestamp.now, fileUpload.reference, failureDetails)
+        }
+      case u => u
+    })
+  }
 }
