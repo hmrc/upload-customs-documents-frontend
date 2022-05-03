@@ -37,7 +37,7 @@ class RemoveController @Inject()(components: BaseControllerComponents,
             case Some((Left(_), _)) | None => InternalServerError
             case Some((Right(_), updatedFilesWithFileRemoved)) =>
               if (updatedFilesWithFileRemoved.isEmpty) {
-                Redirect(routes.ChooseSingleFileController.showChooseFile)
+                Redirect(routes.ChooseSingleFileController.showChooseFile(None))
               } else {
                 Redirect(routes.SummaryController.showSummary)
               }

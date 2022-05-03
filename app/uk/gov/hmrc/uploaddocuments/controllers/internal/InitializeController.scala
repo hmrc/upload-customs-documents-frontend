@@ -44,7 +44,7 @@ class InitializeController @Inject()(components: BaseControllerComponents,
             val url = if (payload.config.features.showUploadMultiple) {
               mainRoutes.StartController.start.url
             } else {
-              mainRoutes.ChooseSingleFileController.showChooseFile.url
+              mainRoutes.ChooseSingleFileController.showChooseFile(None).url
             }
             Created.withHeaders(HeaderNames.LOCATION -> url)
           }

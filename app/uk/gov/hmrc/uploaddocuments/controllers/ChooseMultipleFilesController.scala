@@ -40,7 +40,7 @@ class ChooseMultipleFilesController @Inject()(components: BaseControllerComponen
     whenInSession { implicit journeyId =>
       whenAuthenticated {
         if (!preferUploadMultipleFiles) {
-          Future(Redirect(routes.ChooseSingleFileController.showChooseFile))
+          Future(Redirect(routes.ChooseSingleFileController.showChooseFile(None)))
         } else {
           withJourneyContext { journeyConfig =>
             withFileUploads { files =>

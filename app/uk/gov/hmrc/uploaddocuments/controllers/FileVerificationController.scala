@@ -51,7 +51,7 @@ class FileVerificationController @Inject()(components: BaseControllerComponents,
               fileVerificationService.waitForUpscanResponse(upscanReference, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
                 {
                   case _: FileUpload.Accepted => Future(Redirect(routes.SummaryController.showSummary))
-                  case _                      => Future(Redirect(routes.ChooseSingleFileController.showChooseFile))
+                  case _                      => Future(Redirect(routes.ChooseSingleFileController.showChooseFile(None)))
                 },
                 Future(Ok(renderWaitingView(journeyContext, upscanReference)))
               )
@@ -64,9 +64,9 @@ class FileVerificationController @Inject()(components: BaseControllerComponents,
   private def renderWaitingView(context: FileUploadContext, reference: String)(implicit request: Request[_]) =
     waitingView(
       successAction     = routes.SummaryController.showSummary,
-      failureAction     = routes.ChooseSingleFileController.showChooseFile,
+      failureAction     = routes.ChooseSingleFileController.showChooseFile(None),
       checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(reference),
-      backLink          = routes.StartController.start // TODO: Back Linking needs fixing! Set to start by default for now!!!
+      backLink          = routes.ChooseSingleFileController.showChooseFile(None)
     )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
 
   // GET /file-verification/:reference/status

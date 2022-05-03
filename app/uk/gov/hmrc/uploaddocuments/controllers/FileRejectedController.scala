@@ -47,7 +47,7 @@ class FileRejectedController @Inject()(components: BaseControllerComponents,
               },
               s3UploadError => {
                 fileUploadService.markFileAsRejected(s3UploadError).map { _ =>
-                  Redirect(routes.ChooseSingleFileController.showChooseFile)
+                  Redirect(routes.ChooseSingleFileController.showChooseFile(None))
                 }
               }
             )
