@@ -32,7 +32,7 @@ trait UploadLog extends LoggerUtil {
         uploadDetails.fileMimeType,
         uploadDetails.size,
         duration = Some(timestamp.duration))
-    info(s"json${Json.stringify(Json.toJson(success))}")
+    Logger.info(s"json${Json.stringify(Json.toJson(success))}")
   }
 
   def logFailure(
@@ -46,12 +46,12 @@ trait UploadLog extends LoggerUtil {
         failureDetails.failureReason.toString,
         failureDetails.message,
         duration = Some(timestamp.duration))
-    info(s"json${Json.stringify(Json.toJson(failure))}")
+    Logger.info(s"json${Json.stringify(Json.toJson(failure))}")
   }
 
   def logFailure(context: FileUploadContext, error: S3UploadError): Unit = {
     val failure = Failure(context.hostService.userAgent, error.errorCode, error.errorMessage)
-    info(s"json${Json.stringify(Json.toJson(failure))}")
+    Logger.info(s"json${Json.stringify(Json.toJson(failure))}")
   }
 
 }

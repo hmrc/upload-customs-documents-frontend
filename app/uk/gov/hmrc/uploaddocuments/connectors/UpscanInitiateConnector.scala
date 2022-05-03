@@ -19,6 +19,7 @@ package uk.gov.hmrc.uploaddocuments.connectors
 import java.net.URL
 import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
+import play.api.libs.json.Json
 
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
@@ -45,9 +46,11 @@ class UpscanInitiateConnector @Inject()(appConfig: AppConfig, http: HttpGet with
     request: UpscanInitiateRequest
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[UpscanInitiateResponse] =
     monitor(s"ConsumedAPI-upscan-v2-initiate-$hostUserAgent-POST") {
+      val url = new URL(baseUrl + upscanInitiatev2Path).toExternalForm
+      Logger.debug(s"[initiate] Making call to Upscan Initiate. Url '$url', body: \n${Json.prettyPrint(Json.toJson(request))}")
       http
         .POST[UpscanInitiateRequest, UpscanInitiateResponse](
-          new URL(baseUrl + upscanInitiatev2Path).toExternalForm,
+          url,
           request,
           Seq("User-Agent" -> hostUserAgent))
         .recoverWith {

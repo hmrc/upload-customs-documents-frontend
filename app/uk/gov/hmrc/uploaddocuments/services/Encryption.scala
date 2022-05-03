@@ -18,8 +18,8 @@ package uk.gov.hmrc.uploaddocuments.services
 
 import com.typesafe.config.Config
 import org.apache.commons.codec.binary.Base64
-import play.api.Logger
-import play.api.libs.json.{JsError, JsSuccess, Json, Reads, Writes}
+import play.api.libs.json._
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import java.nio.charset.StandardCharsets
 import java.security.Key
@@ -28,7 +28,7 @@ import javax.crypto.spec.SecretKeySpec
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-object Encryption {
+object Encryption extends LoggerUtil {
 
   final def encrypt[T](value: T, keyProvider: KeyProvider)(implicit wrts: Writes[T]): String = {
     val plainText = Json.stringify(wrts.writes(value))
@@ -60,15 +60,15 @@ object Encryption {
             rds.reads(json) match {
               case JsSuccess(value, _) => value
               case JsError(jsonErrors) =>
-                val error =
+                val errorMsg =
                   s"Encountered an issue with de-serialising JSON state: ${jsonErrors
                     .map {
                       case (p, s) =>
                         s"${if (p.toString().isEmpty) "" else s"$p -> "}${s.map(_.message).mkString(", ")}"
                     }
                     .mkString(", ")}. \nCheck if all your states have relevant entries declared in the *JourneyStateFormats.serializeStateProperties and *JourneyStateFormats.deserializeState functions."
-                Logger(getClass).error(error)
-                throw new Exception(error)
+                Logger.error(errorMsg)
+                throw new Exception(errorMsg)
             }
           }.toEither.left.map(_ => ())
 

@@ -41,8 +41,8 @@ class FileRejectedController @Inject()(components: BaseControllerComponents,
           Forms.UpscanUploadErrorForm.bindFromRequest
             .fold(
               _ => {
-                error("[markFileUploadAsRejected] Query Parameters from Upscan could not be bound to form")
-                debug(s"[markFileUploadAsRejected] Query Params Received: ${request.queryString}")
+                Logger.error("[markFileUploadAsRejected] Query Parameters from Upscan could not be bound to form")
+                Logger.debug(s"[markFileUploadAsRejected] Query Params Received: ${request.queryString}")
                 Future.successful(InternalServerError)
               },
               s3UploadError => {
@@ -75,8 +75,8 @@ class FileRejectedController @Inject()(components: BaseControllerComponents,
       Forms.UpscanUploadErrorForm.bindFromRequest
         .fold(
           _ => {
-            error("[rejectedAsyncLogicWithStatus] Query Parameters from Upscan could not be bound to form")
-            debug(s"[rejectedAsyncLogicWithStatus] Query Params Received: ${request.queryString}")
+            Logger.error("[rejectedAsyncLogicWithStatus] Query Parameters from Upscan could not be bound to form")
+            Logger.debug(s"[rejectedAsyncLogicWithStatus] Query Params Received: ${request.queryString}")
             Future.successful(BadRequest)
           },
           s3UploadError =>

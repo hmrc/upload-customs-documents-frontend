@@ -8,9 +8,7 @@
     <logger name="uk.gov" level="WARN"/>
     <logger name="uk.gov.hmrc.http" level="ERROR"/>
     <logger name="uk.gov.hmrc.play" level="INFO"/>
-    <logger name="uk.gov.hmrc.uploaddocuments" level="${logger.uk.gov.hmrc.uploaddocuments:-DEBUG}"/>
-
-    <logger name="application" level="${logger.application:-DEBUG}"/>
+    <logger name="uk.gov.hmrc.uploaddocuments" level="${logger.uk.gov.hmrc.uploaddocuments:-WARN}"/>
 
     <root level="${logger.root:-ERROR}">
         <appender-ref ref="STDOUT"/>

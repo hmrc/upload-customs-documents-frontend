@@ -24,13 +24,14 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.typesafe.config.ConfigFactory
 import org.apache.commons.lang3.time.FastDateFormat
 import play.api.Logger
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import java.net.InetAddress
 import java.nio.charset.StandardCharsets
 import scala.collection.JavaConverters._
 import scala.util.Try
 
-class JsonEncoder extends EncoderBase[ILoggingEvent] {
+class JsonEncoder extends EncoderBase[ILoggingEvent] with LoggerUtil {
 
   private val mapper = new ObjectMapper().configure(Feature.ESCAPE_NON_ASCII, true)
 
@@ -72,7 +73,7 @@ class JsonEncoder extends EncoderBase[ILoggingEvent] {
         val messageNode: JsonNode = mapper.readTree(message.drop(4))
         eventNode.put("route1", messageNode)
       } catch {
-        case e: Exception => Logger(getClass).error(e.getMessage)
+        case e: Exception => Logger.error(e.getMessage)
       }
     } else
       eventNode.put("message", message)

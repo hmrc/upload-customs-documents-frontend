@@ -16,8 +16,6 @@
 
 package uk.gov.hmrc.uploaddocuments.services
 
-import play.api.mvc.Result
-import play.api.mvc.Results.Redirect
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.Response
@@ -44,8 +42,8 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository,
   def withFiles[T](journeyNotFoundResult: => Future[T])(f: FileUploads => Future[T])
                   (implicit journeyId: JourneyId): Future[T] =
     getFiles.flatMap(_.fold {
-      error("[withFiles] No files exist for the supplied journeyID")
-      debug(s"[withFiles] journeyId: '$journeyId'")
+      Logger.error("[withFiles] No files exist for the supplied journeyID")
+      Logger.debug(s"[withFiles] journeyId: '$journeyId'")
       journeyNotFoundResult
     }(f))
 
@@ -72,8 +70,8 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository,
         })
 
       if(updatedFileUploads == files) {
-        warn(s"[markFileAsPosted] No file with the supplied journeyID & key was updated and marked as posted")
-        debug(s"[markFileAsPosted] No file with the supplied journeyID: '$journeyId' & key: '$key' was updated and marked as posted")
+        Logger.warn(s"[markFileAsPosted] No file with the supplied journeyID & key was updated and marked as posted")
+        Logger.debug(s"[markFileAsPosted] No file with the supplied journeyID: '$journeyId' & key: '$key' was updated and marked as posted")
         Future.successful(None)
       } else {
         putFiles(updatedFileUploads).map(_ => Some(updatedFileUploads))
@@ -94,8 +92,8 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository,
       })
 
       if (updatedFileUploads == files) {
-        warn(s"[markFileAsRejected] No file with the supplied journeyID & key was updated and marked as rejected")
-        debug(s"[markFileAsRejected] No file with the supplied journeyID: '$journeyId' & key: '${s3UploadError.key}' was updated and marked as rejected")
+        Logger.warn(s"[markFileAsRejected] No file with the supplied journeyID & key was updated and marked as rejected")
+        Logger.debug(s"[markFileAsRejected] No file with the supplied journeyID: '$journeyId' & key: '${s3UploadError.key}' was updated and marked as rejected")
         Future.successful(None)
       } else {
         putFiles(updatedFileUploads).map(Some(_))
@@ -110,8 +108,8 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository,
       for {
         updateFiles <- putFiles(updateFileUploadsWithUpscanResponse(notification, requestNonce, fileUploads))
         _ = if(fileUploads.files == updateFiles.files) {
-          warn("[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan")
-          debug(s"[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan. journeyId: '$journeyId', upscanRef: '${notification.reference}'")
+          Logger.warn("[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan")
+          Logger.debug(s"[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan. journeyId: '$journeyId', upscanRef: '${notification.reference}'")
         }
         _ <- if (updateFiles.acceptedCount != fileUploads.acceptedCount) {
           fileUploadResultPushConnector.push(FileUploadResultPushConnector.Request(context, updateFiles))

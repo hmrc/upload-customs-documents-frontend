@@ -16,14 +16,14 @@
 
 package uk.gov.hmrc.uploaddocuments.connectors
 
-import play.api.Logger
+import com.codahale.metrics.MetricRegistry
+import uk.gov.hmrc.http._
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
-import com.codahale.metrics.MetricRegistry
-import uk.gov.hmrc.http._
 
-trait HttpErrorRateMeter {
+trait HttpErrorRateMeter extends LoggerUtil {
   val kenshooRegistry: MetricRegistry
   def meterName[T](serviceName: String, statusCode: Int): String =
     if (statusCode >= 500) s"Http5xxErrorCount-$serviceName" else s"Http4xxErrorCount-$serviceName"
@@ -39,6 +39,6 @@ trait HttpErrorRateMeter {
 
   private def record[T](name: String): Unit = {
     kenshooRegistry.getMeters.getOrDefault(name, kenshooRegistry.meter(name)).mark()
-    Logger(getClass).debug(s"kenshoo-event::meter::$name::recorded")
+    Logger.debug(s"kenshoo-event::meter::$name::recorded")
   }
 }
