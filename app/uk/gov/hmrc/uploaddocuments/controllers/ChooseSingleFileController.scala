@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.mvc.{Action, AnyContent, Request}
+import play.api.mvc.{Action, AnyContent, Call, Request}
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, InitiateUpscanService, JourneyContextService}
@@ -36,11 +36,7 @@ class ChooseSingleFileController @Inject()(initiateUpscanService: InitiateUpscan
   extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper with LoggerUtil {
 
   // GET /choose-file
-  // TODO: The way this works now is it renders the Rejection message but then wipes the state and re-initiates an upload
-  //      This is probably un-desirable, it would be better if it kept knowledge of the rejected file and re-used the same
-  //      Upscan details - this will mean changing models to store the initiate response on rejected status
-  //      However. Given this is the NonJS version - it may not be a problem re-initiating as volumes will be significantly lower (if any)
-  final val showChooseFile: Action[AnyContent] = Action.async { implicit request =>
+  def showChooseFile(backLinkToSummary: Option[Boolean]): Action[AnyContent] = Action.async { implicit request =>
     whenInSession { implicit journeyId =>
       whenAuthenticated {
         withJourneyContext { implicit journeyContext =>
@@ -49,7 +45,7 @@ class ChooseSingleFileController @Inject()(initiateUpscanService: InitiateUpscan
               initiateUpscanService.initiateNextSingleFileUpload().map {
                 case None => Redirect(components.appConfig.govukStartUrl)
                 case Some((upscanResponse, updatedFiles, oError)) =>
-                  val view = renderView(journeyContext, upscanResponse, updatedFiles, oError)
+                  val view = renderView(journeyContext, upscanResponse, updatedFiles, oError, backLinkToSummary)
                   oError.fold(Ok(view))(_ => BadRequest(view))
               }
             } else {
@@ -64,8 +60,15 @@ class ChooseSingleFileController @Inject()(initiateUpscanService: InitiateUpscan
   private def renderView(journeyConfig: FileUploadContext,
                          initiateResponse: UpscanInitiateResponse,
                          files: FileUploads,
-                         maybeUploadError: Option[FileUploadError])
-                        (implicit request: Request[_]): HtmlFormat.Appendable =
+                         maybeUploadError: Option[FileUploadError],
+                         backLinkToSummary: Option[Boolean])
+                        (implicit request: Request[_]): HtmlFormat.Appendable = {
+
+    val backRoute = backLinkToSummary match {
+      case Some(true) => routes.SummaryController.showSummary
+      case _          => Call("GET", journeyConfig.config.backlinkUrl)
+    }
+
     view(
       maxFileUploadsNumber   = journeyConfig.config.maximumNumberOfFiles,
       maximumFileSizeBytes   = journeyConfig.config.maximumFileSizeBytes,
@@ -78,8 +81,9 @@ class ChooseSingleFileController @Inject()(initiateUpscanService: InitiateUpscan
       fileUploads       = files,
       maybeUploadError  = maybeUploadError,
       successAction     = routes.SummaryController.showSummary,
-      failureAction     = routes.ChooseSingleFileController.showChooseFile,
+      failureAction     = routes.ChooseSingleFileController.showChooseFile(backLinkToSummary),
       checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(initiateResponse.reference),
-      backLink          = routes.StartController.start // TODO: Back Linking needs fixing! Set to start by default for now!!!
+      backLink          = backRoute
     )(implicitly[Request[_]], journeyConfig.messages, journeyConfig.config.features, journeyConfig.config.content)
+  }
 }

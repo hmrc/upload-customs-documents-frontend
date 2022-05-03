@@ -59,7 +59,7 @@ class SummaryController @Inject()(view: SummaryView,
               .fold(
                 formWithErrors => Future(BadRequest(renderView(formWithErrors, journeyContext, files))), {
                   case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
-                    Future.successful(Redirect(routes.ChooseSingleFileController.showChooseFile))
+                    Future.successful(Redirect(routes.ChooseSingleFileController.showChooseFile(Some(true))))
                   case _ =>
                     Future.successful(Redirect(routes.ContinueToHostController.continueToHost))
                 }
@@ -81,7 +81,7 @@ class SummaryController @Inject()(view: SummaryView,
         postAction           = routes.SummaryController.submitUploadAnotherFileChoice,
         previewFileCall      = routes.PreviewController.previewFileUploadByReference,
         removeFileCall       = routes.RemoveController.removeFileUploadByReference,
-        backLink             = routes.StartController.start // TODO: Back Linking needs fixing! Set to start by default for now!!!
+        backLink             = routes.ChooseSingleFileController.showChooseFile(None)
       )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
     else
       viewNoChoice(

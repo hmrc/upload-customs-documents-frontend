@@ -6,7 +6,7 @@ GET        /                                                        @uk.gov.hmrc
 
 GET        /choose-files                                            @uk.gov.hmrc.uploaddocuments.controllers.ChooseMultipleFilesController.showChooseMultipleFiles
 POST       /choose-files                                            @uk.gov.hmrc.uploaddocuments.controllers.ChooseMultipleFilesController.continueWithYesNo
-GET        /choose-file                                             @uk.gov.hmrc.uploaddocuments.controllers.ChooseSingleFileController.showChooseFile
+GET        /choose-file                                             @uk.gov.hmrc.uploaddocuments.controllers.ChooseSingleFileController.showChooseFile(backLinkToSummary: Option[Boolean])
 
 + nocsrf
 POST       /initiate-upscan/:uploadId                               @uk.gov.hmrc.uploaddocuments.controllers.InitiateUpscanController.initiateNextFileUpload(uploadId: String)
