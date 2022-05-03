@@ -29,29 +29,27 @@ import scala.concurrent.ExecutionContext
 @Singleton
 class InitializeController @Inject()(components: BaseControllerComponents,
                                      fileUploadService: FileUploadService,
-                                     journeyContextService: JourneyContextService)(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+                                     journeyContextService: JourneyContextService)
+                                    (implicit ec: ExecutionContext) extends BaseController(components) {
 
   // POST /internal/initialize
-  final val initialize: Action[JsValue] =
-    Action.async(parse.tolerantJson) { implicit request =>
-      withJsonBody[FileUploadInitializationRequest] { payload =>
-        whenInSession { implicit journeyId =>
-          whenAuthenticatedInBackchannel {
-            for {
-              _ <- journeyContextService.putJourneyContext(FileUploadContext(payload.config, HostService(request)))
-              _ <- fileUploadService.putFiles(FileUploads(payload))
-            } yield {
-              val url = if (payload.config.features.showUploadMultiple) {
-                mainRoutes.StartController.start.url
-              } else {
-                mainRoutes.ChooseSingleFileController.showChooseFile.url
-              }
-              Created.withHeaders(HeaderNames.LOCATION -> url)
+  final val initialize: Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+    withJsonBody[FileUploadInitializationRequest] { payload =>
+      whenInSession { implicit journeyId =>
+        whenAuthenticatedInBackchannel {
+          for {
+            _ <- journeyContextService.putJourneyContext(FileUploadContext(payload.config, HostService(request)))
+            _ <- fileUploadService.putFiles(FileUploads(payload))
+          } yield {
+            val url = if (payload.config.features.showUploadMultiple) {
+              mainRoutes.StartController.start.url
+            } else {
+              mainRoutes.ChooseSingleFileController.showChooseFile.url
             }
+            Created.withHeaders(HeaderNames.LOCATION -> url)
           }
         }
       }
     }
-
+  }
 }

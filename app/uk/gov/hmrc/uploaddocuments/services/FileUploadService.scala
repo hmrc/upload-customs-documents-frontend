@@ -16,21 +16,24 @@
 
 package uk.gov.hmrc.uploaddocuments.services
 
+import play.api.mvc.Result
+import play.api.mvc.Results.Redirect
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.mongo.cache.CacheItem
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
+import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.Response
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.support.UploadLog
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
+import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class FileUploadService @Inject()(repo: JourneyCacheRepository,
                                   fileUploadResultPushConnector: FileUploadResultPushConnector)
-                                 (implicit ec: ExecutionContext) extends LoggerUtil with UploadLog {
+                                 (implicit ec: ExecutionContext, appConfig: AppConfig) extends LoggerUtil with UploadLog {
 
   def getFiles(implicit journeyId: JourneyId): Future[Option[FileUploads]] =
     repo.get(journeyId.value)(DataKeys.uploadedFiles)
@@ -40,13 +43,21 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository,
 
   def withFiles[T](journeyNotFoundResult: => Future[T])(f: FileUploads => Future[T])
                   (implicit journeyId: JourneyId): Future[T] =
-    getFiles flatMap {
-      case None =>
-        error("[withFiles] No files exist for the supplied journeyID")
-        debug(s"[withFiles] journeyId: '$journeyId'")
-        journeyNotFoundResult
-      case Some(files) => f(files)
+    getFiles.flatMap(_.fold {
+      error("[withFiles] No files exist for the supplied journeyID")
+      debug(s"[withFiles] journeyId: '$journeyId'")
+      journeyNotFoundResult
+    }(f))
+
+  def removeFile(reference: String)
+                (implicit hc: HeaderCarrier, journeyId: JourneyId, journeyContext: FileUploadContext): Future[Option[(Response, FileUploads)]] = {
+    withFiles[Option[(Response, FileUploads)]](Future.successful(None)) { files =>
+      for {
+        updatedFiles <- putFiles(files.copy(files = files.files.filterNot(_.reference == reference)))
+        result <- fileUploadResultPushConnector.push(FileUploadResultPushConnector.Request(journeyContext, updatedFiles))
+      } yield Some(result -> updatedFiles)
     }
+  }
 
   def markFileAsPosted(key: String)
                       (implicit journeyId: JourneyId): Future[Option[FileUploads]] =

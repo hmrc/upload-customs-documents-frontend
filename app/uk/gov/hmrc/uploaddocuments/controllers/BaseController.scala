@@ -16,25 +16,20 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.data.Form
 import play.api.i18n.I18nSupport
 import play.api.mvc._
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.connectors.FrontendAuthConnector
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads, JourneyId}
-import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
-import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
-import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
+import uk.gov.hmrc.uploaddocuments.models.JourneyId
+import uk.gov.hmrc.uploaddocuments.support.JsEnabled.COOKIE_JSENABLED
 import uk.gov.hmrc.uploaddocuments.support.SHA256
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
-import uk.gov.hmrc.uploaddocuments.support.JsEnabled.COOKIE_JSENABLED
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 @Singleton
 class BaseControllerComponents @Inject()(
@@ -42,10 +37,7 @@ class BaseControllerComponents @Inject()(
   val authConnector: FrontendAuthConnector,
   val environment: Environment,
   val configuration: Configuration,
-  val messagesControllerComponents: MessagesControllerComponents,
-  val newJourneyCacheRepository: JourneyCacheRepository,
-  val journeyContextService: JourneyContextService,
-  val fileUploadService: FileUploadService
+  val messagesControllerComponents: MessagesControllerComponents
 )
 
 abstract class BaseController(
@@ -61,35 +53,8 @@ abstract class BaseController(
   final def journeyIdFromSession(implicit hc: HeaderCarrier): Option[JourneyId] =
     hc.sessionId.map(_.value).map(SHA256.compute).map(JourneyId.apply)
 
-  final def whenInSession(
-    body: JourneyId => Future[Result]
-  )(implicit hc: HeaderCarrier): Future[Result] =
+  final def whenInSession(body: JourneyId => Future[Result])(implicit hc: HeaderCarrier): Future[Result] =
     journeyIdFromSession.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
-
-  final def withJourneyContext(
-    body: FileUploadContext => Future[Result]
-  )(implicit ec: ExecutionContext, journeyId: JourneyId): Future[Result] =
-    components.newJourneyCacheRepository.get(journeyId.value)(DataKeys.journeyContext) flatMap {
-      _.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
-    }
-
-  final def withUploadedFiles(
-    body: FileUploads => Future[Result]
-  )(implicit ec: ExecutionContext, journeyId: JourneyId): Future[Result] =
-    components.newJourneyCacheRepository.get(journeyId.value)(DataKeys.uploadedFiles) flatMap {
-      _.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
-    }
-
-  implicit class ResultExtensions(r: Result) {
-
-    //TODO: Not really sure what the flashing does - this was lifted from the Router class...
-    def withFormError(formWithErrors: Form[_]) =
-      r.flashing(Flash {
-        val data = formWithErrors.data
-        // dummy parameter required if empty data
-        if (data.isEmpty) Map("dummy" -> "") else data
-      })
-  }
 
   final def preferUploadMultipleFiles(implicit rh: RequestHeader): Boolean =
     rh.cookies.get(COOKIE_JSENABLED).isDefined

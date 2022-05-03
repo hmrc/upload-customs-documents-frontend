@@ -26,53 +26,37 @@ import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class InitiateUpscanService @Inject()(
-  upscanInitiateConnector: UpscanInitiateConnector,
-  fileUploadService: FileUploadService,
-  val appConfig: AppConfig)(implicit ec: ExecutionContext)
-    extends UpscanRequestSupport with LoggerUtil {
+class InitiateUpscanService @Inject()(upscanInitiateConnector: UpscanInitiateConnector,
+                                      fileUploadService: FileUploadService,
+                                      val appConfig: AppConfig)
+                                     (implicit ec: ExecutionContext) extends UpscanRequestSupport with LoggerUtil {
 
   def randomNonce: Nonce = Nonce.random
 
-  def initiateNextMultiFileUpload(
-    journeyContext: FileUploadContext,
-    uploadId: String
-  )(implicit journeyId: JourneyId, rh: RequestHeader, hc: HeaderCarrier): Future[Option[UpscanInitiateResponse]] = {
+  def initiateNextMultiFileUpload(uploadId: String)
+                                 (implicit journeyContext: FileUploadContext, journeyId: JourneyId, rh: RequestHeader, hc: HeaderCarrier): Future[Option[UpscanInitiateResponse]] = {
     val nonce = randomNonce
-    val initiateRequest =
-      upscanRequestWhenUploadingMultipleFiles(nonce, journeyContext.config.maximumFileSizeBytes)
-    fileUploadService.getFiles flatMap {
-      case None =>
-        error("[initiateNextMultiFileUpload] No files exist for the supplied journeyID")
-        debug(s"[initiateNextMultiFileUpload] journeyId: '$journeyId'")
-        Future.successful(None)
-      case Some(files) =>
-        for {
-          upscanResponse <- upscanInitiateConnector.initiate(journeyContext.hostService.userAgent, initiateRequest)
-          _              <- fileUploadService.putFiles(files + FileUpload(nonce, Some(uploadId))(upscanResponse))
-        } yield Some(upscanResponse)
+    val initiateRequest = upscanRequestWhenUploadingMultipleFiles(nonce, journeyContext.config.maximumFileSizeBytes)
+
+    fileUploadService.withFiles[Option[UpscanInitiateResponse]](Future.successful(None)) { files =>
+      for {
+        upscanResponse <- upscanInitiateConnector.initiate(journeyContext.hostService.userAgent, initiateRequest)
+        _              <- fileUploadService.putFiles(files + FileUpload(nonce, Some(uploadId))(upscanResponse))
+      } yield Some(upscanResponse)
     }
   }
 
-  def initiateNextSingleFileUpload(
-    journeyContext: FileUploadContext
-  )(
-    implicit journeyId: JourneyId,
-    rh: RequestHeader,
-    hc: HeaderCarrier): Future[Option[(UpscanInitiateResponse, FileUploads, Option[FileUploadError])]] = {
+  def initiateNextSingleFileUpload()
+                                  (implicit journeyContext: FileUploadContext, journeyId: JourneyId, rh: RequestHeader, hc: HeaderCarrier): Future[Option[(UpscanInitiateResponse, FileUploads, Option[FileUploadError])]] = {
     val nonce           = randomNonce
     val initiateRequest = upscanRequest(nonce, journeyContext.config.maximumFileSizeBytes)
-    fileUploadService.getFiles flatMap {
-      case None =>
-        error("[initiateNextSingleFileUpload] No files exist for the supplied journeyID")
-        debug(s"[initiateNextSingleFileUpload] journeyId: '$journeyId'")
-        Future.successful(None)
-      case Some(files) =>
-        for {
-          upscanResponse <- upscanInitiateConnector.initiate(journeyContext.hostService.userAgent, initiateRequest)
-          updatedFiles = files.onlyAccepted + FileUpload(nonce, None)(upscanResponse)
-          _ <- fileUploadService.putFiles(updatedFiles)
-        } yield Some((upscanResponse, updatedFiles, files.tofileUploadErrors.headOption))
+
+    fileUploadService.withFiles[Option[(UpscanInitiateResponse, FileUploads, Option[FileUploadError])]](Future.successful(None)) { files =>
+      for {
+        upscanResponse <- upscanInitiateConnector.initiate(journeyContext.hostService.userAgent, initiateRequest)
+        updatedFiles = files.onlyAccepted + FileUpload(nonce, None)(upscanResponse)
+        _ <- fileUploadService.putFiles(updatedFiles)
+      } yield Some((upscanResponse, updatedFiles, files.tofileUploadErrors.headOption))
     }
   }
 }

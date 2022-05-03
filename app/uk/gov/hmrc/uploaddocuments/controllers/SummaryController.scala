@@ -21,32 +21,54 @@ import play.api.mvc.{Action, AnyContent, Call, Request}
 import uk.gov.hmrc.uploaddocuments.forms.Forms
 import uk.gov.hmrc.uploaddocuments.forms.Forms.YesNoChoiceForm
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
+import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 import uk.gov.hmrc.uploaddocuments.views.html.{SummaryNoChoiceView, SummaryView}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class SummaryController @Inject()(
-  view: SummaryView,
-  viewNoChoice: SummaryNoChoiceView,
-  components: BaseControllerComponents
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+class SummaryController @Inject()(view: SummaryView,
+                                  viewNoChoice: SummaryNoChoiceView,
+                                  components: BaseControllerComponents,
+                                  override val journeyContextService: JourneyContextService,
+                                  override val fileUploadService: FileUploadService)
+                                 (implicit ec: ExecutionContext)
+  extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper {
 
   // GET /summary
-  final val showSummary: Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession { implicit journeyId =>
-        whenAuthenticated {
-          withJourneyContext { journeyConfig =>
-            withUploadedFiles { files =>
-              Future(Ok(renderView(YesNoChoiceForm, journeyConfig, files)))
-            }
+  final val showSummary: Action[AnyContent] = Action.async { implicit request =>
+    whenInSession { implicit journeyId =>
+      whenAuthenticated {
+        withJourneyContext { journeyConfig =>
+          withFileUploads { files =>
+            Future(Ok(renderView(YesNoChoiceForm, journeyConfig, files)))
           }
         }
       }
     }
+  }
+
+  // POST /summary
+  final val submitUploadAnotherFileChoice: Action[AnyContent] = Action.async { implicit request =>
+    whenInSession { implicit journeyId =>
+      whenAuthenticated {
+        withJourneyContext { journeyContext =>
+          withFileUploads { files =>
+            Forms.YesNoChoiceForm.bindFromRequest
+              .fold(
+                formWithErrors => Future(BadRequest(renderView(formWithErrors, journeyContext, files))), {
+                  case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
+                    Future.successful(Redirect(routes.ChooseSingleFileController.showChooseFile))
+                  case _ =>
+                    Future.successful(Redirect(routes.ContinueToHostController.continueToHost))
+                }
+              )
+          }
+        }
+      }
+    }
+  }
 
   private def renderView(form: Form[Boolean], context: FileUploadContext, fileUploads: FileUploads)(
     implicit request: Request[_]) =
@@ -70,26 +92,4 @@ class SummaryController @Inject()(
         removeFileCall       = routes.RemoveController.removeFileUploadByReference,
         backLink             = Call("GET", context.config.backlinkUrl)
       )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
-
-  // POST /summary
-  final val submitUploadAnotherFileChoice: Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession { implicit journeyId =>
-        whenAuthenticated {
-          withJourneyContext { journeyContext =>
-            withUploadedFiles { files =>
-              Forms.YesNoChoiceForm.bindFromRequest
-                .fold(
-                  formWithErrors => Future(BadRequest(renderView(formWithErrors, journeyContext, files))), {
-                    case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
-                      Future.successful(Redirect(routes.ChooseSingleFileController.showChooseFile))
-                    case _ =>
-                      Future.successful(Redirect(routes.ContinueToHostController.continueToHost))
-                  }
-                )
-            }
-          }
-        }
-      }
-    }
 }

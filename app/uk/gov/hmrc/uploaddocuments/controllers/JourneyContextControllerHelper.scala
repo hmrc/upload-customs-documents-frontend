@@ -16,17 +16,20 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
+import play.api.mvc.Result
+import play.api.mvc.Results.Redirect
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads, JourneyId}
+import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
-import javax.inject.Inject
-import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
-import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 
-class SignOutController @Inject()(controllerComponents: MessagesControllerComponents,
-                                  appConfig: AppConfig) extends FrontendController(controllerComponents) {
+import scala.concurrent.{ExecutionContext, Future}
 
-  final def signOut(continueUrl: Option[String]): Action[AnyContent] = Action { _ =>
-    continueUrl.fold(Redirect(appConfig.signOutUrl))(url => Redirect(appConfig.signOutUrl, Map("continue" -> Seq(url))))
-  }
+trait JourneyContextControllerHelper { baseController: BaseController =>
 
-  final def signOutTimeout(continueUrl: Option[String]): Action[AnyContent] = signOut(continueUrl)
+  val journeyContextService: JourneyContextService
+
+  def withJourneyContext(body: FileUploadContext => Future[Result])
+                        (implicit ec: ExecutionContext, journeyId: JourneyId): Future[Result] =
+    journeyContextService.withJourneyContext(Future.successful(Redirect(baseController.components.appConfig.govukStartUrl)))(body)
+
 }

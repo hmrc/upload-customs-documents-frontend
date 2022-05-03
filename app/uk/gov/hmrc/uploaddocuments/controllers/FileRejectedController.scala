@@ -20,7 +20,7 @@ import play.api.mvc.{Action, AnyContent, Request, Result}
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.forms.Forms
 import uk.gov.hmrc.uploaddocuments.models.JourneyId
-import uk.gov.hmrc.uploaddocuments.services.FileUploadService
+import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 import uk.gov.hmrc.uploaddocuments.support.UploadLog
 
 import javax.inject.{Inject, Singleton}
@@ -28,54 +28,57 @@ import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class FileRejectedController @Inject()(components: BaseControllerComponents,
-                                       fileUploadService: FileUploadService)(implicit ec: ExecutionContext)
-  extends BaseController(components) with UploadLog {
+                                       override val fileUploadService: FileUploadService,
+                                       override val journeyContextService: JourneyContextService)
+                                      (implicit ec: ExecutionContext)
+  extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper with UploadLog {
 
   // GET /file-rejected
-  final val markFileUploadAsRejected: Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession { implicit journeyId =>
-        whenAuthenticated {
-          withJourneyContext { implicit journeyContext =>
-            Forms.UpscanUploadErrorForm.bindFromRequest
-              .fold(
-                formWithErrors =>
-                  Future(Redirect(routes.ChooseSingleFileController.showChooseFile).withFormError(formWithErrors)),
-                s3UploadError => {
-                  fileUploadService.markFileAsRejected(s3UploadError).map { _ =>
-                    Redirect(routes.ChooseSingleFileController.showChooseFile)
-                  }
+  final val markFileUploadAsRejected: Action[AnyContent] = Action.async { implicit request =>
+    whenInSession { implicit journeyId =>
+      whenAuthenticated {
+        withJourneyContext { implicit journeyContext =>
+          Forms.UpscanUploadErrorForm.bindFromRequest
+            .fold(
+              _ => {
+                error("[markFileUploadAsRejected] Query Parameters from Upscan could not be bound to form")
+                debug(s"[markFileUploadAsRejected] Query Params Received: ${request.queryString}")
+                Future.successful(InternalServerError)
+              },
+              s3UploadError => {
+                fileUploadService.markFileAsRejected(s3UploadError).map { _ =>
+                  Redirect(routes.ChooseSingleFileController.showChooseFile)
                 }
-              )
-          }
+              }
+            )
         }
       }
     }
+  }
 
   // POST /file-rejected
-  final val markFileUploadAsRejectedAsync: Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession { implicit journeyId =>
-        whenAuthenticated {
-          rejectedAsyncLogicWithStatus(Created)
-        }
+  final val markFileUploadAsRejectedAsync: Action[AnyContent] = Action.async { implicit request =>
+    whenInSession { implicit journeyId =>
+      whenAuthenticated {
+        rejectedAsyncLogicWithStatus(Created)
       }
     }
+  }
 
   // GET /journey/:journeyId/file-rejected
-  final def asyncMarkFileUploadAsRejected(implicit journeyId: JourneyId): Action[AnyContent] =
-    Action.async { implicit request =>
-      rejectedAsyncLogicWithStatus(NoContent)
-    }
+  final def asyncMarkFileUploadAsRejected(implicit journeyId: JourneyId): Action[AnyContent] = Action.async { implicit request =>
+    rejectedAsyncLogicWithStatus(NoContent)
+  }
 
   private def rejectedAsyncLogicWithStatus(status: => Result)(implicit request: Request[AnyContent], journeyId: JourneyId): Future[Result] =
     withJourneyContext { implicit journeyContext =>
       Forms.UpscanUploadErrorForm.bindFromRequest
         .fold(
-          formWithErrors =>
-            Future.successful(
-              Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles).withFormError(formWithErrors)
-            ),
+          _ => {
+            error("[rejectedAsyncLogicWithStatus] Query Parameters from Upscan could not be bound to form")
+            debug(s"[rejectedAsyncLogicWithStatus] Query Params Received: ${request.queryString}")
+            Future.successful(BadRequest)
+          },
           s3UploadError =>
             fileUploadService.markFileAsRejected(s3UploadError).map(_ =>
               status.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
@@ -84,9 +87,8 @@ class FileRejectedController @Inject()(components: BaseControllerComponents,
     }
 
   // OPTIONS /journey/:journeyId/file-rejected
-  final def preflightUpload(journeyId: JourneyId): Action[AnyContent] =
-    Action {
-      Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
-    }
+  final def preflightUpload(journeyId: JourneyId): Action[AnyContent] = Action {
+    Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
+  }
 
 }

@@ -18,27 +18,27 @@ package uk.gov.hmrc.uploaddocuments.services.mocks
 
 import org.scalamock.handlers.{CallHandler1, CallHandler2, CallHandler3}
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.mongo.cache.CacheItem
 import uk.gov.hmrc.uploaddocuments.models.{FileUploads, JourneyId}
 import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 trait MockFileUploadService extends MockFactory {
 
   val mockFileUploadService = mock[FileUploadService]
 
-  def mockGetFiles(journeyId: JourneyId)(response: Future[Option[FileUploads]]): CallHandler1[JourneyId, Future[Option[FileUploads]]] =
+  def mockGetFiles(journeyId: JourneyId)(response: => Future[Option[FileUploads]]): CallHandler1[JourneyId, Future[Option[FileUploads]]] =
     (mockFileUploadService.getFiles(_: JourneyId)).expects(journeyId).returning(response)
 
-  def mockPutFiles(journeyId: JourneyId, request: FileUploads)(response: Future[FileUploads]): CallHandler2[FileUploads, JourneyId, Future[FileUploads]] =
+  def mockPutFiles(journeyId: JourneyId, request: FileUploads)(response: => Future[FileUploads]): CallHandler2[FileUploads, JourneyId, Future[FileUploads]] =
     (mockFileUploadService.putFiles(_: FileUploads)(_: JourneyId)).expects(request, journeyId).returning(response)
 
-  def mockWithFiles[T](journeyId: JourneyId)(files: Option[FileUploads]): CallHandler3[Future[T], FileUploads => Future[T], JourneyId, Future[T]] = {
+  def mockWithFiles[T](journeyId: JourneyId)(files: => Future[Option[FileUploads]])
+                      (implicit ec: ExecutionContext): CallHandler3[Future[T], FileUploads => Future[T], JourneyId, Future[T]] = {
     (mockFileUploadService.withFiles[T](_: Future[T])(_: FileUploads => Future[T])(_: JourneyId))
       .expects(*, *, journeyId)
       .onCall { mock =>
-        files match {
+        files.flatMap {
           case Some(value) =>
             mock.productElement(1).asInstanceOf[FileUploads => Future[T]](value)
           case None =>

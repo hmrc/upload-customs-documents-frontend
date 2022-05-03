@@ -17,66 +17,44 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
-import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.Response
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads, JourneyId}
-import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 @Singleton
-class RemoveController @Inject()(
-  fileUploadResultPushConnector: FileUploadResultPushConnector,
-  components: BaseControllerComponents
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+class RemoveController @Inject()(components: BaseControllerComponents,
+                                 override val journeyContextService: JourneyContextService,
+                                 fileUploadService: FileUploadService)
+                                (implicit ec: ExecutionContext) extends BaseController(components) with JourneyContextControllerHelper {
 
   // GET /uploaded/:reference/remove
-  final def removeFileUploadByReference(reference: String): Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession { implicit journeyId =>
-        whenAuthenticated {
-          withJourneyContext { journeyContext =>
-            withUploadedFiles { files =>
-              removeFile(files, reference, journeyContext).map {
-                case (Left(_), _) => InternalServerError
-                case (Right(_), updatedFilesWithFileRemoved) =>
-                  if (updatedFilesWithFileRemoved.isEmpty) {
-                    Redirect(routes.ChooseSingleFileController.showChooseFile)
-                  } else {
-                    Redirect(routes.SummaryController.showSummary)
-                  }
+  final def removeFileUploadByReference(reference: String): Action[AnyContent] = Action.async { implicit request =>
+    whenInSession { implicit journeyId =>
+      whenAuthenticated {
+        withJourneyContext { implicit journeyContext =>
+          fileUploadService.removeFile(reference).map {
+            case Some((Left(_), _)) | None => InternalServerError
+            case Some((Right(_), updatedFilesWithFileRemoved)) =>
+              if (updatedFilesWithFileRemoved.isEmpty) {
+                Redirect(routes.ChooseSingleFileController.showChooseFile)
+              } else {
+                Redirect(routes.SummaryController.showSummary)
               }
-            }
           }
         }
       }
     }
+  }
 
   // POST /uploaded/:reference/remove
-  final def removeFileUploadByReferenceAsync(reference: String): Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession { implicit journeyId =>
-        whenAuthenticated {
-          withJourneyContext { journeyContext =>
-            withUploadedFiles { files =>
-              removeFile(files, reference, journeyContext).map { _ =>
-                NoContent
-              }
-            }
-          }
+  final def removeFileUploadByReferenceAsync(reference: String): Action[AnyContent] = Action.async { implicit request =>
+    whenInSession { implicit journeyId =>
+      whenAuthenticated {
+        withJourneyContext { implicit journeyContext =>
+          fileUploadService.removeFile(reference).map { _ => NoContent }
         }
       }
     }
-
-  def removeFile(files: FileUploads, reference: String, journeyContext: FileUploadContext)(
-    implicit hc: HeaderCarrier, journeyId: JourneyId): Future[(Response, FileUploads)] = {
-    val updatedFiles = files.copy(files = files.files.filterNot(_.reference == reference))
-    for {
-      _ <- components.newJourneyCacheRepository.put(journeyId.value)(DataKeys.uploadedFiles, updatedFiles)
-      result <- fileUploadResultPushConnector.push(FileUploadResultPushConnector.Request(journeyContext, updatedFiles))
-    } yield (result, updatedFiles)
   }
 }

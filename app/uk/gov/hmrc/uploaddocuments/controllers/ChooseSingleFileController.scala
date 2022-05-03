@@ -17,8 +17,9 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent, Request}
+import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.services.InitiateUpscanService
+import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, InitiateUpscanService, JourneyContextService}
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import uk.gov.hmrc.uploaddocuments.views.html.UploadSingleFileView
 
@@ -26,46 +27,45 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ChooseSingleFileController @Inject()(
-  initiateUpscanService: InitiateUpscanService,
-  components: BaseControllerComponents,
-  view: UploadSingleFileView
-)(implicit ec: ExecutionContext)
-    extends BaseController(components) with LoggerUtil {
+class ChooseSingleFileController @Inject()(initiateUpscanService: InitiateUpscanService,
+                                           components: BaseControllerComponents,
+                                           view: UploadSingleFileView,
+                                           override val fileUploadService: FileUploadService,
+                                           override val journeyContextService: JourneyContextService)
+                                          (implicit ec: ExecutionContext)
+  extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper with LoggerUtil {
 
   // GET /choose-file
   // TODO: The way this works now is it renders the Rejection message but then wipes the state and re-initiates an upload
   //      This is probably un-desirable, it would be better if it kept knowledge of the rejected file and re-used the same
   //      Upscan details - this will mean changing models to store the initiate response on rejected status
   //      However. Given this is the NonJS version - it may not be a problem re-initiating as volumes will be significantly lower (if any)
-  final val showChooseFile: Action[AnyContent] =
-    Action.async { implicit request =>
-      whenInSession { implicit journeyId =>
-        whenAuthenticated {
-          withJourneyContext { journeyContext =>
-            withUploadedFiles { files =>
-              if(files.acceptedCount < journeyContext.config.maximumNumberOfFiles) {
-                initiateUpscanService.initiateNextSingleFileUpload(journeyContext).map {
-                  case None => Redirect(components.appConfig.govukStartUrl)
-                  case Some((upscanResponse, updatedFiles, oError)) =>
-                    val view = renderView(journeyContext, upscanResponse, updatedFiles, oError)
-                    oError.fold(Ok(view))(_ => BadRequest(view))
-                }
-              } else {
-                Future.successful(Redirect(routes.SummaryController.showSummary))
+  final val showChooseFile: Action[AnyContent] = Action.async { implicit request =>
+    whenInSession { implicit journeyId =>
+      whenAuthenticated {
+        withJourneyContext { implicit journeyContext =>
+          withFileUploads { files =>
+            if(files.acceptedCount < journeyContext.config.maximumNumberOfFiles) {
+              initiateUpscanService.initiateNextSingleFileUpload().map {
+                case None => Redirect(components.appConfig.govukStartUrl)
+                case Some((upscanResponse, updatedFiles, oError)) =>
+                  val view = renderView(journeyContext, upscanResponse, updatedFiles, oError)
+                  oError.fold(Ok(view))(_ => BadRequest(view))
               }
+            } else {
+              Future.successful(Redirect(routes.SummaryController.showSummary))
             }
           }
         }
       }
     }
+  }
 
-  def renderView(
-    journeyConfig: FileUploadContext,
-    initiateResponse: UpscanInitiateResponse,
-    files: FileUploads,
-    maybeUploadError: Option[FileUploadError]
-  )(implicit request: Request[_]) =
+  private def renderView(journeyConfig: FileUploadContext,
+                         initiateResponse: UpscanInitiateResponse,
+                         files: FileUploads,
+                         maybeUploadError: Option[FileUploadError])
+                        (implicit request: Request[_]): HtmlFormat.Appendable =
     view(
       maxFileUploadsNumber   = journeyConfig.config.maximumNumberOfFiles,
       maximumFileSizeBytes   = journeyConfig.config.maximumFileSizeBytes,
