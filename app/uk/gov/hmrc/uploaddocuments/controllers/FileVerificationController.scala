@@ -76,8 +76,10 @@ class FileVerificationController @Inject()(components: BaseControllerComponents,
         withJourneyContext { implicit journeyContext =>
           fileVerificationService.getFileVerificationStatus(reference).map {
             case Some(verificationStatus) =>
+              Logger.info(s"[checkFileVerificationStatus] UpscanRef: '$reference', Status: ${verificationStatus.fileStatus}")
               Ok(Json.toJson(verificationStatus))
             case None =>
+              Logger.error(s"[checkFileVerificationStatus] No File exists for UpscanRef: '$reference'")
               NotFound
           }
         }

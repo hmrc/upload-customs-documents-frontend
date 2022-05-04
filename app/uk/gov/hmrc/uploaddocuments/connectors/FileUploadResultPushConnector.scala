@@ -58,13 +58,9 @@ class FileUploadResultPushConnector @Inject()(
             val rds = implicitly[HttpReads[HttpResponse]]
             val ehc = request.hostService.populate(hc.withExtraHeaders("FileUploadJourney" -> jid.value))
             val payload = Payload(request, appConfig.baseExternalCallbackUrl)
-            Logger.debug(s"[push] JourneyId: '${jid.value}' - sending notification to host service. Url: '$endpointUrl', Body: \n${Json.prettyPrint(Json.toJson(payload))}")
+            Logger.debug(s"[push] JourneyId: '${jid.value}' - sending notification to host service. Url: '$endpointUrl', Body: \n${Json.prettyPrint(Json.toJson(payload)(Payload.writeNoDownloadUrl))}")
             http
-              .POST[Payload, HttpResponse](endpointUrl, payload)(
-                wts,
-                rds,
-                ehc,
-                ec)
+              .POST[Payload, HttpResponse](endpointUrl, payload)(wts, rds, ehc, ec)
               .transformWith[Response] {
                 case Success(response) =>
                   Logger.debug(s"[push] JourneyId: '${jid.value}' - Response from host: Status: '${response.status}', Body: '${response.body}'")
@@ -135,6 +131,15 @@ object FileUploadResultPushConnector {
         .url
 
     implicit val format: Format[Payload] = Json.format[Payload]
+
+    //Used by logging as we can't leak the internal AWS Download URL to Kibana (even in QA/Staging)
+    val writeNoDownloadUrl: Writes[Payload] = Writes { model =>
+      Json.toJson(Payload(
+        model.nonce,
+        model.uploadedFiles.map(_.copy(downloadUrl = "")),
+        model.cargo
+      ))(format)
+    }
   }
 
   final val shouldRetry: Try[Response] => Boolean =

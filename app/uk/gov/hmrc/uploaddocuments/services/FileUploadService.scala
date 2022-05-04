@@ -24,14 +24,13 @@ import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.support.UploadLog
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
-import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class FileUploadService @Inject()(repo: JourneyCacheRepository,
                                   fileUploadResultPushConnector: FileUploadResultPushConnector)
-                                 (implicit ec: ExecutionContext, appConfig: AppConfig) extends LoggerUtil with UploadLog {
+                                 (implicit ec: ExecutionContext) extends LoggerUtil with UploadLog {
 
   def getFiles(implicit journeyId: JourneyId): Future[Option[FileUploads]] =
     repo.get(journeyId.value)(DataKeys.uploadedFiles)
@@ -64,8 +63,7 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository,
 
       val updatedFileUploads =
         FileUploads(files.files.map {
-          case FileUpload.Initiated(nonce, _, `key`, _, _) =>
-            FileUpload.Posted(nonce, Timestamp.now, key)
+          case FileUpload.Initiated(nonce, _, `key`, _, _) => FileUpload.Posted(nonce, Timestamp.now, key)
           case file => file
         })
 
@@ -121,7 +119,7 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository,
   private def updateFileUploadsWithUpscanResponse(notification: UpscanNotification,
                                                   requestNonce: Nonce,
                                                   fileUploads: FileUploads)
-                                                 (implicit context: FileUploadContext, journeyId: JourneyId) = {
+                                                 (implicit context: FileUploadContext) = {
     FileUploads(fileUploads.files.map {
       case fileUpload if fileUpload.nonce == requestNonce =>
         notification match {
