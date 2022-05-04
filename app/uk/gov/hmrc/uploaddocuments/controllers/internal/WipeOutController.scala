@@ -32,6 +32,7 @@ class WipeOutController @Inject()(components: BaseControllerComponents,
   final val wipeOut: Action[AnyContent] = Action.async { implicit request =>
     whenInSession { implicit journeyId =>
       whenAuthenticatedInBackchannel {
+        Logger.debug(s"[wipeOut] Call to delete journey for journeyId: '$journeyId'")
         journeyCacheRepository.deleteEntity(journeyId.value).map(_ => NoContent)
       }
     }

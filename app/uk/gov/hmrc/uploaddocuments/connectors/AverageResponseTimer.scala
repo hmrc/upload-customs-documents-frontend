@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.uploaddocuments.connectors
 
-import play.api.Logger
+import com.codahale.metrics.MetricRegistry
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import com.codahale.metrics.MetricRegistry
 
-trait AverageResponseTimer {
+trait AverageResponseTimer extends LoggerUtil {
   val kenshooRegistry: MetricRegistry
 
   def timer[T](serviceName: String)(function: => Future[T])(implicit ec: ExecutionContext): Future[T] = {
@@ -33,7 +33,7 @@ trait AverageResponseTimer {
         kenshooRegistry.getTimers
           .getOrDefault(timerName(serviceName), kenshooRegistry.timer(timerName(serviceName)))
           .update(duration.length, duration.unit)
-        Logger(getClass).debug(
+        Logger.debug(
           s"kenshoo-event::timer::${timerName(serviceName)}::duration:{'length':${duration.length}, 'unit':${duration.unit}}"
         )
     }

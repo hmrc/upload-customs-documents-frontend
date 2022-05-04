@@ -16,7 +16,6 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.Logger
 import play.api.mvc.{Request, Result, Results}
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
 import uk.gov.hmrc.auth.core._
@@ -25,10 +24,11 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.config.AuthRedirects
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.support.CallOps
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait AuthActions extends AuthorisedFunctions with AuthRedirects {
+trait AuthActions extends AuthorisedFunctions with AuthRedirects with LoggerUtil {
 
   protected def whenAuthenticated[A](body: => Future[Result])
                                     (implicit request: Request[A], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] =
@@ -47,7 +47,7 @@ trait AuthActions extends AuthorisedFunctions with AuthRedirects {
       .retrieve(credentials)(_ => body)
       .recover {
         case e: AuthorisationException =>
-          Logger(getClass).warn(s"Access forbidden because of ${e.getMessage}")
+          Logger.warn(s"Access forbidden because of ${e.getMessage}")
           Results.Forbidden
       }
   }

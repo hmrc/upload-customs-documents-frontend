@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers.internal
 
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Action
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, FileUploadsControllerHelper, JourneyContextControllerHelper}
 import uk.gov.hmrc.uploaddocuments.models._
@@ -34,10 +34,18 @@ class CallbackFromUpscanController @Inject()(components: BaseControllerComponent
   // POST /callback-from-upscan/journey/:journeyId/:nonce
   final def callbackFromUpscan(journeyId: JourneyId, nonce: String): Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[UpscanNotification] { payload =>
+      logResponse(payload)
       implicit val journey: JourneyId = journeyId
       withJourneyContext { implicit journeyContext =>
         fileUploadService.markFileWithUpscanResponseAndNotifyHost(payload, Nonce(nonce)).map { _ => NoContent }
       }
     }
+  }
+
+  private val logResponse: UpscanNotification => Unit = {
+    case UpscanFileReady(reference, _, _) =>
+      Logger.info(s"[callbackFromUpscan] UpscanRef: '$reference', Status: 'READY'")
+    case UpscanFileFailed(reference, failureDetails) =>
+      Logger.info(s"[callbackFromUpscan] UpscanRef: '$reference', Status: '${failureDetails.failureReason.toString.toUpperCase}'")
   }
 }

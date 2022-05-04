@@ -19,11 +19,11 @@ package uk.gov.hmrc.uploaddocuments.connectors
 import akka.actor.ActorSystem
 import com.codahale.metrics.MetricRegistry
 import com.kenshoo.play.metrics.Metrics
-import play.api.Logger
 import play.api.libs.json.{Format, JsValue, Json, Writes}
 import uk.gov.hmrc.http.HttpReads.Implicits._
 import uk.gov.hmrc.http._
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads, HostService, JourneyId, Nonce, UploadedFile}
+import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import java.net.URL
@@ -38,7 +38,7 @@ class FileUploadResultPushConnector @Inject()(
   http: HttpPost,
   metrics: Metrics,
   val actorSystem: ActorSystem
-) extends HttpAPIMonitor with Retries {
+) extends HttpAPIMonitor with Retries with LoggerUtil {
 
   override val kenshooRegistry: MetricRegistry = metrics.defaultRegistry
 
@@ -50,30 +50,30 @@ class FileUploadResultPushConnector @Inject()(
         Try(new URL(request.url).toExternalForm).fold(
           e => {
             val msg = s"${e.getClass.getName} ${e.getMessage}"
-            Logger(getClass).error(msg)
+            Logger.error(msg)
             Future.successful(Left(Error(0, msg)))
           },
           endpointUrl => {
             val wts = implicitly[Writes[FileUploadResultPushConnector.Payload]]
             val rds = implicitly[HttpReads[HttpResponse]]
             val ehc = request.hostService.populate(hc.withExtraHeaders("FileUploadJourney" -> jid.value))
+            val payload = Payload(request, appConfig.baseExternalCallbackUrl)
+            Logger.debug(s"[push] JourneyId: '${jid.value}' - sending notification to host service. Url: '$endpointUrl', Body: \n${Json.prettyPrint(Json.toJson(payload)(Payload.writeNoDownloadUrl))}")
             http
-              .POST[Payload, HttpResponse](endpointUrl, Payload(request, appConfig.baseExternalCallbackUrl))(
-                wts,
-                rds,
-                ehc,
-                ec)
+              .POST[Payload, HttpResponse](endpointUrl, payload)(wts, rds, ehc, ec)
               .transformWith[Response] {
                 case Success(response) =>
+                  Logger.debug(s"[push] JourneyId: '${jid.value}' - Response from host: Status: '${response.status}', Body: '${response.body}'")
                   if (response.status == 204) Future.successful(SuccessResponse)
                   else {
                     val msg =
                       s"Failure pushing uploaded files to ${request.url}: ${response.body.take(1024)} ${request.hostService}"
-                    Logger(getClass).error(msg)
+                    Logger.error(msg)
                     Future.successful(Left(Error(response.status, msg)))
                   }
                 case Failure(exception) =>
-                  Logger(getClass).error(exception.getMessage)
+                  Logger.debug(s"[push] JourneyId: '${jid.value}' - Exception when handling the HttpResponse from the host service")
+                  Logger.error(exception.getMessage)
                   Future.successful(Left(Error(0, exception.getMessage)))
               }
           }
@@ -131,6 +131,15 @@ object FileUploadResultPushConnector {
         .url
 
     implicit val format: Format[Payload] = Json.format[Payload]
+
+    //Used by logging as we can't leak the internal AWS Download URL to Kibana (even in QA/Staging)
+    val writeNoDownloadUrl: Writes[Payload] = Writes { model =>
+      Json.toJson(Payload(
+        model.nonce,
+        model.uploadedFiles.map(_.copy(downloadUrl = "")),
+        model.cargo
+      ))(format)
+    }
   }
 
   final val shouldRetry: Try[Response] => Boolean =

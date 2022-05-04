@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.models
 
-import play.api.libs.json.{Format, JsPath, Json}
+import play.api.libs.json.{Format, JsPath, Json, Writes}
 
 final case class FileUploadInitializationRequest(config: FileUploadSessionConfig, existingFiles: Seq[UploadedFile])
 
@@ -30,4 +30,12 @@ object FileUploadInitializationRequest {
     },
     Json.writes[FileUploadInitializationRequest]
   )
+
+  //Used by logging as we can't leak the internal AWS Download URL to Kibana (even in QA/Staging)
+  val writeNoDownloadUrl: Writes[FileUploadInitializationRequest] = Writes { model =>
+    Json.toJson(FileUploadInitializationRequest(
+      model.config,
+      model.existingFiles.map(_.copy(downloadUrl = ""))
+    ))(formats)
+  }
 }

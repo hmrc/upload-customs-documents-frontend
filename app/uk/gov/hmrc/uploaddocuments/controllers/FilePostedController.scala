@@ -37,8 +37,8 @@ class FilePostedController @Inject()(components: BaseControllerComponents,
       .bindFromRequest
       .fold(
         _ => {
-          error("[asyncMarkFileUploadAsPosted] Query Parameters from Upscan could not be bound to form")
-          debug(s"[asyncMarkFileUploadAsPosted] Query Params Received: ${request.queryString}")
+          Logger.error("[asyncMarkFileUploadAsPosted] Query Parameters from Upscan could not be bound to form")
+          Logger.debug(s"[asyncMarkFileUploadAsPosted] Query Params Received: ${request.queryString}")
           Future.successful(BadRequest)
         },
         s3UploadSuccess =>

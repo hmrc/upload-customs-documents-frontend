@@ -21,32 +21,27 @@ import play.api.{LoggerLike, MarkerContext}
 
 trait LoggerUtil {
 
-  lazy val className = this.getClass.getSimpleName.stripSuffix("$")
+  final lazy val className = this.getClass.getSimpleName.stripSuffix("$")
 
-  val logger: LoggerLike = new LoggerLike {
-    override val logger: Logger = LoggerFactory.getLogger(s"application.$className")
+  final val logger: LoggerLike = new LoggerLike {
+    override val logger: Logger = LoggerFactory.getLogger(s"uk.gov.hmrc.uploaddocuments.$className")
   }
 
-  private def prefixLog(msg: String): String =
+  private final def prefixLog(msg: String): String =
     s"[$className]" + (if (msg.startsWith("[")) msg else " " + msg)
 
-  def debug(message: => String)(implicit mc: MarkerContext): Unit = logger.debug(prefixLog(message))
+  object Logger {
 
-  def debug(message: => String, error: => Throwable)(implicit mc: MarkerContext): Unit =
-    logger.debug(prefixLog(message), error)
+    def debug(message: => String)(implicit mc: MarkerContext): Unit = logger.debug(prefixLog(message))
+    def debug(message: => String, error: => Throwable)(implicit mc: MarkerContext): Unit = logger.debug(prefixLog(message), error)
 
-  def info(message: => String)(implicit mc: MarkerContext): Unit = logger.info(prefixLog(message))
+    def info(message: => String)(implicit mc: MarkerContext): Unit = logger.info(prefixLog(message))
+    def info(message: => String, error: => Throwable)(implicit mc: MarkerContext): Unit = logger.info(prefixLog(message), error)
 
-  def info(message: => String, error: => Throwable)(implicit mc: MarkerContext): Unit =
-    logger.info(prefixLog(message), error)
+    def warn(message: => String)(implicit mc: MarkerContext): Unit = logger.warn(prefixLog(message))
+    def warn(message: => String, error: => Throwable)(implicit mc: MarkerContext): Unit = logger.warn(prefixLog(message), error)
 
-  def warn(message: => String)(implicit mc: MarkerContext): Unit = logger.warn(prefixLog(message))
-
-  def warn(message: => String, error: => Throwable)(implicit mc: MarkerContext): Unit =
-    logger.warn(prefixLog(message), error)
-
-  def error(message: => String)(implicit mc: MarkerContext): Unit = logger.error(prefixLog(message))
-
-  def error(message: => String, error: => Throwable)(implicit mc: MarkerContext): Unit =
-    logger.error(prefixLog(message), error)
+    def error(message: => String)(implicit mc: MarkerContext): Unit = logger.error(prefixLog(message))
+    def error(message: => String, error: => Throwable)(implicit mc: MarkerContext): Unit = logger.error(prefixLog(message), error)
+  }
 }

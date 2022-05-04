@@ -34,7 +34,9 @@ class RemoveController @Inject()(components: BaseControllerComponents,
       whenAuthenticated {
         withJourneyContext { implicit journeyContext =>
           fileUploadService.removeFile(reference).map {
-            case Some((Left(_), _)) | None => InternalServerError
+            case Some((Left(_), _)) | None =>
+              Logger.error(s"[removeFileUploadByReference] Failed to remove file with reference: '$reference'")
+              InternalServerError
             case Some((Right(_), updatedFilesWithFileRemoved)) =>
               if (updatedFilesWithFileRemoved.isEmpty) {
                 Redirect(routes.ChooseSingleFileController.showChooseFile(None))

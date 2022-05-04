@@ -18,16 +18,15 @@ package uk.gov.hmrc.uploaddocuments.connectors
 
 import akka.actor.ActorSystem
 import akka.pattern.after
+import play.api.Configuration
+import uk.gov.hmrc.play.http.logging.Mdc
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
+
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import uk.gov.hmrc.play.http.logging.Mdc
-import play.api.Logger
-import scala.util.Try
-import scala.util.Success
-import scala.util.Failure
-import play.api.Configuration
+import scala.util.{Failure, Success, Try}
 
-trait Retries {
+trait Retries extends LoggerUtil {
 
   protected def actorSystem: ActorSystem
 
@@ -41,10 +40,7 @@ trait Retries {
         .flatMap(result =>
           if (remainingIntervals.nonEmpty && shouldRetry(Success(result))) {
             val delay = remainingIntervals.head
-            Logger(getClass)
-              .warn(
-                s"Will retry [${intervals.size - remainingIntervals.size + 1}] in $delay due to ${retryReason(result)}"
-              )
+            Logger.warn(s"Will retry [${intervals.size - remainingIntervals.size + 1}] in $delay due to ${retryReason(result)}")
             after(delay, actorSystem.scheduler)(loop(remainingIntervals.tail)(mdcData)(block))
           } else {
             Future.successful(result)
@@ -53,14 +49,10 @@ trait Retries {
           case e: Throwable =>
             if (remainingIntervals.nonEmpty && shouldRetry(Failure(e))) {
               val delay = remainingIntervals.head
-              Logger(getClass).warn(
-                s"Will retry [${intervals.size - remainingIntervals.size + 1}] in $delay due to ${e.getClass.getName}: ${e.getMessage}"
-              )
+              Logger.warn(s"Will retry [${intervals.size - remainingIntervals.size + 1}] in $delay due to ${e.getClass.getName}: ${e.getMessage}")
               after(delay, actorSystem.scheduler)(loop(remainingIntervals.tail)(mdcData)(block))
             } else {
-              Logger(getClass).error(
-                s"After [${intervals.size + 1}] retries failing with ${e.getClass.getName}: ${e.getMessage}"
-              )
+              Logger.error(s"After [${intervals.size + 1}] retries failing with ${e.getClass.getName}: ${e.getMessage}")
               Future.failed(e)
             }
         }

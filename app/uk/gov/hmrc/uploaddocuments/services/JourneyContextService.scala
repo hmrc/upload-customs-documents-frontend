@@ -16,10 +16,8 @@
 
 package uk.gov.hmrc.uploaddocuments.services
 
-import play.api.mvc.Result
-import play.api.mvc.Results.Redirect
 import uk.gov.hmrc.mongo.cache.CacheItem
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads, JourneyId}
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, JourneyId}
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
@@ -41,8 +39,8 @@ class JourneyContextService @Inject()(repo: JourneyCacheRepository)
   def withJourneyContext[T](journeyNotFoundResult: => Future[T])(f: FileUploadContext => Future[T])
                            (implicit journeyId: JourneyId): Future[T] =
     getJourneyContext.flatMap(_.fold {
-      error("[withFiles] No files exist for the supplied journeyID")
-      debug(s"[withFiles] journeyId: '$journeyId'")
+      Logger.error("[withFiles] No files exist for the supplied journeyID")
+      Logger.debug(s"[withFiles] journeyId: '$journeyId'")
       journeyNotFoundResult
     }(f))
 }

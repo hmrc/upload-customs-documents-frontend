@@ -37,18 +37,18 @@ class FileVerificationService @Inject()(fileUploadService: FileUploadService) ex
     fileUploadService.withFiles[T](throw new Exception("No JourneyID found for supplied journeyID")) {
       _.files.find(_.reference == upscanReference) match {
         case Some(file) if file.isReady =>
-          info(s"[waitForUpscanResponse] Response received from Upscan for reference: '$upscanReference' and file is ready")
+          Logger.info(s"[waitForUpscanResponse] Response received from Upscan for reference: '$upscanReference' and file is ready")
           readyResult(file)
         case Some(_) if System.nanoTime() > timeoutNanoTime =>
-          info(s"[waitForUpscanResponse] Timed out waiting for a response from Upscan for reference: '$upscanReference'")
+          Logger.info(s"[waitForUpscanResponse] Timed out waiting for a response from Upscan for reference: '$upscanReference'")
           ifTimeout
         case Some(_) =>
-          info(s"[waitForUpscanResponse] Waiting $intervalInMiliseconds milliseconds for a response from Upscan for reference: '$upscanReference'")
+          Logger.info(s"[waitForUpscanResponse] Waiting $intervalInMiliseconds milliseconds for a response from Upscan for reference: '$upscanReference'")
           ScheduleAfter(intervalInMiliseconds) {
             waitForUpscanResponse(upscanReference, intervalInMiliseconds * 2, timeoutNanoTime)(readyResult, ifTimeout)
           }
         case None =>
-          error(s"[waitForUpscanResponse] No file found for the supplied upscanReference: '$upscanReference'")
+          Logger.error(s"[waitForUpscanResponse] No file found for the supplied upscanReference: '$upscanReference'")
           throw new MatchError(s"No file found for the supplied upscanReference: '$upscanReference'")
       }
     }

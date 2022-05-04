@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers.internal
 
-import play.api.libs.json.JsValue
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Action
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, routes => mainRoutes}
@@ -36,6 +36,7 @@ class InitializeController @Inject()(components: BaseControllerComponents,
   final val initialize: Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
     withJsonBody[FileUploadInitializationRequest] { payload =>
       whenInSession { implicit journeyId =>
+      Logger.debug(s"[initialize] Call to initiate journey for journeyId: '$journeyId', body: \n${Json.prettyPrint(Json.toJson(payload)(FileUploadInitializationRequest.writeNoDownloadUrl))}")
         whenAuthenticatedInBackchannel {
           for {
             _ <- journeyContextService.putJourneyContext(FileUploadContext(payload.config, HostService(request)))
