@@ -14,20 +14,8 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.uploaddocuments.controllers
+package uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush
 
-import play.api.mvc.Result
-import uk.gov.hmrc.uploaddocuments.models.{FileUploads, JourneyId}
-import uk.gov.hmrc.uploaddocuments.services.FileUploadService
-
-import scala.concurrent.Future
-
-trait FileUploadsControllerHelper { baseController: BaseController =>
-
-  val fileUploadService: FileUploadService
-
-  def withFileUploads(body: FileUploads => Future[Result])
-                     (implicit journeyId: JourneyId): Future[Result] =
-    fileUploadService.withFiles(Future.successful(Redirect(baseController.components.appConfig.govukStartUrl)))(body)
-
+case class Error(status: Int, message: String) {
+  lazy val shouldRetry: Boolean = (status >= 500 && status < 600) || status == 499
 }

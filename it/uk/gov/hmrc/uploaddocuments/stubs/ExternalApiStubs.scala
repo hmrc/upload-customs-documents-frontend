@@ -2,8 +2,9 @@ package uk.gov.hmrc.uploaddocuments.stubs
 
 import com.github.tomakehurst.wiremock.client.WireMock._
 import play.api.libs.json.Json
-import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
+import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.Payload
 import uk.gov.hmrc.uploaddocuments.support.WireMockSupport
+
 import java.util.UUID
 
 trait ExternalApiStubs {
@@ -54,7 +55,7 @@ trait ExternalApiStubs {
     content
   }
 
-  def givenResultPushEndpoint(path: String, payload: FileUploadResultPushConnector.Payload, status: Int): Unit =
+  def givenResultPushEndpoint(path: String, payload: Payload, status: Int): Unit =
     stubFor(
       post(urlPathEqualTo(path))
         .withRequestBody(equalToJson(Json.stringify(Json.toJson(payload))))

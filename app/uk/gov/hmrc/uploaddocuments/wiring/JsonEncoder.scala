@@ -19,11 +19,10 @@ package uk.gov.hmrc.uploaddocuments.wiring
 import ch.qos.logback.classic.spi.{ILoggingEvent, ThrowableProxyUtil}
 import ch.qos.logback.core.encoder.EncoderBase
 import com.fasterxml.jackson.core.JsonGenerator.Feature
-import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import com.typesafe.config.ConfigFactory
 import org.apache.commons.lang3.time.FastDateFormat
-import play.api.Logger
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import java.net.InetAddress

@@ -21,14 +21,13 @@ import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, JourneyId}
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
-import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class JourneyContextService @Inject()(repo: JourneyCacheRepository)
-                                     (implicit ec: ExecutionContext, appConfig: AppConfig) extends LoggerUtil {
+                                     (implicit ec: ExecutionContext) extends LoggerUtil {
 
   def getJourneyContext()(implicit journeyId: JourneyId): Future[Option[FileUploadContext]] =
     repo.get(journeyId.value)(DataKeys.journeyContext)

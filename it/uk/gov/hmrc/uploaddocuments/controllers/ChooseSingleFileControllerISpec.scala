@@ -1,6 +1,5 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
 
