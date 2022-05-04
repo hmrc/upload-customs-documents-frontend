@@ -2,7 +2,7 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 
 import play.api.http.{HeaderNames, MimeTypes}
 import play.api.libs.json.{JsNumber, JsString, Json}
-import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.{Payload, Request}
+import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush._
 import uk.gov.hmrc.uploaddocuments.controllers.ControllerISpecBase
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs

@@ -1,0 +1,39 @@
+/*
+ * Copyright 2022 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package uk.gov.hmrc.uploaddocuments.connectors.httpParsers
+
+import play.api.http.Status._
+import uk.gov.hmrc.http.{HttpReads, HttpResponse}
+import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
+import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.SuccessResponse
+import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.Error
+import uk.gov.hmrc.uploaddocuments.models.{HostService, JourneyId}
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
+
+class FileUploadResultPushConnectorReads(hostService: HostService)(implicit journeyId: JourneyId) extends HttpReads[FileUploadResultPushConnector.Response] with LoggerUtil {
+
+  def read(method: String, url: String, response: HttpResponse): FileUploadResultPushConnector.Response = {
+    Logger.debug(s"[push]  JourneyId: '$journeyId' - Response from host: Status: '${response.status}', Body: '${response.body}'")
+    response.status match {
+      case NO_CONTENT => SuccessResponse
+      case _ =>
+        val msg = s"Failure pushing uploaded files to $url: ${response.body.take(1024)} $hostService"
+        Logger.error(msg)
+        Left(Error(response.status, msg))
+    }
+  }
+}

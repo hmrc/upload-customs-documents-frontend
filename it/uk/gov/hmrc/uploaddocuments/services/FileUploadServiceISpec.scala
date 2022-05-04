@@ -19,10 +19,8 @@ package uk.gov.hmrc.uploaddocuments.services
 import org.mongodb.scala.bson.BsonDocument
 import org.scalatest.BeforeAndAfterEach
 import play.api.test.FakeRequest
-import uk.gov.hmrc.mongo.cache.CacheItem
-import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.{Payload, Request}
-import uk.gov.hmrc.uploaddocuments.models.UpscanNotification.{UploadDetails, fileStatus}
-import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileUploads, JourneyId, Nonce, Timestamp, UpscanFileReady}
+import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush._
+import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
@@ -30,7 +28,6 @@ import uk.gov.hmrc.uploaddocuments.support.TestData._
 import uk.gov.hmrc.uploaddocuments.support.{AppISpec, LogCapturing}
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
-import java.time.ZonedDateTime
 import scala.concurrent.Future
 
 class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapturing with BeforeAndAfterEach {

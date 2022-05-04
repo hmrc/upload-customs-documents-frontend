@@ -1,6 +1,6 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.{Payload, Request}
+import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush._
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
 
