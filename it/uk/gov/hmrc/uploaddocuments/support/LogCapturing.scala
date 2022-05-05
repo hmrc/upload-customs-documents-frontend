@@ -40,8 +40,11 @@ trait LogCapturing { _: UnitSpec =>
     withCaptureOfLoggingFrom(logger.logger.asInstanceOf[LogbackLogger])(body)
   }
 
-  def logExists(msg: String, nTimes: Int = 1)(logs: List[ILoggingEvent]): Assertion = {
+  def logExists(msg: String)(logs: List[ILoggingEvent]): Assertion =
+    assert(logs.exists(_.getMessage.contains(msg)), s"The log msg '$msg' did not appear within the captured log messages.")
+
+  def logExists(msg: String, nTimes: Int)(logs: List[ILoggingEvent]): Assertion = {
     val numberOfLogs = logs.collect { case log if log.getMessage.contains(msg) => log }.size
-    assert(numberOfLogs == nTimes, s"$msg was not $nTimes times within logs. Actually occurred $numberOfLogs times")
+    assert(numberOfLogs == nTimes, s"The log msg '$msg' did not appear $nTimes times within logs. Actually occurred $numberOfLogs times.")
   }
 }
