@@ -16,22 +16,30 @@
 
 package uk.gov.hmrc.uploaddocuments.services
 
+import akka.actor.{ActorSystem, Scheduler}
 import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.mongo.lock.MongoLockRepository
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.Response
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.Request
-import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
+import uk.gov.hmrc.uploaddocuments.repository.{JourneyCacheRepository, JourneyLocking}
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.support.UploadLog
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
+import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
 class FileUploadService @Inject()(repo: JourneyCacheRepository,
-                                  fileUploadResultPushConnector: FileUploadResultPushConnector)
-                                 (implicit ec: ExecutionContext) extends LoggerUtil with UploadLog {
+                                  fileUploadResultPushConnector: FileUploadResultPushConnector,
+                                  override val lockRepositoryProvider: MongoLockRepository,
+                                  override val appConfig: AppConfig,
+                                  val actorSystem: ActorSystem)
+                                 (implicit ec: ExecutionContext) extends LoggerUtil with UploadLog with JourneyLocking {
+
+  implicit lazy val scheduler: Scheduler = actorSystem.scheduler
 
   def getFiles(implicit journeyId: JourneyId): Future[Option[FileUploads]] =
     repo.get(journeyId.value)(DataKeys.uploadedFiles)
@@ -59,61 +67,64 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository,
 
   def markFileAsPosted(key: String)
                       (implicit journeyId: JourneyId): Future[Option[FileUploads]] =
+    takeLock[Option[FileUploads]](Future.successful(None)) {
+      withFiles[Option[FileUploads]](Future.successful(None)) { files =>
 
-    withFiles[Option[FileUploads]](Future.successful(None)) { files =>
+        val updatedFileUploads =
+          FileUploads(files.files.map {
+            case FileUpload.Initiated(nonce, _, `key`, _, _) => FileUpload.Posted(nonce, Timestamp.now, key)
+            case file => file
+          })
 
-      val updatedFileUploads =
-        FileUploads(files.files.map {
-          case FileUpload.Initiated(nonce, _, `key`, _, _) => FileUpload.Posted(nonce, Timestamp.now, key)
-          case file => file
-        })
-
-      if(updatedFileUploads == files) {
-        Logger.warn(s"[markFileAsPosted] No file with the supplied journeyID & key was updated and marked as posted")
-        Logger.debug(s"[markFileAsPosted] No file with the supplied journeyID: '$journeyId' & key: '$key' was updated and marked as posted")
-        Future.successful(None)
-      } else {
-        putFiles(updatedFileUploads).map(_ => Some(updatedFileUploads))
+        if (updatedFileUploads == files) {
+          Logger.warn(s"[markFileAsPosted] No file with the supplied journeyID & key was updated and marked as posted")
+          Logger.debug(s"[markFileAsPosted] No file with the supplied journeyID: '$journeyId' & key: '$key' was updated and marked as posted")
+          Future.successful(None)
+        } else {
+          putFiles(updatedFileUploads).map(_ => Some(updatedFileUploads))
+        }
       }
     }
 
   def markFileAsRejected(s3UploadError: S3UploadError)
                         (implicit journeyId: JourneyId, journeyContext: FileUploadContext): Future[Option[FileUploads]] =
+    takeLock[Option[FileUploads]](Future.successful(None)) {
+      withFiles[Option[FileUploads]](Future.successful(None)) { files =>
 
-    withFiles[Option[FileUploads]](Future.successful(None)) { files =>
+        logFailure(journeyContext, s3UploadError)
 
-      logFailure(journeyContext, s3UploadError)
+        val updatedFileUploads = FileUploads(files.files.map {
+          case FileUpload(nonce, s3UploadError.key) =>
+            FileUpload.Rejected(nonce, Timestamp.now, s3UploadError.key, s3UploadError)
+          case file => file
+        })
 
-      val updatedFileUploads = FileUploads(files.files.map {
-        case FileUpload(nonce, s3UploadError.key) =>
-          FileUpload.Rejected(nonce, Timestamp.now, s3UploadError.key, s3UploadError)
-        case file => file
-      })
-
-      if (updatedFileUploads == files) {
-        Logger.warn(s"[markFileAsRejected] No file with the supplied journeyID & key was updated and marked as rejected")
-        Logger.debug(s"[markFileAsRejected] No file with the supplied journeyID: '$journeyId' & key: '${s3UploadError.key}' was updated and marked as rejected")
-        Future.successful(None)
-      } else {
-        putFiles(updatedFileUploads).map(Some(_))
+        if (updatedFileUploads == files) {
+          Logger.warn(s"[markFileAsRejected] No file with the supplied journeyID & key was updated and marked as rejected")
+          Logger.debug(s"[markFileAsRejected] No file with the supplied journeyID: '$journeyId' & key: '${s3UploadError.key}' was updated and marked as rejected")
+          Future.successful(None)
+        } else {
+          putFiles(updatedFileUploads).map(Some(_))
+        }
       }
     }
 
   def markFileWithUpscanResponseAndNotifyHost(notification: UpscanNotification,
                                               requestNonce: Nonce)
                                              (implicit context: FileUploadContext, journeyId: JourneyId, hc: HeaderCarrier): Future[Option[FileUploads]] = {
-
-    withFiles[Option[FileUploads]](Future.successful(None)) { fileUploads =>
-      for {
-        updateFiles <- putFiles(updateFileUploadsWithUpscanResponse(notification, requestNonce, fileUploads))
-        _ = if(fileUploads.files == updateFiles.files) {
-          Logger.warn("[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan")
-          Logger.debug(s"[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan. journeyId: '$journeyId', upscanRef: '${notification.reference}'")
-        }
-        _ <- if (updateFiles.acceptedCount != fileUploads.acceptedCount) {
-          fileUploadResultPushConnector.push(Request(context, updateFiles))
-        } else Future.successful(Right((): Unit))
-      } yield Some(updateFiles)
+    takeLock[Option[FileUploads]](Future.successful(None)) {
+      withFiles[Option[FileUploads]](Future.successful(None)) { fileUploads =>
+        for {
+          updateFiles <- putFiles(updateFileUploadsWithUpscanResponse(notification, requestNonce, fileUploads))
+          _ = if (fileUploads.files == updateFiles.files) {
+            Logger.warn("[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan")
+            Logger.debug(s"[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan. journeyId: '$journeyId', upscanRef: '${notification.reference}'")
+          }
+          _ <- if (updateFiles.acceptedCount != fileUploads.acceptedCount) {
+            fileUploadResultPushConnector.push(Request(context, updateFiles))
+          } else Future.successful(Right((): Unit))
+        } yield Some(updateFiles)
+      }
     }
   }
 
