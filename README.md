@@ -2,7 +2,7 @@
 
 # upload-customs-documents-frontend
 
-Plug&Play customizable frontend microservice for uploading documents to the Upscan.
+Plug&Play customizable frontend microservice for uploading customs documents to Upscan.
 
 File upload session is attached to the initial Session-ID and defined by the latest initialization request, making it fully parametrizable and customizable by the invoking host service.
 
@@ -271,7 +271,13 @@ Each uploaded file can be marked with a label. Each empty input row can have a l
 
 It should then be listening on port 10110
 
-    browse http://localhost:10110/upload-customs-documents
+    http://localhost:10110/upload-customs-documents
+
+There is a Test Harness frontend which simplifies integration - you can access at:
+
+    http://localhost:10111/upload-customs-documents-test-harness
+
+The harness is also available in QA and Staging
 
 ## License
 
