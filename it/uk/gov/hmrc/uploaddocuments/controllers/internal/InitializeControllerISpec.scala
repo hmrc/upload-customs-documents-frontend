@@ -1,10 +1,12 @@
 package uk.gov.hmrc.uploaddocuments.controllers.internal
 
+import play.api.http.HeaderNames
 import play.api.libs.json.{JsString, Json}
 import uk.gov.hmrc.uploaddocuments.controllers.ControllerISpecBase
 import uk.gov.hmrc.uploaddocuments.models._
 
 import java.time.ZonedDateTime
+import uk.gov.hmrc.uploaddocuments.controllers.{routes => mainRoutes}
 
 class InitializeControllerISpec extends ControllerISpecBase {
 
@@ -59,6 +61,30 @@ class InitializeControllerISpec extends ControllerISpecBase {
         getContext() shouldBe Some(
           FileUploadContext(
             fileUploadSessionConfig,
+            HostService.Any
+          )
+        )
+
+        getFileUploads() shouldBe Some(
+          FileUploads()
+        )
+      }
+
+      "when feature for multi file is disabled still redirect to the start page" in {
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+        val journeyContext = fileUploadSessionConfig.copy(features = Features(showUploadMultiple = false))
+
+        val result = await(
+          backchannelRequest("/initialize")
+            .post(Json.toJson(FileUploadInitializationRequest(journeyContext, Seq.empty)))
+        )
+        result.status shouldBe 201
+        result.header(HeaderNames.LOCATION) shouldBe Some(mainRoutes.StartController.start.url)
+
+        getContext() shouldBe Some(
+          FileUploadContext(
+            journeyContext,
             HostService.Any
           )
         )

@@ -23,6 +23,26 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         result.body should include(htmlEscapedMessage("view.upload-multiple-files.heading"))
       }
 
+      "show the single files page when cookie set but the feature is turned off" in {
+
+        val journeyContext = fileUploadSessionConfig.copy(features = Features(showUploadMultiple = false))
+
+        setContext(FileUploadContext(journeyContext))
+        setFileUploads()
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val callbackUrl =
+          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+        val result = await(requestWithCookies("/choose-files", "jsenabled" -> "true").get())
+
+        result.status shouldBe 200
+        result.body should include(htmlEscapedPageTitle("view.upload-file.first.title"))
+        result.body should include(htmlEscapedMessage("view.upload-file.first.heading"))
+      }
+
       "show the upload single file per page when no cookie set" in {
 
         setContext()
