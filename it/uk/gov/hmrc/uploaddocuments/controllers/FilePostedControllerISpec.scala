@@ -1,6 +1,5 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.models._
 
 class FilePostedControllerISpec extends ControllerISpecBase {
@@ -29,7 +28,6 @@ class FilePostedControllerISpec extends ControllerISpecBase {
 
         result.status shouldBe 201
         result.body.isEmpty shouldBe true
-        result.headerValues(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN) shouldBe Seq("*")
 
         getFileUploads() shouldBe Some(
           FileUploads(files =
@@ -39,19 +37,6 @@ class FilePostedControllerISpec extends ControllerISpecBase {
             )
           )
         )
-      }
-    }
-
-    "OPTIONS /journey/:journeyId/file-posted" should {
-      "return 201 with access control header" in {
-        val result =
-          await(
-            requestWithoutSessionId(s"/journey/$getJourneyId/file-posted")
-              .options()
-          )
-        result.status shouldBe 201
-        result.body.isEmpty shouldBe true
-        result.headerValues(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN) shouldBe Seq("*")
       }
     }
   }
