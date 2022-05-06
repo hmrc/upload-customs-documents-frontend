@@ -41,14 +41,8 @@ class InitializeController @Inject()(components: BaseControllerComponents,
           for {
             _ <- journeyContextService.putJourneyContext(FileUploadContext(payload.config, HostService(request)))
             _ <- fileUploadService.putFiles(FileUploads(payload))
-          } yield {
-            val url = if (payload.config.features.showUploadMultiple) {
-              mainRoutes.StartController.start.url
-            } else {
-              mainRoutes.ChooseSingleFileController.showChooseFile(None).url
-            }
-            Created.withHeaders(HeaderNames.LOCATION -> url)
-          }
+          } yield
+            Created.withHeaders(HeaderNames.LOCATION -> mainRoutes.StartController.start.url)
         }
       }
     }

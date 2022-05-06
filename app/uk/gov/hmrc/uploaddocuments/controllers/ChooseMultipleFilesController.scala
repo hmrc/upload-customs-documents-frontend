@@ -39,13 +39,13 @@ class ChooseMultipleFilesController @Inject()(components: BaseControllerComponen
   final val showChooseMultipleFiles: Action[AnyContent] = Action.async { implicit request =>
     whenInSession { implicit journeyId =>
       whenAuthenticated {
-        if (!preferUploadMultipleFiles) {
-          Future(Redirect(routes.ChooseSingleFileController.showChooseFile(None)))
-        } else {
-          withJourneyContext { journeyConfig =>
+        withJourneyContext { journeyConfig =>
+          if (preferUploadMultipleFiles && journeyConfig.config.features.showUploadMultiple) {
             withFileUploads { files =>
-              Future(Ok(renderView(journeyConfig, files, YesNoChoiceForm)))
+              Future.successful(Ok(renderView(journeyConfig, files, YesNoChoiceForm)))
             }
+          } else {
+            Future.successful(Redirect(routes.ChooseSingleFileController.showChooseFile(None)))
           }
         }
       }
