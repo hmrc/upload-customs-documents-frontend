@@ -21,7 +21,7 @@ class StartControllerISpec extends ControllerISpecBase with UpscanInitiateStubs 
         val result = await(request("/").get())
 
         result.status shouldBe 200
-        result.body should include("url=/upload-customs-documents/choose-files")
+        result.body should include("URL='/upload-customs-documents/choose-files'")
       }
     }
   }
