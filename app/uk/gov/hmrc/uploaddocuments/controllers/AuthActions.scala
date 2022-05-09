@@ -35,7 +35,8 @@ trait AuthActions extends AuthorisedFunctions with AuthRedirects with LoggerUtil
     authorised(AuthProviders(GovernmentGateway, PrivilegedApplication))
       .retrieve(credentials)(_ => body)
       .recover {
-        case _: AuthorisationException =>
+        case e: AuthorisationException =>
+          Logger.warn(s"Access forbidden because of ${e.getMessage}")
           val continueUrl = CallOps.localFriendlyUrl(env, config)(request.uri, request.host)
           toGGLogin(continueUrl)
       }

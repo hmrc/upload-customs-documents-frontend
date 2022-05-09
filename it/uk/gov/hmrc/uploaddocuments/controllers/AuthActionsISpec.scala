@@ -1,12 +1,13 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
+import play.api.http.HeaderNames
 import play.api.mvc.Result
 import play.api.mvc.Results._
 import play.api.test.FakeRequest
 import play.api.test.Helpers._
 import play.api.{Application, Configuration, Environment}
 import uk.gov.hmrc.auth.core.AuthConnector
-import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
+import uk.gov.hmrc.http.{Authorization, HeaderCarrier, SessionKeys}
 import uk.gov.hmrc.uploaddocuments.support.AppISpec
 
 import scala.concurrent.Future
@@ -77,8 +78,7 @@ trait AuthActionISpecSetup extends AppISpec {
 
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    implicit val hc: HeaderCarrier = HeaderCarrier()
-    implicit val request = FakeRequest().withSession(SessionKeys.authToken -> "Bearer XYZ")
+    implicit val request = FakeRequest().withSession(SessionKeys.authToken -> "Bearer XYZ").withHeaders(HeaderNames.AUTHORIZATION -> "Bearer XYZ")
 
     def testWhenAuthenticated: Result =
       await(super.whenAuthenticated { Future.successful(Ok("authenticated")) })
