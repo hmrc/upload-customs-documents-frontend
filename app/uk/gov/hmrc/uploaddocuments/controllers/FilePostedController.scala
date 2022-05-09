@@ -42,7 +42,15 @@ class FilePostedController @Inject()(components: BaseControllerComponents,
           Future.successful(BadRequest)
         },
         s3UploadSuccess =>
-          fileUploadService.markFileAsPosted(s3UploadSuccess.key).map(_ => Created)
+          fileUploadService.markFileAsPosted(s3UploadSuccess.key).map { _ =>
+            Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
+          }
       )
   }
+
+  // OPTIONS /journey/:journeyId/file-posted
+  final def preflightUpload(journeyId: JourneyId): Action[AnyContent] = Action {
+    Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
+  }
+
 }

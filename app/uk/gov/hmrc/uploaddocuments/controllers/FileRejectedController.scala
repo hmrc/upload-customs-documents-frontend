@@ -80,7 +80,15 @@ class FileRejectedController @Inject()(components: BaseControllerComponents,
             Future.successful(BadRequest)
           },
           s3UploadError =>
-            fileUploadService.markFileAsRejected(s3UploadError).map(_ => status)
+            fileUploadService.markFileAsRejected(s3UploadError).map(_ =>
+              status.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
+            )
         )
     }
+
+  // OPTIONS /journey/:journeyId/file-rejected
+  final def preflightUpload(journeyId: JourneyId): Action[AnyContent] = Action {
+    Created.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*")
+  }
+
 }

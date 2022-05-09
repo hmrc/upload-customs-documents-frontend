@@ -97,7 +97,7 @@ class FileVerificationController @Inject()(components: BaseControllerComponents,
         fileVerificationService.waitForUpscanResponse(upscanReference, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
           _ => Future(Created),
           Future(Accepted)
-        )
+        ).map(_.withHeaders(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN -> "*"))
     }
   }
 }
