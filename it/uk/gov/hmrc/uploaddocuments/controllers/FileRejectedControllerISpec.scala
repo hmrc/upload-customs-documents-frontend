@@ -167,18 +167,5 @@ class FileRejectedControllerISpec extends ControllerISpecBase with UpscanInitiat
         )
       }
     }
-
-    "OPTIONS /journey/:journeyId/file-rejected" should {
-      "return 201 with access control header" in {
-        val result =
-          await(
-            requestWithoutSessionId(s"/journey/$getJourneyId/file-rejected")
-              .options()
-          )
-        result.status shouldBe 201
-        result.body.isEmpty shouldBe true
-        result.headerValues(HeaderNames.ACCESS_CONTROL_ALLOW_ORIGIN) shouldBe Seq("*")
-      }
-    }
   }
 }
