@@ -24,58 +24,49 @@ trait ControllerISpecBase extends ServerISpec {
   import play.api.i18n._
   implicit val messages: Messages = MessagesImpl(Lang("en"), app.injector.instanceOf[MessagesApi])
 
-  final def fakeRequest(cookies: Cookie*)(implicit hc: HeaderCarrier): Request[AnyContent] =
-    fakeRequest("GET", "/", cookies: _*)
+  def sessionCookie(implicit hc: HeaderCarrier) = sessionCookieBaker
+    .encodeAsCookie(Session(Map(
+      SessionKeys.sessionId -> hc.sessionId.map(_.value).getOrElse(""),
+      SessionKeys.authToken -> "Bearer XYZ"
+    )))
 
-  final def fakeRequest(method: String, path: String, cookies: Cookie*)(
-    implicit hc: HeaderCarrier): Request[AnyContent] =
-    FakeRequest(Call(method, path))
-      .withCookies(cookies: _*)
-      .withSession(SessionKeys.sessionId -> hc.sessionId.map(_.value).getOrElse(""))
+  def withHeaders(f: => StandaloneWSRequest): StandaloneWSRequest =
+    f.addHttpHeaders(
+      play.api.http.HeaderNames.USER_AGENT -> "it-test",
+      play.api.http.HeaderNames.AUTHORIZATION -> "Bearer XYZ"
+    )
 
-  final def request(path: String)(implicit hc: HeaderCarrier): StandaloneWSRequest = {
-    val sessionCookie =
-      sessionCookieBaker
-        .encodeAsCookie(Session(Map(SessionKeys.sessionId -> hc.sessionId.map(_.value).getOrElse(""))))
-    wsClient
-      .url(s"$baseUrl$path")
-      .withCookies(
-        DefaultWSCookie(sessionCookie.name, sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value)
-      )
-      .addHttpHeaders(play.api.http.HeaderNames.USER_AGENT -> "it-test")
-  }
-
-  final def backchannelRequest(path: String)(implicit hc: HeaderCarrier): StandaloneWSRequest = {
-    val sessionCookie =
-      sessionCookieBaker
-        .encodeAsCookie(Session(Map(SessionKeys.sessionId -> hc.sessionId.map(_.value).getOrElse(""))))
-    wsClient
-      .url(s"$backchannelBaseUrl$path")
-      .withCookies(
-        DefaultWSCookie(
-          sessionCookie.name,
-          sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value
+  final def request(path: String)(implicit hc: HeaderCarrier): StandaloneWSRequest =
+    withHeaders {
+      wsClient
+        .url(s"$baseUrl$path")
+        .withCookies(
+          DefaultWSCookie(sessionCookie.name, sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value)
         )
-      )
-      .addHttpHeaders(play.api.http.HeaderNames.USER_AGENT -> "it-test")
-  }
+    }
 
-  final def requestWithCookies(path: String, cookies: (String, String)*)(
-    implicit hc: HeaderCarrier): StandaloneWSRequest = {
-    val sessionCookie =
-      sessionCookieBaker
-        .encodeAsCookie(Session(Map(SessionKeys.sessionId -> hc.sessionId.map(_.value).getOrElse(""))))
+  final def backchannelRequest(path: String)(implicit hc: HeaderCarrier): StandaloneWSRequest =
+    withHeaders {
+      wsClient
+        .url(s"$backchannelBaseUrl$path")
+        .withCookies(
+          DefaultWSCookie(
+            sessionCookie.name,
+            sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value
+          )
+        )
+    }
 
-    wsClient
-      .url(s"$baseUrl$path")
-      .withCookies(
-        cookies.map(c => DefaultWSCookie(c._1, c._2)) :+ DefaultWSCookie(
-          sessionCookie.name,
-          sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value
-        ): _*
-      )
-      .addHttpHeaders(play.api.http.HeaderNames.USER_AGENT -> "it-test")
-  }
+  final def requestWithCookies(path: String, cookies: (String, String)*)(implicit hc: HeaderCarrier): StandaloneWSRequest =
+    withHeaders {
+      wsClient
+        .url(s"$baseUrl$path")
+        .withCookies(
+          cookies.map(c => DefaultWSCookie(c._1, c._2)) :+ DefaultWSCookie(
+            sessionCookie.name,
+            sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value
+          ): _*)
+    }
 
   final val nonEmptyFileUploads: FileUploads = FileUploads(Seq(TestData.acceptedFileUpload))
 
