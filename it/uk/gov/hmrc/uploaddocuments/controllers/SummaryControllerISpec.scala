@@ -196,6 +196,23 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
         result.body shouldBe expected
       }
 
+      "redirect to the continue_when_yes_url customised URL when yes" in {
+
+        val context = FileUploadContext(fileUploadSessionConfig.copy(continueAfterYesAnswerUrl = Some(s"$wireMockBaseUrlAsString/foo-url")))
+        val fileUploads = nFileUploads(3)
+
+        setContext(context)
+        setFileUploads(fileUploads)
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+        val expected = givenSomePage(200, "/foo-url")
+
+        val result = await(request("/summary").post(Map("choice" -> "yes")))
+
+        result.status shouldBe 200
+        result.body shouldBe expected
+      }
+
       "redirect to the continue_url when no and files number below the limit" in {
 
         val context = FileUploadContext(fileUploadSessionConfig)
