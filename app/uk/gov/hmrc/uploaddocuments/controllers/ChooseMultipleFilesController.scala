@@ -18,6 +18,7 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.data.Form
 import play.api.mvc.{Action, AnyContent, Call, Request}
+import uk.gov.hmrc.uploaddocuments.controllers.actions.{AuthAction, AuthenticatedAction, JourneyContextAction, SessionAction}
 import uk.gov.hmrc.uploaddocuments.forms.Forms
 import uk.gov.hmrc.uploaddocuments.forms.Forms.YesNoChoiceForm
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
@@ -32,26 +33,25 @@ import scala.concurrent.{ExecutionContext, Future}
 class ChooseMultipleFilesController @Inject()(components: BaseControllerComponents,
                                               uploadMultipleFilesView: UploadMultipleFilesView,
                                               override val journeyContextService: JourneyContextService,
-                                              override val fileUploadService: FileUploadService)
+                                              override val fileUploadService: FileUploadService,
+                                              inSession: SessionAction,
+                                              auth: AuthenticatedAction,
+                                              withJourneyContext: JourneyContextAction
+                                             )
                                              (implicit ec: ExecutionContext) extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper {
 
   // GET /choose-files
-  final val showChooseMultipleFiles: Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        withJourneyContext { journeyConfig =>
-          withFileUploads { files =>
-            Future.successful {
-              if (preferUploadMultipleFiles && journeyConfig.config.features.showUploadMultiple) {
-                Ok(renderView(journeyConfig, files, YesNoChoiceForm))
-              } else {
-                if (files.acceptedCount > 0) {
-                  Redirect(routes.SummaryController.showSummary)
-                } else {
-                  Redirect(routes.ChooseSingleFileController.showChooseFile(None))
-                }
-              }
-            }
+  final val showChooseMultipleFiles: Action[AnyContent] = (inSession andThen auth andThen withJourneyContext).async { implicit request =>
+    implicit val jid = request.journeyId
+    withFileUploads { files =>
+      Future.successful {
+        if (preferUploadMultipleFiles && request.journeyContext.config.features.showUploadMultiple) {
+          Ok(renderView(request.journeyContext, files, YesNoChoiceForm))
+        } else {
+          if (files.acceptedCount > 0) {
+            Redirect(routes.SummaryController.showSummary)
+          } else {
+            Redirect(routes.ChooseSingleFileController.showChooseFile(None))
           }
         }
       }
@@ -59,23 +59,20 @@ class ChooseMultipleFilesController @Inject()(components: BaseControllerComponen
   }
 
   // POST /choose-files
-  final val continueWithYesNo: Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        withJourneyContext { journeyConfig =>
-          withFileUploads { files =>
-            Forms.YesNoChoiceForm.bindFromRequest
-              .fold(
-                formWithErrors => Future.successful(BadRequest(renderView(journeyConfig, files, formWithErrors))),
-                {
-                  case true =>
-                    Future.successful(Redirect(journeyConfig.config.continueAfterYesAnswerUrl.getOrElse(journeyConfig.config.backlinkUrl)))
-                  case false =>
-                    Future.successful(Redirect(routes.ContinueToHostController.continueToHost))
-                }
-              )
-          }
-        }
+  final val continueWithYesNo: Action[AnyContent] = (inSession andThen auth).async { implicit request =>
+    implicit val jid = request.journeyId
+    withJourneyContext { journeyConfig =>
+      withFileUploads { files =>
+        Forms.YesNoChoiceForm.bindFromRequest
+          .fold(
+            formWithErrors => Future.successful(BadRequest(renderView(journeyConfig, files, formWithErrors))),
+            {
+              case true =>
+                Future.successful(Redirect(journeyConfig.config.continueAfterYesAnswerUrl.getOrElse(journeyConfig.config.backlinkUrl)))
+              case false =>
+                Future.successful(Redirect(routes.ContinueToHostController.continueToHost))
+            }
+          )
       }
     }
   }

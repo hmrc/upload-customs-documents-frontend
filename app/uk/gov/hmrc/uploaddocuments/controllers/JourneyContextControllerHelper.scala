@@ -22,12 +22,12 @@ import uk.gov.hmrc.uploaddocuments.services.JourneyContextService
 
 import scala.concurrent.Future
 
-trait JourneyContextControllerHelper { baseController: BaseController =>
+trait JourneyContextControllerHelper { _: BaseController =>
 
   val journeyContextService: JourneyContextService
 
   def withJourneyContext(body: FileUploadContext => Future[Result])
                         (implicit journeyId: JourneyId): Future[Result] =
-    journeyContextService.withJourneyContext(Future.successful(Redirect(baseController.components.appConfig.govukStartUrl)))(body)
+    journeyContextService.withJourneyContext(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
 
 }
