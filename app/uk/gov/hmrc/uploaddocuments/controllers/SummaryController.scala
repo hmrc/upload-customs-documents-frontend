@@ -42,7 +42,7 @@ class SummaryController @Inject()(view: SummaryView,
       whenAuthenticated {
         withJourneyContext { journeyConfig =>
           withFileUploads { files =>
-            Future(Ok(renderView(YesNoChoiceForm, journeyConfig, files)))
+            Future.successful(Ok(renderView(YesNoChoiceForm, journeyConfig, files)))
           }
         }
       }
@@ -55,15 +55,15 @@ class SummaryController @Inject()(view: SummaryView,
       whenAuthenticated {
         withJourneyContext { journeyContext =>
           withFileUploads { files =>
-            Forms.YesNoChoiceForm.bindFromRequest
-              .fold(
-                formWithErrors => Future(BadRequest(renderView(formWithErrors, journeyContext, files))), {
-                  case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
-                    Future.successful(Redirect(routes.ChooseSingleFileController.showChooseFile(Some(true))))
-                  case _ =>
-                    Future.successful(Redirect(routes.ContinueToHostController.continueToHost))
-                }
-              )
+            Future.successful(Forms.YesNoChoiceForm.bindFromRequest.fold(
+              formWithErrors => BadRequest(renderView(formWithErrors, journeyContext, files)), {
+                case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
+                  val redirect = journeyContext.config.continueAfterYesAnswerUrl.getOrElse(routes.ChooseSingleFileController.showChooseFile(Some(true)).url)
+                  Redirect(redirect)
+                case _ =>
+                  Redirect(routes.ContinueToHostController.continueToHost)
+              }
+            ))
           }
         }
       }

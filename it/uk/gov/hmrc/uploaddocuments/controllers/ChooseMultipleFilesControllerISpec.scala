@@ -2,85 +2,131 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.{ExternalApiStubs, UpscanInitiateStubs}
+import uk.gov.hmrc.uploaddocuments.support.TestData
 
 class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with UpscanInitiateStubs with ExternalApiStubs {
 
   "ChooseMultipleFilesController" when {
 
-    "GET /choose-files" should {
+    "GET /choose-files" when {
 
-      "show the upload multiple files page when cookie set" in {
+      "no existing files are pre-popped" should {
 
-        setContext()
-        setFileUploads()
+        "show the upload multiple files page when cookie set" in {
 
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+          setContext()
+          setFileUploads()
 
-        val result = await(requestWithCookies("/choose-files", "jsenabled" -> "true").get())
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
-        result.status shouldBe 200
-        result.body should include(htmlEscapedPageTitle("view.upload-multiple-files.title"))
-        result.body should include(htmlEscapedMessage("view.upload-multiple-files.heading"))
-      }
+          val result = await(requestWithCookies("/choose-files", "jsenabled" -> "true").get())
 
-      "show the single files page when cookie set but the feature is turned off" in {
+          result.status shouldBe 200
+          result.body should include(htmlEscapedPageTitle("view.upload-multiple-files.title"))
+          result.body should include(htmlEscapedMessage("view.upload-multiple-files.heading"))
+        }
 
-        val journeyContext = fileUploadSessionConfig.copy(features = Features(showUploadMultiple = false))
+        "show the single files page when cookie set but the feature is turned off" in {
 
-        setContext(FileUploadContext(journeyContext))
-        setFileUploads()
+          val journeyContext = fileUploadSessionConfig.copy(features = Features(showUploadMultiple = false))
 
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+          setContext(FileUploadContext(journeyContext))
+          setFileUploads()
 
-        val callbackUrl =
-          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
-        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
-        val result = await(requestWithCookies("/choose-files", "jsenabled" -> "true").get())
+          val callbackUrl =
+            appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+          givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
-        result.status shouldBe 200
-        result.body should include(htmlEscapedPageTitle("view.upload-file.first.title"))
-        result.body should include(htmlEscapedMessage("view.upload-file.first.heading"))
-      }
+          val result = await(requestWithCookies("/choose-files", "jsenabled" -> "true").get())
 
-      "show the upload single file per page when no cookie set" in {
+          result.status shouldBe 200
+          result.body should include(htmlEscapedPageTitle("view.upload-file.first.title"))
+          result.body should include(htmlEscapedMessage("view.upload-file.first.heading"))
+        }
 
-        setContext()
-        setFileUploads()
+        "show the upload single file per page when no cookie set" in {
 
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+          setContext()
+          setFileUploads()
 
-        val callbackUrl =
-          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
-        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
-        //Follows a redirect which then renders the Choose Single File page
-        val result = await(request("/choose-files").get())
+          val callbackUrl =
+            appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+          givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
-        result.status shouldBe 200
-        result.body should include(htmlEscapedPageTitle("view.upload-file.first.title"))
-        result.body should include(htmlEscapedMessage("view.upload-file.first.heading"))
+          //Follows a redirect which then renders the Choose Single File page
+          val result = await(request("/choose-files").get())
 
-        getFileUploads() shouldBe Some(
-          FileUploads(files =
-            Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d", Some(UploadRequest(
-              href = "https://bucketName.s3.eu-west-2.amazonaws.com",
-              fields = Map(
-                "Content-Type"            -> "application/xml",
-                "acl"                     -> "private",
-                "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                "policy"                  -> "xxxxxxxx==",
-                "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
-                "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
-                "x-amz-date"              -> "yyyyMMddThhmmssZ",
-                "x-amz-meta-callback-url" -> callbackUrl,
-                "x-amz-signature"         -> "xxxx",
-                "success_action_redirect" -> "https://myservice.com/nextPage",
-                "error_action_redirect"   -> "https://myservice.com/errorPage"
-              )
-            ))))
+          result.status shouldBe 200
+          result.body should include(htmlEscapedPageTitle("view.upload-file.first.title"))
+          result.body should include(htmlEscapedMessage("view.upload-file.first.heading"))
+
+          getFileUploads() shouldBe Some(
+            FileUploads(files =
+              Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d", Some(UploadRequest(
+                href = "https://bucketName.s3.eu-west-2.amazonaws.com",
+                fields = Map(
+                  "Content-Type" -> "application/xml",
+                  "acl" -> "private",
+                  "key" -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                  "policy" -> "xxxxxxxx==",
+                  "x-amz-algorithm" -> "AWS4-HMAC-SHA256",
+                  "x-amz-credential" -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
+                  "x-amz-date" -> "yyyyMMddThhmmssZ",
+                  "x-amz-meta-callback-url" -> callbackUrl,
+                  "x-amz-signature" -> "xxxx",
+                  "success_action_redirect" -> "https://myservice.com/nextPage",
+                  "error_action_redirect" -> "https://myservice.com/errorPage"
+                )
+              ))))
+            )
           )
-        )
+        }
+      }
+
+      "existing files are pre-popped" should {
+
+        "show the summary page when jsenabled cookie set but the feature is turned off" in {
+
+          val journeyContext = fileUploadSessionConfig.copy(features = Features(showUploadMultiple = false))
+
+          setContext(FileUploadContext(journeyContext))
+          setFileUploads(nFileUploads(1))
+
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+          val callbackUrl =
+            appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+          givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+          val result = await(requestWithCookies("/choose-files", "jsenabled" -> "true").get())
+
+          result.status shouldBe 200
+          result.body should include(htmlEscapedPageTitle("view.summary.singular.title"))
+          result.body should include(htmlEscapedMessage("view.summary.singular.title"))
+        }
+
+        "show the upload single file per page when js is disabled set" in {
+
+          setContext()
+          setFileUploads(nFileUploads(1))
+
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+          val callbackUrl =
+            appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+          givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+          //Follows a redirect which then renders the Choose Single File page
+          val result = await(request("/choose-files").get())
+
+          result.status shouldBe 200
+          result.body should include(htmlEscapedPageTitle("view.summary.singular.title"))
+          result.body should include(htmlEscapedMessage("view.summary.singular.title"))
+        }
       }
     }
 
