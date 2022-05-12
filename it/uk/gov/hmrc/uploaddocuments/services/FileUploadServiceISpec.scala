@@ -325,7 +325,7 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
 
                 givenResultPushEndpoint(
                   path = "/result-post-url",
-                  payload = Payload(Request(fileUploadContext, updatedFiles), appConfig.baseExternalCallbackUrl),
+                  payload = Payload(FileUploadResultPushModel(fileUploadContext, updatedFiles), appConfig.baseExternalCallbackUrl),
                   status = 204
                 )
 

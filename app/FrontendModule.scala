@@ -16,18 +16,20 @@
 
 import com.google.inject.AbstractModule
 import play.api.{Configuration, Environment}
+import play.inject.NamedImpl
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.http.ws.UploadHttpClient
 import uk.gov.hmrc.uploaddocuments.connectors.FrontendAuthConnector
-import uk.gov.hmrc.uploaddocuments.controllers.actions.{JourneyContextAction, JourneyContextActionI, SessionAction, SessionActionI}
+import uk.gov.hmrc.uploaddocuments.controllers.actions._
 
 class FrontendModule(val environment: Environment, val configuration: Configuration) extends AbstractModule {
   override def configure(): Unit = {
     bind(classOf[HttpGet]).to(classOf[UploadHttpClient])
     bind(classOf[HttpPost]).to(classOf[UploadHttpClient])
     bind(classOf[AuthConnector]).to(classOf[FrontendAuthConnector])
-    bind(classOf[SessionAction]).to(classOf[SessionActionI])
     bind(classOf[JourneyContextAction]).to(classOf[JourneyContextActionI])
+    bind(classOf[AuthAction]).annotatedWith(new NamedImpl("authenticated")).to(classOf[AuthenticatedAction])
+    bind(classOf[AuthAction]).annotatedWith(new NamedImpl("backChannelAuthentication")).to(classOf[BackChannelAuthenticatedAction])
   }
 }

@@ -26,6 +26,7 @@ import uk.gov.hmrc.uploaddocuments.connectors.FrontendAuthConnector
 import uk.gov.hmrc.uploaddocuments.models.JourneyId
 import uk.gov.hmrc.uploaddocuments.support.JsEnabled.COOKIE_JSENABLED
 import uk.gov.hmrc.uploaddocuments.support.SHA256
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.{Inject, Singleton}
@@ -40,21 +41,9 @@ class BaseControllerComponents @Inject()(
   val messagesControllerComponents: MessagesControllerComponents
 )
 
-abstract class BaseController(
-  val components: BaseControllerComponents
-) extends FrontendBaseController with I18nSupport with AuthActions {
-
-  final def config: Configuration        = components.configuration
-  final def env: Environment             = components.environment
-  final def authConnector: AuthConnector = components.authConnector
+abstract class BaseController(val components: BaseControllerComponents) extends FrontendBaseController with I18nSupport with LoggerUtil {
 
   final protected def controllerComponents: MessagesControllerComponents = components.messagesControllerComponents
-
-  final def journeyIdFromSession(implicit hc: HeaderCarrier): Option[JourneyId] =
-    hc.sessionId.map(_.value).map(SHA256.compute).map(JourneyId.apply)
-
-  final def whenInSession(body: JourneyId => Future[Result])(implicit hc: HeaderCarrier): Future[Result] =
-    journeyIdFromSession.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
 
   final def preferUploadMultipleFiles(implicit rh: RequestHeader): Boolean =
     rh.cookies.get(COOKIE_JSENABLED).isDefined

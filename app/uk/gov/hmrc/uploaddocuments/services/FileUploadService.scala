@@ -22,7 +22,8 @@ import uk.gov.hmrc.mongo.lock.MongoLockRepository
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.Response
 import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.Request
+import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.FileUploadResultPushModel
+import uk.gov.hmrc.uploaddocuments.models.requests.JourneyContextRequest
 import uk.gov.hmrc.uploaddocuments.repository.{JourneyCacheRepository, JourneyLocking}
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.support.UploadLog
@@ -60,7 +61,7 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository,
     withFiles[Option[(Response, FileUploads)]](Future.successful(None)) { files =>
       for {
         updatedFiles <- putFiles(files.copy(files = files.files.filterNot(_.reference == reference)))
-        result <- fileUploadResultPushConnector.push(Request(journeyContext, updatedFiles))
+        result <- fileUploadResultPushConnector.push(FileUploadResultPushModel(journeyContext, updatedFiles))
       } yield Some(result -> updatedFiles)
     }
   }
@@ -121,7 +122,7 @@ class FileUploadService @Inject()(repo: JourneyCacheRepository,
             Logger.debug(s"[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan. journeyId: '$journeyId', upscanRef: '${notification.reference}'")
           }
           _ <- if (updateFiles.acceptedCount != fileUploads.acceptedCount) {
-            fileUploadResultPushConnector.push(Request(context, updateFiles))
+            fileUploadResultPushConnector.push(FileUploadResultPushModel(context, updateFiles))
           } else Future.successful(Right((): Unit))
         } yield Some(updateFiles)
       }

@@ -23,7 +23,7 @@ case class Payload(nonce: Nonce, uploadedFiles: Seq[UploadedFile], cargo: Option
 
 object Payload {
 
-  def apply(request: Request, baseUrl: String): Payload =
+  def apply(request: FileUploadResultPushModel, baseUrl: String): Payload =
     Payload(
       request.nonce,
       request.uploadedFiles

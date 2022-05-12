@@ -24,6 +24,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
 import uk.gov.hmrc.uploaddocuments.models.FileUploadSessionConfig.defaultMaximumFileSizeBytes
 import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.requests.{AuthRequest, JourneyContextRequest}
 import uk.gov.hmrc.uploaddocuments.services.mocks.MockFileUploadService
 import uk.gov.hmrc.uploaddocuments.support.JsEnabled.COOKIE_JSENABLED
 import uk.gov.hmrc.uploaddocuments.support.UnitSpec
@@ -38,14 +39,10 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
   val mockUpscanInitiateConnector = mock[UpscanInitiateConnector]
   val appConfig                   = inject[AppConfig]
 
-  val fakeRequest          = FakeRequest()
-  val fakeRequestJsEnabled = FakeRequest().withCookies(Cookie(COOKIE_JSENABLED, "true"))
-
   val testService = new InitiateUpscanService(mockUpscanInitiateConnector, mockFileUploadService, appConfig) {
     override val randomNonce: Nonce = Nonce(1)
   }
   val nonce: Nonce     = Nonce(1)
-  val maximumFileBytes = 2
   val journeyId        = JourneyId("testJourneyId")
   val uploadId         = "uploadId"
   val upscanResponse   = UpscanInitiateResponse("reference", UploadRequest("href", Map.empty[String, String]))
@@ -68,67 +65,70 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
       4567890
     )
 
+  val fakeRequest          = JourneyContextRequest(AuthRequest(FakeRequest(), journeyId, None), fileUploadContext)
+  val fakeRequestJsEnabled = JourneyContextRequest(AuthRequest(FakeRequest().withCookies(Cookie(COOKIE_JSENABLED, "true")), journeyId, None), fileUploadContext)
+
   "callbackFromUpscan" should {
     "redirect to Callback From Upscan page" in {
-      testService.callbackFromUpscan(nonce)(journeyId) shouldBe
+      testService.callbackFromUpscan(nonce)(fakeRequest) shouldBe
         s"http://localhost:10110/internal/callback-from-upscan/journey/$journeyId/$nonce"
     }
   }
   "successRedirect" when {
     "JS is enabled" should {
       "redirect to Async Waiting For File Verification page" in {
-        testService.successRedirect()(journeyId, fakeRequestJsEnabled) shouldBe
+        testService.successRedirect()(fakeRequestJsEnabled) shouldBe
           s"http://localhost:10110/upload-customs-documents/journey/$journeyId/file-verification"
       }
     }
     "JS is not enabled" should {
       "redirect to Show Waiting For File Verification page" in {
-        testService.successRedirect()(journeyId, fakeRequest) shouldBe
+        testService.successRedirect()(fakeRequest) shouldBe
           "http://localhost:10110/upload-customs-documents/file-verification"
       }
     }
   }
   "successRedirectWhenUploadingMultipleFiles" should {
     "redirect to Async Mark File Upload As Posted page" in {
-      testService.successRedirectWhenUploadingMultipleFiles()(journeyId) shouldBe
+      testService.successRedirectWhenUploadingMultipleFiles()(fakeRequest) shouldBe
         s"http://localhost:10110/upload-customs-documents/journey/$journeyId/file-posted"
     }
   }
   "errorRedirect" when {
     "JS is enabled" should {
       "redirect to Async Mark File Upload As Rejected page" in {
-        testService.errorRedirect()(journeyId, fakeRequestJsEnabled) shouldBe
+        testService.errorRedirect()(fakeRequestJsEnabled) shouldBe
           s"http://localhost:10110/upload-customs-documents/journey/$journeyId/file-rejected"
       }
     }
     "JS is not enabled" should {
       "redirect to Mark File Upload As Rejected page" in {
-        testService.errorRedirect()(journeyId, fakeRequest) shouldBe
+        testService.errorRedirect()(fakeRequest) shouldBe
           "http://localhost:10110/upload-customs-documents/file-rejected"
       }
     }
   }
   "upscanRequestWhenUploadingMultipleFiles" should {
     "return UpscanInitiateRequest" in {
-      testService.upscanRequestWhenUploadingMultipleFiles(nonce, maximumFileBytes)(journeyId, fakeRequest) shouldBe
+      testService.upscanRequestWhenUploadingMultipleFiles(nonce)(fakeRequest) shouldBe
         UpscanInitiateRequest(
-          callbackUrl     = testService.callbackFromUpscan(nonce)(journeyId),
-          successRedirect = Some(testService.successRedirectWhenUploadingMultipleFiles()(journeyId)),
-          errorRedirect   = Some(testService.errorRedirect()(journeyId, fakeRequest)),
-          minimumFileSize = Some(1),
-          maximumFileSize = Some(maximumFileBytes)
+          callbackUrl     = testService.callbackFromUpscan(nonce)(fakeRequest),
+          successRedirect = Some(testService.successRedirectWhenUploadingMultipleFiles()(fakeRequest)),
+          errorRedirect   = Some(testService.errorRedirect()(fakeRequest)),
+          minimumFileSize = Some(fakeRequest.journeyContext.config.minimumNumberOfFiles),
+          maximumFileSize = Some(fakeRequest.journeyContext.config.maximumFileSizeBytes.toInt)
         )
     }
   }
   "upscanRequest" should {
     "return UpscanInitiateRequest" in {
-      testService.upscanRequest(nonce, maximumFileBytes)(journeyId, fakeRequest) shouldBe
+      testService.upscanRequest(nonce)(fakeRequest) shouldBe
         UpscanInitiateRequest(
-          callbackUrl     = testService.callbackFromUpscan(nonce)(journeyId),
-          successRedirect = Some(testService.successRedirect()(journeyId, fakeRequest)),
-          errorRedirect   = Some(testService.errorRedirect()(journeyId, fakeRequest)),
-          minimumFileSize = Some(1),
-          maximumFileSize = Some(maximumFileBytes)
+          callbackUrl     = testService.callbackFromUpscan(nonce)(fakeRequest),
+          successRedirect = Some(testService.successRedirect()(fakeRequest)),
+          errorRedirect   = Some(testService.errorRedirect()(fakeRequest)),
+          minimumFileSize = Some(fakeRequest.journeyContext.config.minimumNumberOfFiles),
+          maximumFileSize = Some(fakeRequest.journeyContext.config.maximumFileSizeBytes.toInt)
         )
     }
   }
@@ -145,12 +145,12 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
 
         mockWithFiles(journeyId)(Future.successful(None))
         val result =
-          testService.initiateNextSingleFileUpload()(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+          testService.initiateNextSingleFileUpload()(fakeRequest, HeaderCarrier())
 
         await(result) shouldBe None
       }
     }
-    val upscanRequest    = testService.upscanRequest(nonce, defaultMaximumFileSizeBytes)(journeyId, fakeRequest)
+    val upscanRequest    = testService.upscanRequest(nonce)(fakeRequest)
     val newInitiatedFile = FileUpload(nonce, None)(upscanResponse).copy(timestamp = Timestamp.Any)
     "files present for journeyId in cache" when {
       "upscan initiate succeeds and cache successfully updated" when {
@@ -164,7 +164,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
             mockPutFiles(journeyId, updatedFiles)(Future.successful(updatedFiles))
 
             val result =
-              testService.initiateNextSingleFileUpload()(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+              testService.initiateNextSingleFileUpload()(fakeRequest, HeaderCarrier())
 
             await(result) shouldBe Some((upscanResponse, updatedFiles, None))
           }
@@ -179,7 +179,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
             mockPutFiles(journeyId, updatedFiles)(Future.successful(updatedFiles))
 
             val result =
-              testService.initiateNextSingleFileUpload()(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+              testService.initiateNextSingleFileUpload()(fakeRequest, HeaderCarrier())
 
             await(result) shouldBe Some((upscanResponse, updatedFiles, None))
           }
@@ -194,7 +194,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
             mockPutFiles(journeyId, updatedFiles)(Future.successful(updatedFiles))
 
             val result =
-              testService.initiateNextSingleFileUpload()(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+              testService.initiateNextSingleFileUpload()(fakeRequest, HeaderCarrier())
 
             await(result) shouldBe Some((upscanResponse, updatedFiles, Some(FileUploadError(fileUploadRejected))))
           }
@@ -209,7 +209,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
             mockPutFiles(journeyId, updatedFiles)(Future.successful(updatedFiles))
 
             val result =
-              testService.initiateNextSingleFileUpload()(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+              testService.initiateNextSingleFileUpload()(fakeRequest, HeaderCarrier())
 
             await(result) shouldBe Some((upscanResponse, updatedFiles, None))
           }
@@ -220,7 +220,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
           mockWithFiles(journeyId)(Future.successful(Some(FileUploads())))
           mockInitiate(upscanRequest, Future.failed(new NumberFormatException))
           val result =
-            testService.initiateNextSingleFileUpload()(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+            testService.initiateNextSingleFileUpload()(fakeRequest, HeaderCarrier())
 
           assertThrows[NumberFormatException](await(result))
         }
@@ -231,7 +231,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
           mockInitiate(upscanRequest, Future.successful(upscanResponse))
           mockPutFiles(journeyId, FileUploads(Seq(newInitiatedFile)))(Future.failed(new NumberFormatException))
           val result =
-            testService.initiateNextSingleFileUpload()(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+            testService.initiateNextSingleFileUpload()(fakeRequest, HeaderCarrier())
 
           assertThrows[NumberFormatException](await(result))
         }
@@ -241,7 +241,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
       "return it" in {
         mockWithFiles(journeyId)(Future.failed(new NumberFormatException))
         val result =
-          testService.initiateNextSingleFileUpload()(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+          testService.initiateNextSingleFileUpload()(fakeRequest, HeaderCarrier())
 
         assertThrows[NumberFormatException](await(result))
       }
@@ -252,13 +252,13 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
       "log and return None" in {
         mockWithFiles(journeyId)(Future.successful(None))
         val result =
-          testService.initiateNextMultiFileUpload(uploadId)(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+          testService.initiateNextMultiFileUpload(uploadId)(fakeRequest, HeaderCarrier())
 
         await(result) shouldBe None
       }
     }
     val upscanRequest =
-      testService.upscanRequestWhenUploadingMultipleFiles(nonce, defaultMaximumFileSizeBytes)(journeyId, fakeRequest)
+      testService.upscanRequestWhenUploadingMultipleFiles(nonce)(fakeRequest)
     val newInitiatedFile = FileUpload(nonce, Some(uploadId))(upscanResponse).copy(timestamp = Timestamp.Any)
     "files present for journeyId in cache" when {
       "upscan initiate succeeds and cache successfully updated" when {
@@ -272,7 +272,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
             mockPutFiles(journeyId, updatedFiles)(Future.successful(updatedFiles))
 
             val result = testService
-              .initiateNextMultiFileUpload(uploadId)(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+              .initiateNextMultiFileUpload(uploadId)(fakeRequest, HeaderCarrier())
 
             await(result) shouldBe Some(upscanResponse)
           }
@@ -287,7 +287,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
             mockPutFiles(journeyId, updatedFiles)(Future.successful(updatedFiles))
 
             val result = testService
-              .initiateNextMultiFileUpload(uploadId)(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+              .initiateNextMultiFileUpload(uploadId)(fakeRequest, HeaderCarrier())
 
             await(result) shouldBe Some(upscanResponse)
           }
@@ -298,7 +298,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
           mockWithFiles(journeyId)(Future.successful(Some(FileUploads())))
           mockInitiate(upscanRequest, Future.failed(new NumberFormatException))
           val result = testService
-            .initiateNextMultiFileUpload(uploadId)(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+            .initiateNextMultiFileUpload(uploadId)(fakeRequest, HeaderCarrier())
 
           assertThrows[NumberFormatException](await(result))
         }
@@ -309,7 +309,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
           mockInitiate(upscanRequest, Future.successful(upscanResponse))
           mockPutFiles(journeyId, FileUploads(Seq(newInitiatedFile)))(Future.failed(new NumberFormatException))
           val result = testService
-            .initiateNextMultiFileUpload(uploadId)(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+            .initiateNextMultiFileUpload(uploadId)(fakeRequest, HeaderCarrier())
 
           assertThrows[NumberFormatException](await(result))
         }
@@ -319,7 +319,7 @@ class InitiateUpscanServiceSpec extends UnitSpec with MockFactory with GuiceOneA
       "return it" in {
         mockWithFiles(journeyId)(Future.failed(new NumberFormatException))
         val result =
-          testService.initiateNextMultiFileUpload(uploadId)(fileUploadContext, journeyId, fakeRequest, HeaderCarrier())
+          testService.initiateNextMultiFileUpload(uploadId)(fakeRequest, HeaderCarrier())
 
         assertThrows[NumberFormatException](await(result))
       }

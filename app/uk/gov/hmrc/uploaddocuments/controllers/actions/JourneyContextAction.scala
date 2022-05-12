@@ -36,12 +36,9 @@ class JourneyContextActionI @Inject()(val journeyContextService: JourneyContextS
                                    (implicit val executionContext: ExecutionContext) extends JourneyContextAction with LoggerUtil {
 
   override def invokeBlock[A](request: AuthRequest[A], block: JourneyContextRequest[A] => Future[Result]): Future[Result] = {
-    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(
-      session = request.session,
-      request = request
-    )
+    implicit val hc: HeaderCarrier = HeaderCarrierConverter.fromRequestAndSession(session = request.session, request = request)
     journeyContextService.withJourneyContext(Future.successful(Redirect(appConfig.govukStartUrl))) { context =>
-      block(JourneyContextRequest(request, request.journeyId, request.credId, context))
+      block(JourneyContextRequest(request, context))
     }(request.journeyId)
   }
 }

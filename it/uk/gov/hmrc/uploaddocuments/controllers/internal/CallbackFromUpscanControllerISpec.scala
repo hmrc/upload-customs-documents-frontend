@@ -51,7 +51,7 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
         givenResultPushEndpoint(
           "/result-post-url",
           Payload(
-            Request(
+            FileUploadResultPushModel(
               FileUploadContext(fileUploadSessionConfig),
               FileUploads(files = Seq(
                 FileUpload.Accepted(

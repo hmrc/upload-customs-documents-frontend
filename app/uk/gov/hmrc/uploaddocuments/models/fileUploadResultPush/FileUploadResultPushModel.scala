@@ -19,15 +19,15 @@ package uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush
 import play.api.libs.json.{Format, JsValue, Json}
 import uk.gov.hmrc.uploaddocuments.models._
 
-case class Request(url: String,
-                   nonce: Nonce,
-                   uploadedFiles: Seq[UploadedFile],
-                   context: Option[JsValue],
-                   hostService: HostService = HostService.Any)
+case class FileUploadResultPushModel(url: String,
+                                     nonce: Nonce,
+                                     uploadedFiles: Seq[UploadedFile],
+                                     context: Option[JsValue],
+                                     hostService: HostService = HostService.Any)
 
-object Request {
-  def apply(context: FileUploadContext, fileUploads: FileUploads): Request =
-    Request(
+object FileUploadResultPushModel {
+  def apply(context: FileUploadContext, fileUploads: FileUploads): FileUploadResultPushModel =
+    FileUploadResultPushModel(
       context.config.callbackUrl,
       context.config.nonce,
       fileUploads.toUploadedFiles,
@@ -35,7 +35,7 @@ object Request {
       context.hostService
     )
 
-  implicit val format: Format[Request] = Json.format[Request]
+  implicit val format: Format[FileUploadResultPushModel] = Json.format[FileUploadResultPushModel]
 }
 
 

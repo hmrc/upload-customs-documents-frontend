@@ -18,69 +18,61 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent, Request, Result}
 import play.mvc.Http.HeaderNames
+import uk.gov.hmrc.uploaddocuments.controllers.actions.{AuthAction, JourneyContextAction}
 import uk.gov.hmrc.uploaddocuments.forms.Forms
 import uk.gov.hmrc.uploaddocuments.models.JourneyId
+import uk.gov.hmrc.uploaddocuments.models.requests.{AuthRequest, JourneyContextRequest}
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 import uk.gov.hmrc.uploaddocuments.support.UploadLog
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class FileRejectedController @Inject()(components: BaseControllerComponents,
                                        override val fileUploadService: FileUploadService,
-                                       override val journeyContextService: JourneyContextService)
-                                      (implicit ec: ExecutionContext)
-  extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper with UploadLog {
+                                       @Named("authenticated") auth: AuthAction,
+                                       journeyContext: JourneyContextAction)
+                                      (implicit ec: ExecutionContext) extends BaseController(components) with FileUploadsControllerHelper with UploadLog {
 
   // GET /file-rejected
-  final val markFileUploadAsRejected: Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        withJourneyContext { implicit journeyContext =>
-          Forms.UpscanUploadErrorForm.bindFromRequest
-            .fold(
-              _ => {
-                Logger.error("[markFileUploadAsRejected] Query Parameters from Upscan could not be bound to form")
-                Logger.debug(s"[markFileUploadAsRejected] Query Params Received: ${request.queryString}")
-                Future.successful(InternalServerError)
-              },
-              s3UploadError => {
-                fileUploadService.markFileAsRejected(s3UploadError).map { _ =>
-                  Redirect(routes.ChooseSingleFileController.showChooseFile(None))
-                }
-              }
-            )
+  final val markFileUploadAsRejected: Action[AnyContent] = (auth andThen journeyContext).async { implicit request =>
+    Forms.UpscanUploadErrorForm.bindFromRequest
+      .fold(
+        _ => {
+          Logger.error("[markFileUploadAsRejected] Query Parameters from Upscan could not be bound to form")
+          Logger.debug(s"[markFileUploadAsRejected] Query Params Received: ${request.queryString}")
+          Future.successful(InternalServerError)
+        },
+        s3UploadError => {
+          fileUploadService.markFileAsRejected(s3UploadError)(request.journeyId, request.journeyContext).map { _ =>
+            Redirect(routes.ChooseSingleFileController.showChooseFile(None))
+          }
         }
-      }
-    }
+      )
   }
 
   // POST /file-rejected
-  final val markFileUploadAsRejectedAsync: Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        rejectedAsyncLogicWithStatus(Created)
-      }
-    }
+  final val markFileUploadAsRejectedAsync: Action[AnyContent] = (auth andThen journeyContext).async { implicit request =>
+    rejectedAsyncLogicWithStatus(Created)
   }
 
   // GET /journey/:journeyId/file-rejected
   final def asyncMarkFileUploadAsRejected(implicit journeyId: JourneyId): Action[AnyContent] = Action.async { implicit request =>
-    rejectedAsyncLogicWithStatus(NoContent)
+    journeyContext.invokeBlock(AuthRequest(request, journeyId, None), { implicit journeyContextRequest: JourneyContextRequest[AnyContent] =>
+      rejectedAsyncLogicWithStatus(NoContent)
+    })
   }
 
-  private def rejectedAsyncLogicWithStatus(status: => Result)(implicit request: Request[AnyContent], journeyId: JourneyId): Future[Result] =
-    withJourneyContext { implicit journeyContext =>
-      Forms.UpscanUploadErrorForm.bindFromRequest
-        .fold(
-          _ => {
-            Logger.error("[rejectedAsyncLogicWithStatus] Query Parameters from Upscan could not be bound to form")
-            Logger.debug(s"[rejectedAsyncLogicWithStatus] Query Params Received: ${request.queryString}")
-            Future.successful(BadRequest)
-          },
-          s3UploadError =>
-            fileUploadService.markFileAsRejected(s3UploadError).map(_ => status)
-        )
-    }
+  private def rejectedAsyncLogicWithStatus(status: => Result)(implicit request: JourneyContextRequest[AnyContent]): Future[Result] =
+    Forms.UpscanUploadErrorForm.bindFromRequest
+      .fold(
+        _ => {
+          Logger.error("[rejectedAsyncLogicWithStatus] Query Parameters from Upscan could not be bound to form")
+          Logger.debug(s"[rejectedAsyncLogicWithStatus] Query Params Received: ${request.queryString}")
+          Future.successful(BadRequest)
+        },
+        s3UploadError =>
+          fileUploadService.markFileAsRejected(s3UploadError)(request.journeyId, request.journeyContext).map(_ => status)
+      )
 }

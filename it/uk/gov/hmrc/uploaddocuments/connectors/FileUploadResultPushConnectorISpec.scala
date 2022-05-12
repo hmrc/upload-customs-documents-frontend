@@ -44,8 +44,8 @@ class FileUploadResultPushConnectorISpec extends FileUploadResultPushConnectorIS
         fileSize        = 1024
       )
 
-      def request(url: String): Request =
-        Request(
+      def request(url: String): FileUploadResultPushModel =
+        FileUploadResultPushModel(
           url,
           Nonce(123),
           Seq(uploadedFile),

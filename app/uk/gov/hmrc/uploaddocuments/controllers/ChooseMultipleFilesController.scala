@@ -18,35 +18,31 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.data.Form
 import play.api.mvc.{Action, AnyContent, Call, Request}
-import uk.gov.hmrc.uploaddocuments.controllers.actions.{AuthAction, AuthenticatedAction, JourneyContextAction, SessionAction}
+import uk.gov.hmrc.uploaddocuments.controllers.actions.{AuthAction, AuthenticatedAction, JourneyContextAction}
 import uk.gov.hmrc.uploaddocuments.forms.Forms
 import uk.gov.hmrc.uploaddocuments.forms.Forms.YesNoChoiceForm
+import uk.gov.hmrc.uploaddocuments.models.requests.JourneyContextRequest
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 import uk.gov.hmrc.uploaddocuments.views.html.UploadMultipleFilesView
-import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ChooseMultipleFilesController @Inject()(components: BaseControllerComponents,
                                               uploadMultipleFilesView: UploadMultipleFilesView,
-                                              override val journeyContextService: JourneyContextService,
                                               override val fileUploadService: FileUploadService,
-                                              inSession: SessionAction,
-                                              auth: AuthenticatedAction,
-                                              withJourneyContext: JourneyContextAction
-                                             )
-                                             (implicit ec: ExecutionContext) extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper {
+                                              @Named("authenticated") auth: AuthAction,
+                                              journeyContext: JourneyContextAction)
+                                             (implicit ec: ExecutionContext) extends BaseController(components) with FileUploadsControllerHelper {
 
   // GET /choose-files
-  final val showChooseMultipleFiles: Action[AnyContent] = (inSession andThen auth andThen withJourneyContext).async { implicit request =>
-    implicit val jid = request.journeyId
+  final val showChooseMultipleFiles: Action[AnyContent] = (auth andThen journeyContext).async { implicit request =>
     withFileUploads { files =>
       Future.successful {
         if (preferUploadMultipleFiles && request.journeyContext.config.features.showUploadMultiple) {
-          Ok(renderView(request.journeyContext, files, YesNoChoiceForm))
+          Ok(renderView(files, YesNoChoiceForm))
         } else {
           if (files.acceptedCount > 0) {
             Redirect(routes.SummaryController.showSummary)
@@ -59,48 +55,47 @@ class ChooseMultipleFilesController @Inject()(components: BaseControllerComponen
   }
 
   // POST /choose-files
-  final val continueWithYesNo: Action[AnyContent] = (inSession andThen auth).async { implicit request =>
-    implicit val jid = request.journeyId
-    withJourneyContext { journeyConfig =>
-      withFileUploads { files =>
-        Forms.YesNoChoiceForm.bindFromRequest
-          .fold(
-            formWithErrors => Future.successful(BadRequest(renderView(journeyConfig, files, formWithErrors))),
-            {
-              case true =>
-                Future.successful(Redirect(journeyConfig.config.continueAfterYesAnswerUrl.getOrElse(journeyConfig.config.backlinkUrl)))
-              case false =>
-                Future.successful(Redirect(routes.ContinueToHostController.continueToHost))
-            }
-          )
-      }
+  final val continueWithYesNo: Action[AnyContent] = (auth andThen journeyContext).async { implicit request =>
+    withFileUploads { files =>
+      Forms.YesNoChoiceForm.bindFromRequest
+        .fold(
+          formWithErrors => Future.successful(BadRequest(renderView(files, formWithErrors))),
+          {
+            case true =>
+              Future.successful(Redirect(request.journeyContext.config.continueAfterYesAnswerUrl.getOrElse(request.journeyContext.config.backlinkUrl)))
+            case false =>
+              Future.successful(Redirect(routes.ContinueToHostController.continueToHost))
+          }
+        )
     }
   }
 
-  private def renderView(context: FileUploadContext, files: FileUploads, form: Form[Boolean])(
-    implicit request: Request[_]) =
+  private def renderView(files: FileUploads, form: Form[Boolean])(
+    implicit request: JourneyContextRequest[_]) = {
+    val config = request.journeyContext.config
     uploadMultipleFilesView(
-      minimumNumberOfFiles     = context.config.minimumNumberOfFiles,
-      maximumNumberOfFiles     = context.config.maximumNumberOfFiles,
-      initialNumberOfEmptyRows = context.config.initialNumberOfEmptyRows,
-      maximumFileSizeBytes     = context.config.maximumFileSizeBytes,
-      filePickerAcceptFilter   = context.config.getFilePickerAcceptFilter,
-      allowedFileTypesHint = context.config.content.allowedFilesTypesHint
-        .orElse(context.config.allowedFileExtensions)
-        .getOrElse(context.config.allowedContentTypes),
-      context.config.newFileDescription,
+      minimumNumberOfFiles     = config.minimumNumberOfFiles,
+      maximumNumberOfFiles     = config.maximumNumberOfFiles,
+      initialNumberOfEmptyRows = config.initialNumberOfEmptyRows,
+      maximumFileSizeBytes     = config.maximumFileSizeBytes,
+      filePickerAcceptFilter   = config.getFilePickerAcceptFilter,
+      allowedFileTypesHint = config.content.allowedFilesTypesHint
+        .orElse(config.allowedFileExtensions)
+        .getOrElse(config.allowedContentTypes),
+      config.newFileDescription,
       initialFileUploads          = files.files,
       initiateNextFileUpload      = routes.InitiateUpscanController.initiateNextFileUpload,
       checkFileVerificationStatus = routes.FileVerificationController.checkFileVerificationStatus,
       removeFile                  = routes.RemoveController.removeFileUploadByReferenceAsync,
       previewFile                 = routes.PreviewController.previewFileUploadByReference,
       markFileRejected            = routes.FileRejectedController.markFileUploadAsRejectedAsync,
-      continueAction = if (context.config.features.showYesNoQuestionBeforeContinue) {
+      continueAction = if (config.features.showYesNoQuestionBeforeContinue) {
         routes.ChooseMultipleFilesController.continueWithYesNo
       } else { routes.ContinueToHostController.continueToHost },
-      backLink = Call("GET", context.config.backlinkUrl),
-      context.config.features.showYesNoQuestionBeforeContinue,
-      context.config.content.yesNoQuestionText,
+      backLink = Call("GET", config.backlinkUrl),
+      config.features.showYesNoQuestionBeforeContinue,
+      config.content.yesNoQuestionText,
       form
-    )(request, context.messages, context.config.features, context.config.content)
+    )(request, request.journeyContext.messages, config.features, config.content)
+  }
 }

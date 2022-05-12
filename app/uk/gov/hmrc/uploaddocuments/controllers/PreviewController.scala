@@ -20,26 +20,25 @@ import akka.actor.ActorSystem
 import play.api.mvc.{Action, AnyContent}
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.connectors.FileStream
+import uk.gov.hmrc.uploaddocuments.controllers.actions.{AuthAction, JourneyContextAction}
 import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploads, RFC3986Encoder}
 import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class PreviewController @Inject()(components: BaseControllerComponents,
                                   val actorSystem: ActorSystem,
-                                  override val fileUploadService: FileUploadService)
+                                  override val fileUploadService: FileUploadService,
+                                  @Named("authenticated") auth: AuthAction,
+                                  journeyContext: JourneyContextAction)
                                  (implicit ec: ExecutionContext) extends BaseController(components) with FileStream with FileUploadsControllerHelper {
 
   // GET /preview/:reference/:fileName
-  final def previewFileUploadByReference(reference: String, fileName: String): Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        withFileUploads { files =>
-          streamFileFromUspcan(reference, files)
-        }
-      }
+  final def previewFileUploadByReference(reference: String, fileName: String): Action[AnyContent] = (auth andThen journeyContext).async { implicit request =>
+    withFileUploads { files =>
+      streamFileFromUspcan(reference, files)
     }
   }
 

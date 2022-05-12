@@ -40,7 +40,7 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
         givenResultPushEndpoint(
           "/result-post-url",
           Payload(
-            Request(FileUploadContext(fileUploadSessionConfig), FileUploads(files = Seq(fileUploadNotDeleted))),
+            FileUploadResultPushModel(FileUploadContext(fileUploadSessionConfig), FileUploads(files = Seq(fileUploadNotDeleted))),
             "http://base.external.callback"
           ),
           204
@@ -70,7 +70,7 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
         givenResultPushEndpoint(
           "/result-post-url",
           Payload(
-            Request(FileUploadContext(fileUploadSessionConfig), FileUploads(files = Seq(fileUploadNotDeleted))),
+            FileUploadResultPushModel(FileUploadContext(fileUploadSessionConfig), FileUploads(files = Seq(fileUploadNotDeleted))),
             "http://base.external.callback"
           ),
           204

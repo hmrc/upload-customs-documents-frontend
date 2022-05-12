@@ -20,7 +20,7 @@ import play.api.mvc.{Request, WrappedRequest}
 import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, JourneyId}
 
-case class JourneyContextRequest[A](request: Request[A],
-                                    journeyId: JourneyId,
-                                    credId: Option[Credentials],
-                                    journeyContext: FileUploadContext) extends WrappedRequest[A](request)
+case class JourneyContextRequest[A](authRequest: AuthRequest[A],
+                                    journeyContext: FileUploadContext) extends WrappedRequest[A](authRequest) {
+  val journeyId = authRequest.journeyId
+}
