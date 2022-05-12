@@ -29,7 +29,7 @@ import scala.concurrent.{ExecutionContext, Future}
 @Singleton
 class FilePostedController @Inject()(components: BaseControllerComponents,
                                      fileUploadService: FileUploadService)
-                                    (implicit ec: ExecutionContext) extends BaseController(components) with LoggerUtil {
+                                    (implicit ec: ExecutionContext) extends BaseController(components) {
 
   // GET /journey/:journeyId/file-posted
   final def asyncMarkFileUploadAsPosted(implicit journeyId: JourneyId): Action[AnyContent] = Action.async { implicit request =>

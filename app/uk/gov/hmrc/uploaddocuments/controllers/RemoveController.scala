@@ -17,46 +17,37 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent}
+import uk.gov.hmrc.uploaddocuments.controllers.actions.{AuthAction, JourneyContextAction}
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class RemoveController @Inject()(components: BaseControllerComponents,
-                                 override val journeyContextService: JourneyContextService,
-                                 fileUploadService: FileUploadService)
-                                (implicit ec: ExecutionContext) extends BaseController(components) with JourneyContextControllerHelper {
+                                 fileUploadService: FileUploadService,
+                                 @Named("authenticated") auth: AuthAction,
+                                 journeyContext: JourneyContextAction)
+                                (implicit ec: ExecutionContext) extends BaseController(components) {
 
   // GET /uploaded/:reference/remove
-  final def removeFileUploadByReference(reference: String): Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        withJourneyContext { implicit journeyContext =>
-          fileUploadService.removeFile(reference).map {
-            case Some((Left(_), _)) | None =>
-              Logger.error(s"[removeFileUploadByReference] Failed to remove file with reference: '$reference'")
-              InternalServerError
-            case Some((Right(_), updatedFilesWithFileRemoved)) =>
-              if (updatedFilesWithFileRemoved.isEmpty) {
-                Redirect(routes.ChooseSingleFileController.showChooseFile(None))
-              } else {
-                Redirect(routes.SummaryController.showSummary)
-              }
-          }
+  final def removeFileUploadByReference(reference: String): Action[AnyContent] = (auth andThen journeyContext).async { implicit request =>
+    fileUploadService.removeFile(reference)(hc, request.journeyId, request.journeyContext).map {
+      case Some((Left(_), _)) | None =>
+        Logger.error(s"[removeFileUploadByReference] Failed to remove file with reference: '$reference'")
+        InternalServerError
+      case Some((Right(_), updatedFilesWithFileRemoved)) =>
+        if (updatedFilesWithFileRemoved.isEmpty) {
+          Redirect(routes.ChooseSingleFileController.showChooseFile(None))
+        } else {
+          Redirect(routes.SummaryController.showSummary)
         }
-      }
     }
   }
 
   // POST /uploaded/:reference/remove
-  final def removeFileUploadByReferenceAsync(reference: String): Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        withJourneyContext { implicit journeyContext =>
-          fileUploadService.removeFile(reference).map { _ => NoContent }
-        }
-      }
-    }
+  final def removeFileUploadByReferenceAsync(reference: String): Action[AnyContent] = (auth andThen journeyContext).async { implicit request =>
+    fileUploadService.removeFile(reference)(hc, request.journeyId, request.journeyContext).map { _ => NoContent }
   }
 }

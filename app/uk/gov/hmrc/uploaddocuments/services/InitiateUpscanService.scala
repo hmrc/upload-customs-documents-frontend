@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.uploaddocuments.services
 
-import play.api.mvc.RequestHeader
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
-import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, FileUploadError, FileUploads, JourneyId, Nonce, UpscanInitiateResponse}
+import uk.gov.hmrc.uploaddocuments.models.requests.JourneyContextRequest
+import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
@@ -34,29 +34,29 @@ class InitiateUpscanService @Inject()(upscanInitiateConnector: UpscanInitiateCon
   def randomNonce: Nonce = Nonce.random
 
   def initiateNextMultiFileUpload(uploadId: String)
-                                 (implicit journeyContext: FileUploadContext, journeyId: JourneyId, rh: RequestHeader, hc: HeaderCarrier): Future[Option[UpscanInitiateResponse]] = {
+                                 (implicit request: JourneyContextRequest[_], hc: HeaderCarrier): Future[Option[UpscanInitiateResponse]] = {
     val nonce = randomNonce
-    val initiateRequest = upscanRequestWhenUploadingMultipleFiles(nonce, journeyContext.config.maximumFileSizeBytes)
+    val initiateRequest = upscanRequestWhenUploadingMultipleFiles(nonce)
 
     fileUploadService.withFiles[Option[UpscanInitiateResponse]](Future.successful(None)) { files =>
       for {
-        upscanResponse <- upscanInitiateConnector.initiate(journeyContext.hostService.userAgent, initiateRequest)
-        _              <- fileUploadService.putFiles(files + FileUpload(nonce, Some(uploadId))(upscanResponse))
+        upscanResponse <- upscanInitiateConnector.initiate(request.journeyContext.hostService.userAgent, initiateRequest)
+        _              <- fileUploadService.putFiles(files + FileUpload(nonce, Some(uploadId))(upscanResponse))(request.journeyId)
       } yield Some(upscanResponse)
-    }
+    }(request.journeyId)
   }
 
   def initiateNextSingleFileUpload()
-                                  (implicit journeyContext: FileUploadContext, journeyId: JourneyId, rh: RequestHeader, hc: HeaderCarrier): Future[Option[(UpscanInitiateResponse, FileUploads, Option[FileUploadError])]] = {
+                                  (implicit request: JourneyContextRequest[_], hc: HeaderCarrier): Future[Option[(UpscanInitiateResponse, FileUploads, Option[FileUploadError])]] = {
     val nonce           = randomNonce
-    val initiateRequest = upscanRequest(nonce, journeyContext.config.maximumFileSizeBytes)
+    val initiateRequest = upscanRequest(nonce)
 
     fileUploadService.withFiles[Option[(UpscanInitiateResponse, FileUploads, Option[FileUploadError])]](Future.successful(None)) { files =>
       for {
-        upscanResponse <- upscanInitiateConnector.initiate(journeyContext.hostService.userAgent, initiateRequest)
+        upscanResponse <- upscanInitiateConnector.initiate(request.journeyContext.hostService.userAgent, initiateRequest)
         updatedFiles = files.onlyAccepted + FileUpload(nonce, None)(upscanResponse)
-        _ <- fileUploadService.putFiles(updatedFiles)
+        _ <- fileUploadService.putFiles(updatedFiles)(request.journeyId)
       } yield Some((upscanResponse, updatedFiles, files.tofileUploadErrors.headOption))
-    }
+    }(request.journeyId)
   }
 }

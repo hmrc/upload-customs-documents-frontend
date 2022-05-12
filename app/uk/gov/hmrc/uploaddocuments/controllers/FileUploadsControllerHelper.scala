@@ -17,17 +17,18 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.Result
+import uk.gov.hmrc.uploaddocuments.models.requests.JourneyContextRequest
 import uk.gov.hmrc.uploaddocuments.models.{FileUploads, JourneyId}
 import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 
 import scala.concurrent.Future
 
-trait FileUploadsControllerHelper { baseController: BaseController =>
+trait FileUploadsControllerHelper { _: BaseController =>
 
   val fileUploadService: FileUploadService
 
   def withFileUploads(body: FileUploads => Future[Result])
-                     (implicit journeyId: JourneyId): Future[Result] =
-    fileUploadService.withFiles(Future.successful(Redirect(baseController.components.appConfig.govukStartUrl)))(body)
+                     (implicit request: JourneyContextRequest[_]): Future[Result] =
+    fileUploadService.withFiles(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)(request.journeyId)
 
 }

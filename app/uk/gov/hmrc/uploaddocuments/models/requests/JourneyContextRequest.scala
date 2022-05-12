@@ -14,20 +14,13 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.uploaddocuments.controllers
+package uk.gov.hmrc.uploaddocuments.models.requests
 
-import play.api.mvc.Result
+import play.api.mvc.{Request, WrappedRequest}
+import uk.gov.hmrc.auth.core.retrieve.Credentials
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, JourneyId}
-import uk.gov.hmrc.uploaddocuments.services.JourneyContextService
 
-import scala.concurrent.Future
-
-trait JourneyContextControllerHelper { _: BaseController =>
-
-  val journeyContextService: JourneyContextService
-
-  def withJourneyContext(body: FileUploadContext => Future[Result])
-                        (implicit journeyId: JourneyId): Future[Result] =
-    journeyContextService.withJourneyContext(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
-
+case class JourneyContextRequest[A](authRequest: AuthRequest[A],
+                                    journeyContext: FileUploadContext) extends WrappedRequest[A](authRequest) {
+  val journeyId = authRequest.journeyId
 }

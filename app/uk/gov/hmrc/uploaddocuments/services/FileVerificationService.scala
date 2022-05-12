@@ -20,6 +20,7 @@ import akka.actor.Scheduler
 import play.api.i18n.Messages
 import uk.gov.hmrc.uploaddocuments.controllers.routes
 import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.requests.JourneyContextRequest
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import javax.inject.Inject
@@ -32,7 +33,7 @@ class FileVerificationService @Inject()(fileUploadService: FileUploadService) ex
                                timeoutNanoTime: Long)
                               (readyResult: FileUpload => Future[T],
                                ifTimeout: => Future[T])
-                              (implicit scheduler: Scheduler, ec: ExecutionContext, journeyId: JourneyId): Future[T] =
+                              (implicit scheduler: Scheduler, ec: ExecutionContext, request: JourneyContextRequest[_]): Future[T] =
 
     fileUploadService.withFiles[T](throw new Exception("No JourneyID found for supplied journeyID")) {
       _.files.find(_.reference == upscanReference) match {
@@ -51,20 +52,20 @@ class FileVerificationService @Inject()(fileUploadService: FileUploadService) ex
           Logger.error(s"[waitForUpscanResponse] No file found for the supplied upscanReference: '$upscanReference'")
           throw new MatchError(s"No file found for the supplied upscanReference: '$upscanReference'")
       }
-    }
+    }(request.journeyId)
 
   def getFileVerificationStatus(reference: String)
-                               (implicit journeyContext: FileUploadContext, messages: Messages, journeyId: JourneyId): Future[Option[FileVerificationStatus]] =
+                               (implicit request: JourneyContextRequest[_], messages: Messages): Future[Option[FileVerificationStatus]] =
     fileUploadService.withFiles[Option[FileVerificationStatus]](Future.successful(None)) { files =>
       Future.successful(files.files.find(_.reference == reference) map { file =>
         FileVerificationStatus(
           fileUpload = file,
           filePreviewUrl = routes.PreviewController.previewFileUploadByReference,
-          maximumFileSizeBytes = journeyContext.config.maximumFileSizeBytes.toInt,
-          allowedFileTypesHint = journeyContext.config.content.allowedFilesTypesHint
-            .orElse(journeyContext.config.allowedFileExtensions)
-            .getOrElse(journeyContext.config.allowedContentTypes)
+          maximumFileSizeBytes = request.journeyContext.config.maximumFileSizeBytes.toInt,
+          allowedFileTypesHint = request.journeyContext.config.content.allowedFilesTypesHint
+            .orElse(request.journeyContext.config.allowedFileExtensions)
+            .getOrElse(request.journeyContext.config.allowedContentTypes)
         )
       })
-    }
+    }(request.journeyId)
 }

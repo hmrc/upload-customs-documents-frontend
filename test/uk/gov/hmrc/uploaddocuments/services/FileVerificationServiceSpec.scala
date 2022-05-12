@@ -18,10 +18,12 @@ package uk.gov.hmrc.uploaddocuments.services
 
 import akka.actor.{ActorSystem, Scheduler}
 import play.api.i18n.Messages
+import play.api.test.FakeRequest
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.uploaddocuments.controllers.routes
 import uk.gov.hmrc.uploaddocuments.journeys.TestData
 import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.requests.{AuthRequest, JourneyContextRequest}
 import uk.gov.hmrc.uploaddocuments.services.mocks.MockFileUploadService
 import uk.gov.hmrc.uploaddocuments.support.UnitSpec
 
@@ -37,6 +39,7 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
   implicit val hc = HeaderCarrier()
   implicit val jid = journeyId
   implicit val messages = mock[Messages]
+  implicit val journeyContextRequest = JourneyContextRequest(AuthRequest(FakeRequest(), jid, None), journeyContext)
 
   implicit val scheduler: Scheduler = ActorSystem("FileVerificationTestsActor").scheduler
 
@@ -145,9 +148,11 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
                 allowedFilesTypesHint = Some(hint)
               )))
 
+              val fakeRequest = journeyContextRequest.copy(journeyContext = context)
+
               mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
-              await(TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)) shouldBe Some(
+              await(TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)(fakeRequest, messages)) shouldBe Some(
                 FileVerificationStatus(
                   fileUpload = acceptedFileUpload,
                   filePreviewUrl = routes.PreviewController.previewFileUploadByReference,
@@ -167,9 +172,11 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
                 val extensions = "Extensions"
                 val context = journeyContext.copy(config = fileUploadSessionConfig.copy(allowedFileExtensions = Some(extensions)))
 
+                val fakeRequest = journeyContextRequest.copy(journeyContext = context)
+
                 mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
-                await(TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)) shouldBe
+                await(TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)(fakeRequest, messages)) shouldBe
                   Some(
                     FileVerificationStatus(
                       fileUpload = acceptedFileUpload,

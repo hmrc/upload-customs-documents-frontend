@@ -4,7 +4,7 @@ import play.api.libs.ws.{DefaultWSCookie, StandaloneWSRequest}
 import play.api.mvc._
 import play.api.test.FakeRequest
 import uk.gov.hmrc.crypto.PlainText
-import uk.gov.hmrc.http.{HeaderCarrier, SessionId, SessionKeys}
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames, SessionId, SessionKeys}
 import uk.gov.hmrc.mongo.cache.CacheItem
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
@@ -32,6 +32,7 @@ trait ControllerISpecBase extends ServerISpec {
 
   def withHeaders(f: => StandaloneWSRequest): StandaloneWSRequest =
     f.addHttpHeaders(
+      HeaderNames.xSessionId -> hc.sessionId.map(_.value).getOrElse(""),
       play.api.http.HeaderNames.USER_AGENT -> "it-test",
       play.api.http.HeaderNames.AUTHORIZATION -> "Bearer XYZ"
     )

@@ -17,79 +17,73 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.data.Form
-import play.api.mvc.{Action, AnyContent, Call, Request}
+import play.api.mvc.{Action, AnyContent, Call}
+import uk.gov.hmrc.uploaddocuments.controllers.actions.{AuthAction, JourneyContextAction}
 import uk.gov.hmrc.uploaddocuments.forms.Forms
 import uk.gov.hmrc.uploaddocuments.forms.Forms.YesNoChoiceForm
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
-import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
+import uk.gov.hmrc.uploaddocuments.models.FileUploads
+import uk.gov.hmrc.uploaddocuments.models.requests.JourneyContextRequest
+import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 import uk.gov.hmrc.uploaddocuments.views.html.{SummaryNoChoiceView, SummaryView}
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class SummaryController @Inject()(view: SummaryView,
                                   viewNoChoice: SummaryNoChoiceView,
                                   components: BaseControllerComponents,
-                                  override val journeyContextService: JourneyContextService,
+                                  @Named("authenticated") auth: AuthAction,
+                                  journeyContext: JourneyContextAction,
                                   override val fileUploadService: FileUploadService)
-                                 (implicit ec: ExecutionContext)
-  extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper {
+                                 (implicit ec: ExecutionContext) extends BaseController(components) with FileUploadsControllerHelper {
 
   // GET /summary
-  final val showSummary: Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        withJourneyContext { journeyConfig =>
-          withFileUploads { files =>
-            Future.successful(Ok(renderView(YesNoChoiceForm, journeyConfig, files)))
-          }
-        }
-      }
+  final val showSummary: Action[AnyContent] = (auth andThen journeyContext).async { implicit request =>
+    withFileUploads { files =>
+      Future.successful(Ok(renderView(YesNoChoiceForm, files)))
     }
   }
 
   // POST /summary
-  final val submitUploadAnotherFileChoice: Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        withJourneyContext { journeyContext =>
-          withFileUploads { files =>
-            Future.successful(Forms.YesNoChoiceForm.bindFromRequest.fold(
-              formWithErrors => BadRequest(renderView(formWithErrors, journeyContext, files)), {
-                case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
-                  val redirect = journeyContext.config.continueAfterYesAnswerUrl.getOrElse(routes.ChooseSingleFileController.showChooseFile(Some(true)).url)
-                  Redirect(redirect)
-                case _ =>
-                  Redirect(routes.ContinueToHostController.continueToHost)
-              }
-            ))
-          }
+  final val submitUploadAnotherFileChoice: Action[AnyContent] = (auth andThen journeyContext).async { implicit request =>
+    withFileUploads { files =>
+      Future.successful(Forms.YesNoChoiceForm.bindFromRequest.fold(
+        formWithErrors => BadRequest(renderView(formWithErrors, files)), {
+          case true if files.initiatedOrAcceptedCount < request.journeyContext.config.maximumNumberOfFiles =>
+            val redirect = request.journeyContext.config.continueAfterYesAnswerUrl.getOrElse(routes.ChooseSingleFileController.showChooseFile(Some(true)).url)
+            Redirect(redirect)
+          case _ =>
+            Redirect(routes.ContinueToHostController.continueToHost)
         }
-      }
+      ))
     }
   }
 
-  private def renderView(form: Form[Boolean], context: FileUploadContext, fileUploads: FileUploads)(
-    implicit request: Request[_]) =
-    if (fileUploads.acceptedCount < context.config.maximumNumberOfFiles)
+  private def renderView(form: Form[Boolean], fileUploads: FileUploads)
+                        (implicit request: JourneyContextRequest[_]) = {
+
+    val config = request.journeyContext.config
+
+    if (fileUploads.acceptedCount < config.maximumNumberOfFiles)
       view(
-        maxFileUploadsNumber = context.config.maximumNumberOfFiles,
-        maximumFileSizeBytes = context.config.maximumFileSizeBytes,
+        maxFileUploadsNumber = config.maximumNumberOfFiles,
+        maximumFileSizeBytes = config.maximumFileSizeBytes,
         form                 = form,
         fileUploads          = fileUploads,
         postAction           = routes.SummaryController.submitUploadAnotherFileChoice,
         previewFileCall      = routes.PreviewController.previewFileUploadByReference,
         removeFileCall       = routes.RemoveController.removeFileUploadByReference,
         backLink             = routes.ChooseSingleFileController.showChooseFile(None)
-      )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
+      )(request, request.journeyContext.messages, config.features, config.content)
     else
       viewNoChoice(
-        maxFileUploadsNumber = context.config.maximumNumberOfFiles,
+        maxFileUploadsNumber = config.maximumNumberOfFiles,
         fileUploads          = fileUploads,
         postAction           = routes.ContinueToHostController.continueToHost,
         previewFileCall      = routes.PreviewController.previewFileUploadByReference,
         removeFileCall       = routes.RemoveController.removeFileUploadByReference,
-        backLink             = Call("GET", context.config.backlinkUrl)
-      )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
+        backLink             = Call("GET", config.backlinkUrl)
+      )(request, request.journeyContext.messages, config.features, config.content)
+  }
 }

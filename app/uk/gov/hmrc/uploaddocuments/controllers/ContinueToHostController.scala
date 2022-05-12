@@ -17,29 +17,24 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent}
+import uk.gov.hmrc.uploaddocuments.controllers.actions.{AuthAction, JourneyContextAction}
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
-import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
+import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class ContinueToHostController @Inject()(components: BaseControllerComponents,
                                          override val fileUploadService: FileUploadService,
-                                         override val journeyContextService: JourneyContextService)
-                                        (implicit ec: ExecutionContext)
-  extends BaseController(components) with JourneyContextControllerHelper with FileUploadsControllerHelper {
+                                         @Named("authenticated") auth: AuthAction,
+                                         journeyContext: JourneyContextAction)
+                                        (implicit ec: ExecutionContext) extends BaseController(components) with FileUploadsControllerHelper {
 
   // GET /continue-to-host
-  final val continueToHost: Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        withJourneyContext { implicit journeyConfig =>
-          withFileUploads { files =>
-            Future(Redirect(redirectRoute(files, journeyConfig)))
-          }
-        }
-      }
+  final val continueToHost: Action[AnyContent] = (auth andThen journeyContext).async { implicit request =>
+    withFileUploads { files =>
+      Future.successful(Redirect(redirectRoute(files, request.journeyContext)))
     }
   }
 

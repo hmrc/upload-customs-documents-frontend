@@ -18,34 +18,30 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent}
+import uk.gov.hmrc.uploaddocuments.controllers.actions.{AuthAction, JourneyContextAction}
 import uk.gov.hmrc.uploaddocuments.models.UploadRequest
-import uk.gov.hmrc.uploaddocuments.services.{InitiateUpscanService, JourneyContextService}
+import uk.gov.hmrc.uploaddocuments.services.InitiateUpscanService
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class InitiateUpscanController @Inject()(upscanInitiateService: InitiateUpscanService,
                                          components: BaseControllerComponents,
-                                         override val journeyContextService: JourneyContextService)
-                                        (implicit ec: ExecutionContext) extends BaseController(components) with JourneyContextControllerHelper {
+                                         @Named("authenticated") auth: AuthAction,
+                                         journeyContext: JourneyContextAction)
+                                        (implicit ec: ExecutionContext) extends BaseController(components) {
 
   // POST /initiate-upscan/:uploadId
-  final def initiateNextFileUpload(uploadId: String): Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        withJourneyContext { implicit journeyContext =>
-          upscanInitiateService.initiateNextMultiFileUpload(uploadId).map {
-            case Some(upscanResponse) =>
-              Ok(Json.obj(fields =
-                "upscanReference" -> upscanResponse.reference,
-                "uploadId"        -> uploadId,
-                "uploadRequest"   -> UploadRequest.formats.writes(upscanResponse.uploadRequest)
-              ))
-            case None => BadRequest
-          }
-        }
-      }
+  final def initiateNextFileUpload(uploadId: String): Action[AnyContent] = (auth andThen journeyContext).async { implicit request =>
+    upscanInitiateService.initiateNextMultiFileUpload(uploadId).map {
+      case Some(upscanResponse) =>
+        Ok(Json.obj(fields =
+          "upscanReference" -> upscanResponse.reference,
+          "uploadId"        -> uploadId,
+          "uploadRequest"   -> UploadRequest.formats.writes(upscanResponse.uploadRequest)
+        ))
+      case None => BadRequest
     }
   }
 }

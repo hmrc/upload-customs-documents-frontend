@@ -19,32 +19,30 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Action
 import play.mvc.Http.HeaderNames
+import uk.gov.hmrc.uploaddocuments.controllers.actions.AuthAction
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, routes => mainRoutes}
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 
-import javax.inject.{Inject, Singleton}
+import javax.inject.{Inject, Named, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
 class InitializeController @Inject()(components: BaseControllerComponents,
                                      fileUploadService: FileUploadService,
-                                     journeyContextService: JourneyContextService)
+                                     journeyContextService: JourneyContextService,
+                                     @Named("backChannelAuthentication") backChannelAuth: AuthAction)
                                     (implicit ec: ExecutionContext) extends BaseController(components) {
 
   // POST /internal/initialize
-  final val initialize: Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
+  final val initialize: Action[JsValue] = backChannelAuth.async(parse.tolerantJson) { implicit request =>
     withJsonBody[FileUploadInitializationRequest] { payload =>
-      whenInSession { implicit journeyId =>
-      Logger.debug(s"[initialize] Call to initiate journey for journeyId: '$journeyId', body: \n${Json.prettyPrint(Json.toJson(payload)(FileUploadInitializationRequest.writeNoDownloadUrl))}")
-        whenAuthenticatedInBackchannel {
-          for {
-            _ <- journeyContextService.putJourneyContext(FileUploadContext(payload.config, HostService(request)))
-            _ <- fileUploadService.putFiles(FileUploads(payload))
-          } yield
-            Created.withHeaders(HeaderNames.LOCATION -> mainRoutes.StartController.start.url)
-        }
-      }
+      Logger.debug(s"[initialize] Call to initiate journey for journeyId: '${request.journeyId}', body: \n${Json.prettyPrint(Json.toJson(payload)(FileUploadInitializationRequest.writeNoDownloadUrl))}")
+      for {
+        _ <- journeyContextService.putJourneyContext(FileUploadContext(payload.config, HostService(request)))(request.journeyId)
+        _ <- fileUploadService.putFiles(FileUploads(payload))(request.journeyId)
+      } yield
+        Created.withHeaders(HeaderNames.LOCATION -> mainRoutes.StartController.start.url)
     }
   }
 }

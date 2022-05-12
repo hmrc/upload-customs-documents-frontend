@@ -22,8 +22,8 @@ import com.kenshoo.play.metrics.Metrics
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpPost}
 import uk.gov.hmrc.uploaddocuments.connectors.httpParsers.FileUploadResultPushConnectorReads
-import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.{Error, Payload, Request}
+import uk.gov.hmrc.uploaddocuments.models.JourneyId
+import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.{Error, FileUploadResultPushModel, Payload}
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
@@ -44,18 +44,18 @@ class FileUploadResultPushConnector @Inject()(
 
   import FileUploadResultPushConnector._
 
-  def push(request: Request)(implicit hc: HeaderCarrier, jid: JourneyId, ec: ExecutionContext): Future[Response] = {
-    val responseReads = new FileUploadResultPushConnectorReads(request.hostService)
+  def push(fileUploadResult: FileUploadResultPushModel)(implicit hc: HeaderCarrier, journeyId: JourneyId, ec: ExecutionContext): Future[Response] = {
+    val responseReads = new FileUploadResultPushConnectorReads(fileUploadResult.hostService)
     retry(appConfig.fileUploadResultPushRetryIntervals: _*)(shouldRetry, errorMessage) {
-      monitor(s"ConsumedAPI-push-file-uploads-${request.hostService.userAgent}-POST") {
-        withUrl(request) { endpointUrl =>
-          val payload = Payload(request, appConfig.baseExternalCallbackUrl)
-          Logger.debug(s"[push] JourneyId: '${jid.value}' - sending notification to host service. Url: '$endpointUrl', Body: \n${Json.prettyPrint(Json.toJson(payload)(Payload.writeNoDownloadUrl))}")
+      monitor(s"ConsumedAPI-push-file-uploads-${fileUploadResult.hostService.userAgent}-POST") {
+        withUrl(fileUploadResult) { endpointUrl =>
+          val payload = Payload(fileUploadResult, appConfig.baseExternalCallbackUrl)
+          Logger.debug(s"[push] JourneyId: '${journeyId.value}' - sending notification to host service. Url: '$endpointUrl', Body: \n${Json.prettyPrint(Json.toJson(payload)(Payload.writeNoDownloadUrl))}")
           http
-            .POST[Payload, Response](endpointUrl, payload)(implicitly, responseReads, hc.withExtraHeaders("FileUploadJourney" -> jid.value), ec)
+            .POST[Payload, Response](endpointUrl, payload)(implicitly, responseReads, hc.withExtraHeaders("FileUploadJourney" -> journeyId.value), ec)
             .recover {
               case exception =>
-                Logger.debug(s"[push] JourneyId: '${jid.value}' - Exception when handling the HttpResponse from the host service")
+                Logger.debug(s"[push] JourneyId: '${journeyId.value}' - Exception when handling the HttpResponse from the host service")
                 Logger.error(exception.getMessage)
                 Left(Error(0, exception.getMessage))
             }
@@ -64,7 +64,7 @@ class FileUploadResultPushConnector @Inject()(
     }
   }
 
-  private def withUrl(request: Request)(f: String => Future[Response]): Future[Response] =
+  private def withUrl(request: FileUploadResultPushModel)(f: String => Future[Response]): Future[Response] =
     Try(new URL(request.url).toExternalForm).fold(
       e => {
         val msg = s"${e.getClass.getName} ${e.getMessage}"
