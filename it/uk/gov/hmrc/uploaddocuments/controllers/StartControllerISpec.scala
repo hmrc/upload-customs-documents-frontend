@@ -7,7 +7,7 @@ class StartControllerISpec extends ControllerISpecBase with UpscanInitiateStubs 
   "StartController" when {
 
     "GET /" should {
-      "show the start page when no jsenabled cookie set" in {
+      "show the start page when no JS-Detection cookie set" in {
 
         setContext()
         setFileUploads()

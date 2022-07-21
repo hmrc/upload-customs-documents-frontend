@@ -66,22 +66,31 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
 
           getFileUploads() shouldBe Some(
             FileUploads(files =
-              Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d", Some(UploadRequest(
-                href = "https://bucketName.s3.eu-west-2.amazonaws.com",
-                fields = Map(
-                  "Content-Type" -> "application/xml",
-                  "acl" -> "private",
-                  "key" -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                  "policy" -> "xxxxxxxx==",
-                  "x-amz-algorithm" -> "AWS4-HMAC-SHA256",
-                  "x-amz-credential" -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
-                  "x-amz-date" -> "yyyyMMddThhmmssZ",
-                  "x-amz-meta-callback-url" -> callbackUrl,
-                  "x-amz-signature" -> "xxxx",
-                  "success_action_redirect" -> "https://myservice.com/nextPage",
-                  "error_action_redirect" -> "https://myservice.com/errorPage"
+              Seq(
+                FileUpload.Initiated(
+                  Nonce.Any,
+                  Timestamp.Any,
+                  "11370e18-6e24-453e-b45a-76d3e32ea33d",
+                  Some(
+                    UploadRequest(
+                      href = "https://bucketName.s3.eu-west-2.amazonaws.com",
+                      fields = Map(
+                        "Content-Type"            -> "application/xml",
+                        "acl"                     -> "private",
+                        "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                        "policy"                  -> "xxxxxxxx==",
+                        "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
+                        "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
+                        "x-amz-date"              -> "yyyyMMddThhmmssZ",
+                        "x-amz-meta-callback-url" -> callbackUrl,
+                        "x-amz-signature"         -> "xxxx",
+                        "success_action_redirect" -> "https://myservice.com/nextPage",
+                        "error_action_redirect"   -> "https://myservice.com/errorPage"
+                      )
+                    )
+                  )
                 )
-              ))))
+              )
             )
           )
         }
@@ -89,7 +98,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
 
       "existing files are pre-popped" should {
 
-        "show the summary page when jsenabled cookie set but the feature is turned off" in {
+        "show the summary page when JS-Detection cookie set but the feature is turned off" in {
 
           val journeyContext = fileUploadSessionConfig.copy(features = Features(showUploadMultiple = false))
 
@@ -147,7 +156,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url")
-        val result = await(request("/choose-files").post(Map("choice" -> "no")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "no")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -168,7 +177,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url")
-        val result = await(request("/choose-files").post(Map("choice" -> "no")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "no")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -190,7 +199,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url-if-empty")
-        val result = await(request("/choose-files").post(Map("choice" -> "no")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "no")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -211,7 +220,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url")
-        val result = await(request("/choose-files").post(Map("choice" -> "no")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "no")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -233,7 +242,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url-if-full")
-        val result = await(request("/choose-files").post(Map("choice" -> "no")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "no")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -255,7 +264,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/backlink-url")
-        val result = await(request("/choose-files").post(Map("choice" -> "yes")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "yes")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -276,7 +285,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/backlink-url")
-        val result = await(request("/choose-files").post(Map("choice" -> "yes")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "yes")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -298,7 +307,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/backlink-url")
-        val result = await(request("/choose-files").post(Map("choice" -> "yes")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "yes")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -319,7 +328,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/backlink-url")
-        val result = await(request("/choose-files").post(Map("choice" -> "yes")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "yes")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -341,7 +350,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/backlink-url")
-        val result = await(request("/choose-files").post(Map("choice" -> "yes")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "yes")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -364,7 +373,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url-if-yes")
-        val result = await(request("/choose-files").post(Map("choice" -> "yes")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "yes")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -386,7 +395,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url-if-yes")
-        val result = await(request("/choose-files").post(Map("choice" -> "yes")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "yes")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -409,7 +418,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url-if-yes")
-        val result = await(request("/choose-files").post(Map("choice" -> "yes")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "yes")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -431,7 +440,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url-if-yes")
-        val result = await(request("/choose-files").post(Map("choice" -> "yes")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "yes")))
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -454,7 +463,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url-if-yes")
-        val result = await(request("/choose-files").post(Map("choice" -> "yes")))
+        val result   = await(request("/choose-files").post(Map("choice" -> "yes")))
 
         result.status shouldBe 200
         result.body shouldBe expected
