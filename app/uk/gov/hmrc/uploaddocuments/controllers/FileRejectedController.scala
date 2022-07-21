@@ -17,7 +17,6 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent, Request, Result}
-import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.forms.Forms
 import uk.gov.hmrc.uploaddocuments.models.JourneyId
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
@@ -27,11 +26,13 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FileRejectedController @Inject()(components: BaseControllerComponents,
-                                       override val fileUploadService: FileUploadService,
-                                       override val journeyContextService: JourneyContextService)
-                                      (implicit ec: ExecutionContext)
-  extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper with UploadLog {
+class FileRejectedController @Inject() (
+  components: BaseControllerComponents,
+  override val fileUploadService: FileUploadService,
+  override val journeyContextService: JourneyContextService
+)(implicit ec: ExecutionContext)
+    extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper
+    with UploadLog {
 
   // GET /file-rejected
   final val markFileUploadAsRejected: Action[AnyContent] = Action.async { implicit request =>
@@ -45,11 +46,10 @@ class FileRejectedController @Inject()(components: BaseControllerComponents,
                 Logger.debug(s"[markFileUploadAsRejected] Query Params Received: ${request.queryString}")
                 Future.successful(InternalServerError)
               },
-              s3UploadError => {
+              s3UploadError =>
                 fileUploadService.markFileAsRejected(s3UploadError).map { _ =>
                   Redirect(routes.ChooseSingleFileController.showChooseFile(None))
                 }
-              }
             )
         }
       }
@@ -66,11 +66,14 @@ class FileRejectedController @Inject()(components: BaseControllerComponents,
   }
 
   // GET /journey/:journeyId/file-rejected
-  final def asyncMarkFileUploadAsRejected(implicit journeyId: JourneyId): Action[AnyContent] = Action.async { implicit request =>
-    rejectedAsyncLogicWithStatus(NoContent)
+  final def asyncMarkFileUploadAsRejected(implicit journeyId: JourneyId): Action[AnyContent] = Action.async {
+    implicit request =>
+      rejectedAsyncLogicWithStatus(NoContent)
   }
 
-  private def rejectedAsyncLogicWithStatus(status: => Result)(implicit request: Request[AnyContent], journeyId: JourneyId): Future[Result] =
+  private def rejectedAsyncLogicWithStatus(
+    status: => Result
+  )(implicit request: Request[AnyContent], journeyId: JourneyId): Future[Result] =
     withJourneyContext { implicit journeyContext =>
       Forms.UpscanUploadErrorForm.bindFromRequest
         .fold(
@@ -79,8 +82,7 @@ class FileRejectedController @Inject()(components: BaseControllerComponents,
             Logger.debug(s"[rejectedAsyncLogicWithStatus] Query Params Received: ${request.queryString}")
             Future.successful(BadRequest)
           },
-          s3UploadError =>
-            fileUploadService.markFileAsRejected(s3UploadError).map(_ => status)
+          s3UploadError => fileUploadService.markFileAsRejected(s3UploadError).map(_ => status)
         )
     }
 }
