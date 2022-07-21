@@ -19,7 +19,6 @@ package uk.gov.hmrc.uploaddocuments.controllers
 import akka.actor.{ActorSystem, Scheduler}
 import play.api.libs.json.Json
 import play.api.mvc.{Action, AnyContent, Request}
-import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploadContext, JourneyId}
 import uk.gov.hmrc.uploaddocuments.services.{FileVerificationService, JourneyContextService}
 import uk.gov.hmrc.uploaddocuments.views.html.WaitingForFileVerificationView
@@ -29,13 +28,14 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FileVerificationController @Inject()(components: BaseControllerComponents,
-                                           waitingView: WaitingForFileVerificationView,
-                                           actorSystem: ActorSystem,
-                                           fileVerificationService: FileVerificationService,
-                                           override val journeyContextService: JourneyContextService)
-                                          (implicit ec: ExecutionContext, appConfig: AppConfig)
-  extends BaseController(components) with JourneyContextControllerHelper {
+class FileVerificationController @Inject() (
+  components: BaseControllerComponents,
+  waitingView: WaitingForFileVerificationView,
+  actorSystem: ActorSystem,
+  fileVerificationService: FileVerificationService,
+  override val journeyContextService: JourneyContextService
+)(implicit ec: ExecutionContext, appConfig: AppConfig)
+    extends BaseController(components) with JourneyContextControllerHelper {
 
   implicit val scheduler: Scheduler = actorSystem.scheduler
 
@@ -48,7 +48,11 @@ class FileVerificationController @Inject()(components: BaseControllerComponents,
           whenAuthenticated {
             withJourneyContext { implicit journeyContext =>
               val timeoutNanoTime: Long = System.nanoTime() + appConfig.upscanInitialWaitTime.toNanos
-              fileVerificationService.waitForUpscanResponse(upscanReference, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
+              fileVerificationService.waitForUpscanResponse(
+                upscanReference,
+                appConfig.upscanWaitInterval.toMillis,
+                timeoutNanoTime
+              )(
                 {
                   case _: FileUpload.Accepted => Future(Redirect(routes.SummaryController.showSummary))
                   case _                      => Future(Redirect(routes.ChooseSingleFileController.showChooseFile(None)))
@@ -63,10 +67,10 @@ class FileVerificationController @Inject()(components: BaseControllerComponents,
 
   private def renderWaitingView(context: FileUploadContext, reference: String)(implicit request: Request[_]) =
     waitingView(
-      successAction     = routes.SummaryController.showSummary,
-      failureAction     = routes.ChooseSingleFileController.showChooseFile(None),
+      successAction = routes.SummaryController.showSummary,
+      failureAction = routes.ChooseSingleFileController.showChooseFile(None),
       checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(reference),
-      backLink          = routes.ChooseSingleFileController.showChooseFile(None)
+      backLink = routes.ChooseSingleFileController.showChooseFile(None)
     )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
 
   // GET /file-verification/:reference/status
@@ -76,7 +80,9 @@ class FileVerificationController @Inject()(components: BaseControllerComponents,
         withJourneyContext { implicit journeyContext =>
           fileVerificationService.getFileVerificationStatus(reference).map {
             case Some(verificationStatus) =>
-              Logger.info(s"[checkFileVerificationStatus] UpscanRef: '$reference', Status: ${verificationStatus.fileStatus}")
+              Logger.info(
+                s"[checkFileVerificationStatus] UpscanRef: '$reference', Status: ${verificationStatus.fileStatus}"
+              )
               Ok(Json.toJson(verificationStatus))
             case None =>
               Logger.error(s"[checkFileVerificationStatus] No File exists for UpscanRef: '$reference'")
@@ -88,16 +94,21 @@ class FileVerificationController @Inject()(components: BaseControllerComponents,
   }
 
   // GET /journey/:journeyId/file-verification?key
-  final def asyncWaitingForFileVerification(journeyId: JourneyId, key: Option[String]): Action[AnyContent] = Action.async {
-    implicit val journey: JourneyId = journeyId
-    key match {
-      case None => Future(BadRequest)
-      case Some(upscanReference) =>
-        val timeoutNanoTime: Long = System.nanoTime() + appConfig.upscanInitialWaitTime.toNanos
-        fileVerificationService.waitForUpscanResponse(upscanReference, appConfig.upscanWaitInterval.toMillis, timeoutNanoTime)(
-          _ => Future(Created),
-          Future(Accepted)
-        )
+  final def asyncWaitingForFileVerification(journeyId: JourneyId, key: Option[String]): Action[AnyContent] =
+    Action.async {
+      implicit val journey: JourneyId = journeyId
+      key match {
+        case None => Future(BadRequest)
+        case Some(upscanReference) =>
+          val timeoutNanoTime: Long = System.nanoTime() + appConfig.upscanInitialWaitTime.toNanos
+          fileVerificationService.waitForUpscanResponse(
+            upscanReference,
+            appConfig.upscanWaitInterval.toMillis,
+            timeoutNanoTime
+          )(
+            _ => Future(Created),
+            Future(Accepted)
+          )
+      }
     }
-  }
 }

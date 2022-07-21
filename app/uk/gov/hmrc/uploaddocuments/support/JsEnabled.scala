@@ -17,5 +17,5 @@
 package uk.gov.hmrc.uploaddocuments.support
 
 object JsEnabled {
-  val COOKIE_JSENABLED: String = "jsenabled"
+  val COOKIE_JSENABLED: String = "JS-Detection"
 }

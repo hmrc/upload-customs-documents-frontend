@@ -2,7 +2,7 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.{ExternalApiStubs, UpscanInitiateStubs}
-import uk.gov.hmrc.uploaddocuments.support.TestData
+import uk.gov.hmrc.uploaddocuments.support.JsEnabled
 
 class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with UpscanInitiateStubs with ExternalApiStubs {
 
@@ -19,7 +19,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
 
           givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
-          val result = await(requestWithCookies("/choose-files", "jsenabled" -> "true").get())
+          val result = await(requestWithCookies("/choose-files", JsEnabled.COOKIE_JSENABLED -> "true").get())
 
           result.status shouldBe 200
           result.body should include(htmlEscapedPageTitle("view.upload-multiple-files.title"))
@@ -39,7 +39,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
             appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
           givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
-          val result = await(requestWithCookies("/choose-files", "jsenabled" -> "true").get())
+          val result = await(requestWithCookies("/choose-files", JsEnabled.COOKIE_JSENABLED -> "true").get())
 
           result.status shouldBe 200
           result.body should include(htmlEscapedPageTitle("view.upload-file.first.title"))
@@ -102,7 +102,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
             appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
           givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
-          val result = await(requestWithCookies("/choose-files", "jsenabled" -> "true").get())
+          val result = await(requestWithCookies("/choose-files", JsEnabled.COOKIE_JSENABLED -> "true").get())
 
           result.status shouldBe 200
           result.body should include(htmlEscapedPageTitle("view.summary.singular.title"))

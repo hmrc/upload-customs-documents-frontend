@@ -2,7 +2,6 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.libs.ws.{DefaultWSCookie, StandaloneWSRequest}
 import play.api.mvc._
-import play.api.test.FakeRequest
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.{HeaderCarrier, SessionId, SessionKeys}
 import uk.gov.hmrc.mongo.cache.CacheItem
@@ -25,14 +24,18 @@ trait ControllerISpecBase extends ServerISpec {
   implicit val messages: Messages = MessagesImpl(Lang("en"), app.injector.instanceOf[MessagesApi])
 
   def sessionCookie(implicit hc: HeaderCarrier) = sessionCookieBaker
-    .encodeAsCookie(Session(Map(
-      SessionKeys.sessionId -> hc.sessionId.map(_.value).getOrElse(""),
-      SessionKeys.authToken -> "Bearer XYZ"
-    )))
+    .encodeAsCookie(
+      Session(
+        Map(
+          SessionKeys.sessionId -> hc.sessionId.map(_.value).getOrElse(""),
+          SessionKeys.authToken -> "Bearer XYZ"
+        )
+      )
+    )
 
   def withHeaders(f: => StandaloneWSRequest): StandaloneWSRequest =
     f.addHttpHeaders(
-      play.api.http.HeaderNames.USER_AGENT -> "it-test",
+      play.api.http.HeaderNames.USER_AGENT    -> "it-test",
       play.api.http.HeaderNames.AUTHORIZATION -> "Bearer XYZ"
     )
 
@@ -57,7 +60,9 @@ trait ControllerISpecBase extends ServerISpec {
         )
     }
 
-  final def requestWithCookies(path: String, cookies: (String, String)*)(implicit hc: HeaderCarrier): StandaloneWSRequest =
+  final def requestWithCookies(path: String, cookies: (String, String)*)(implicit
+    hc: HeaderCarrier
+  ): StandaloneWSRequest =
     withHeaders {
       wsClient
         .url(s"$baseUrl$path")
@@ -65,7 +70,8 @@ trait ControllerISpecBase extends ServerISpec {
           cookies.map(c => DefaultWSCookie(c._1, c._2)) :+ DefaultWSCookie(
             sessionCookie.name,
             sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value
-          ): _*)
+          ): _*
+        )
     }
 
   final val nonEmptyFileUploads: FileUploads = FileUploads(Seq(TestData.acceptedFileUpload))

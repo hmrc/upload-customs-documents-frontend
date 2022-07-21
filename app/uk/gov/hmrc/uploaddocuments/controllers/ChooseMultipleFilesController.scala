@@ -23,7 +23,6 @@ import uk.gov.hmrc.uploaddocuments.forms.Forms.YesNoChoiceForm
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 import uk.gov.hmrc.uploaddocuments.views.html.UploadMultipleFilesView
-import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
