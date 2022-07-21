@@ -14,8 +14,10 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.uploaddocuments.support.HtmlCleaner
+
 @this()
 
 @(msg: String, classes: String = "govuk-heading-xl")(implicit messages: Messages)
 
-<h1 class="@classes">@messages(msg)</h1>
+<h1 class="@classes">@Html(HtmlCleaner.cleanSimpleText(messages(msg)))</h1>

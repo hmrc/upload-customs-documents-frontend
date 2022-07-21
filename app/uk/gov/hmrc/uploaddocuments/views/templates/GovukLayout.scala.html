@@ -15,6 +15,7 @@
  *@
 
 @import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.uploaddocuments.support.HtmlCleaner
 
 @this(
   govukTemplate: GovukTemplate,
@@ -70,7 +71,7 @@
 }
 @govukTemplate(
   htmlLang = Some(messages.lang.code),
-  pageTitle = pageTitle,
+  pageTitle = pageTitle.map(HtmlCleaner.purge),
   headBlock = headBlock,
   headerBlock = headerDefault,
   beforeContentBlock = beforeContentBlock,

@@ -28,9 +28,9 @@ case class FileUploads(files: Seq[FileUpload] = Seq.empty) {
   lazy val isEmpty: Boolean  = acceptedCount == 0
   lazy val isSingle: Boolean = acceptedCount == 1
 
-  lazy val acceptedCount: Int  = files.count { case _: FileUpload.Accepted  => true; case _ => false }
+  lazy val acceptedCount: Int  = files.count { case _: FileUpload.Accepted => true; case _ => false }
   lazy val initiatedCount: Int = files.count { case _: FileUpload.Initiated => true; case _ => false }
-  lazy val postedCount: Int    = files.count { case _: FileUpload.Posted    => true; case _ => false }
+  lazy val postedCount: Int    = files.count { case _: FileUpload.Posted => true; case _ => false }
 
   lazy val initiatedOrAcceptedCount: Int = acceptedCount + initiatedCount + postedCount
 
@@ -70,26 +70,25 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
 
   def apply(uploadedFile: UploadedFile): FileUpload =
     FileUpload.Accepted(
-      nonce           = Nonce.Any,
-      timestamp       = Timestamp.Any,
-      reference       = uploadedFile.upscanReference,
-      checksum        = uploadedFile.checksum,
-      fileName        = uploadedFile.fileName,
-      fileMimeType    = uploadedFile.fileMimeType,
-      fileSize        = uploadedFile.fileSize,
-      url             = uploadedFile.downloadUrl,
+      nonce = Nonce.Any,
+      timestamp = Timestamp.Any,
+      reference = uploadedFile.upscanReference,
+      checksum = uploadedFile.checksum,
+      fileName = uploadedFile.fileName,
+      fileMimeType = uploadedFile.fileMimeType,
+      fileSize = uploadedFile.fileSize,
+      url = uploadedFile.downloadUrl,
       uploadTimestamp = uploadedFile.uploadTimestamp,
-      cargo           = uploadedFile.cargo,
-      description     = uploadedFile.description
+      cargo = uploadedFile.cargo,
+      description = uploadedFile.description
     )
-  def apply(nonce: Nonce, uploadId: Option[String])(
-    upscanResponse: UpscanInitiateResponse): FileUpload.Initiated =
+  def apply(nonce: Nonce, uploadId: Option[String])(upscanResponse: UpscanInitiateResponse): FileUpload.Initiated =
     FileUpload.Initiated(
-      nonce         = nonce,
-      timestamp     = Timestamp.now,
-      reference     = upscanResponse.reference,
+      nonce = nonce,
+      timestamp = Timestamp.now,
+      reference = upscanResponse.reference,
       uploadRequest = Some(upscanResponse.uploadRequest),
-      uploadId      = uploadId
+      uploadId = uploadId
     )
 
   final val isWindowPathHaving: Regex = "[a-zA-Z]:.*\\\\(.+)".r("name")
@@ -108,7 +107,7 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
     timestamp: Timestamp,
     reference: String,
     uploadRequest: Option[UploadRequest] = None,
-    uploadId: Option[String]             = None
+    uploadId: Option[String] = None
   ) extends FileUpload {
     override val isReady: Boolean = false
   }
@@ -143,7 +142,7 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
     fileName: String,
     fileMimeType: String,
     fileSize: Int,
-    cargo: Option[JsValue]                  = None, // data carried through, from and to host service
+    cargo: Option[JsValue] = None, // data carried through, from and to host service
     private val description: Option[String] = None
   ) extends FileUpload {
     override val isReady: Boolean = true
