@@ -46,7 +46,7 @@ final case class CustomizedServiceContent(
   yesNoQuestionText: Option[String] = None,
   yesNoQuestionRequiredError: Option[String] = None
 ) {
-  lazy val safeDescriptionHtml: Option[String] = descriptionHtml.map(html => HtmlCleaner.cleanBlock(html))
+  lazy val safeDescriptionHtml: Option[String] = descriptionHtml.map(HtmlCleaner.cleanBlock)
 }
 
 object CustomizedServiceContent {

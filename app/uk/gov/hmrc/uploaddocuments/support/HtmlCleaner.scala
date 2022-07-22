@@ -22,18 +22,20 @@ import org.jsoup.Jsoup
 object HtmlCleaner {
 
   final val blockSafelist = new Safelist()
-    .addTags("div", "p", "span", "br", "ol", "ul", "li", "dd", "dl", "dt", "i", "b", "em", "strong")
-    .addAttributes(":all", "class")
+    .addTags("div", "p", "span", "abbr", "br", "ol", "ul", "li", "dd", "dl", "dt", "i", "b", "em", "strong")
+    .addAttributes(":all", "class", "title")
     .addAttributes(":all", "id")
 
   final val simpleTextSafelist =
     Safelist.simpleText
-      .addTags("span")
-      .addAttributes(":all", "class")
+      .addTags("span", "abbr")
+      .addAttributes(":all", "class", "title")
       .addAttributes(":all", "id")
 
   final def cleanBlock(text: String): String = Jsoup.clean(text, blockSafelist)
 
   final def cleanSimpleText(text: String): String = Jsoup.clean(text, simpleTextSafelist)
+
+  final def purge(text: String): String = Jsoup.clean(text, Safelist.none())
 
 }
