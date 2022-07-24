@@ -33,12 +33,12 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
 
 @Singleton
-class FileUploadResultPushConnector @Inject()(
-                                               appConfig: AppConfig,
-                                               http: HttpPost,
-                                               metrics: Metrics,
-                                               val actorSystem: ActorSystem
-                                             ) extends HttpAPIMonitor with Retries with LoggerUtil {
+class FileUploadResultPushConnector @Inject() (
+  appConfig: AppConfig,
+  http: HttpPost,
+  metrics: Metrics,
+  val actorSystem: ActorSystem
+) extends HttpAPIMonitor with Retries with LoggerUtil {
 
   override val kenshooRegistry: MetricRegistry = metrics.defaultRegistry
 
@@ -50,14 +50,23 @@ class FileUploadResultPushConnector @Inject()(
       monitor(s"ConsumedAPI-push-file-uploads-${request.hostService.userAgent}-POST") {
         withUrl(request) { endpointUrl =>
           val payload = Payload(request, appConfig.baseExternalCallbackUrl)
-          Logger.debug(s"[push] JourneyId: '${jid.value}' - sending notification to host service. Url: '$endpointUrl', Body: \n${Json.prettyPrint(Json.toJson(payload)(Payload.writeNoDownloadUrl))}")
+          Logger.debug(
+            s"[push] JourneyId: '${jid.value}' - sending notification to host service. Url: '$endpointUrl', Body: \n${Json
+              .prettyPrint(Json.toJson(payload)(Payload.writeNoDownloadUrl))}"
+          )
           http
-            .POST[Payload, Response](endpointUrl, payload)(implicitly, responseReads, hc.withExtraHeaders("FileUploadJourney" -> jid.value), ec)
-            .recover {
-              case exception =>
-                Logger.debug(s"[push] JourneyId: '${jid.value}' - Exception when handling the HttpResponse from the host service")
-                Logger.error(exception.getMessage)
-                Left(Error(0, exception.getMessage))
+            .POST[Payload, Response](endpointUrl, payload)(
+              implicitly,
+              responseReads,
+              request.hostService.populate(hc).withExtraHeaders("FileUploadJourney" -> jid.value),
+              ec
+            )
+            .recover { case exception =>
+              Logger.debug(
+                s"[push] JourneyId: '${jid.value}' - Exception when handling the HttpResponse from the host service"
+              )
+              Logger.error(exception.getMessage)
+              Left(Error(0, exception.getMessage))
             }
         }
       }
@@ -70,7 +79,9 @@ class FileUploadResultPushConnector @Inject()(
         val msg = s"${e.getClass.getName} ${e.getMessage}"
         Logger.error(msg)
         Future.successful(Left(Error(0, msg)))
-      },f)
+      },
+      f
+    )
 
 }
 
