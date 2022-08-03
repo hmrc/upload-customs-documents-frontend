@@ -166,8 +166,8 @@ Minimal payload example:
 |field|type|description|
 |-----|----|-----------|
 |`serviceName`|string|Service name to display in the header bar and title|
-|`title`|string|Upload page title|
-|`descriptionHtml`|string|Description in a limited HTML format allowing use of`div`, `p`, `span`, `br`, `ol`, `ul`, `li`, `dd`, `dl`, `dt`, `i`, `b`, `em`, `strong` tags only|
+|`title`|string|Upload page title. Can be formatted using `span` or `abbr` HTML tags with `class`, `title`, `id` attributes if needed|
+|`descriptionHtml`|string|Description in an HTML subset format allowing **only** use of`div`, `p`, `span`, `abbr`, `br`, `ol`, `ul`, `li`, `dd`, `dl`, `dt`, `i`, `b`, `em`, `strong`, `details`, `summary` tags and `class`, `title`, `id` attributes.|
 |`serviceUrl`|string|Header bar URL pointing to the host service|
 |`accessibilityStatementUrl`|string|Footer URL of  a host service accessibilty statement|
 |`phaseBanner`|string|Phase banner type, either `alpha`, `beta` or none|

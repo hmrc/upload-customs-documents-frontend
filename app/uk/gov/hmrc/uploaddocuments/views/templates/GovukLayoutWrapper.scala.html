@@ -96,10 +96,9 @@ None, refresh: Int = 0)(contentBlock: Html)(implicit request: Request[_], messag
 }
 
 @content = {
-  <div class="govuk-!-margin-bottom-6">
-    @contentBlock
-  </div>
-
+  
+  @contentBlock
+  
   @serviceContent.contactFrontendServiceId.orElse(contactFrontendConfig.serviceId).map{ serviceId =>
     <div class="report-a-problem">
       @hmrcReportTechnicalIssue(ReportTechnicalIssue(
