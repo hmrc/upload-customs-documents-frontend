@@ -31,7 +31,7 @@ import java.nio.ByteBuffer
 class JsonEncoderSpec extends UnitSpec with AsJavaConverters {
 
   val encoder = new JsonEncoder()
-  val jnf = JsonNodeFactory.instance
+  val jnf     = JsonNodeFactory.instance
 
   "JsonEncoder" should {
     "decode empty message into a text node" in {
@@ -49,7 +49,7 @@ class JsonEncoderSpec extends UnitSpec with AsJavaConverters {
     "decode json message into an object node" in {
       val node = new ObjectNode(jnf)
       encoder.decodeMessage(node, """json{"foo":"bar"}""")
-      node.get("route1") shouldBe new ObjectNode(
+      node.get("ucdf") shouldBe new ObjectNode(
         jnf,
         mapAsJavaMap(Map("foo" -> new TextNode("bar")))
       )
@@ -67,11 +67,11 @@ class JsonEncoderSpec extends UnitSpec with AsJavaConverters {
     }
 
     "encode event with json message" in {
-      assertLog("""json{"foo":"bar"}""", """"route1":{"foo":"bar"}""")
+      assertLog("""json{"foo":"bar"}""", """"ucdf":{"foo":"bar"}""")
     }
 
     def assertLog(message: String, expected: String) = {
-      val context = new LoggerContext()
+      val context  = new LoggerContext()
       val appender = new OutputStreamAppender[ILoggingEvent]
       appender.setContext(context)
       val buf = ByteBuffer.allocateDirect(1024)
