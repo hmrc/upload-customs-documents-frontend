@@ -58,8 +58,9 @@ class JsonEncoder extends EncoderBase[ILoggingEvent] with LoggerUtil {
     eventNode.put("thread", event.getThreadName)
     eventNode.put("level", event.getLevel.toString)
 
-    Option(getContext).foreach(
-      _.getCopyOfPropertyMap.asScala foreach { case (k, v) => eventNode.put(k.toLowerCase, v) })
+    Option(getContext).foreach(_.getCopyOfPropertyMap.asScala foreach { case (k, v) =>
+      eventNode.put(k.toLowerCase, v)
+    })
     event.getMDCPropertyMap.asScala foreach { case (k, v) => eventNode.put(k.toLowerCase, v) }
 
     s"${mapper.writeValueAsString(eventNode)}$LINE_SEPARATOR".getBytes(StandardCharsets.UTF_8)
@@ -70,7 +71,7 @@ class JsonEncoder extends EncoderBase[ILoggingEvent] with LoggerUtil {
       eventNode.put("message", message.drop(4))
       try {
         val messageNode: JsonNode = mapper.readTree(message.drop(4))
-        eventNode.put("route1", messageNode)
+        eventNode.put("ucdf", messageNode)
       } catch {
         case e: Exception => Logger.error(e.getMessage)
       }
