@@ -59,5 +59,5 @@ object S3UploadError {
   def unapplyOptional(
     error: S3UploadError
   ): Option[(String, Option[String], Option[String], Option[String], Option[String])] =
-    Some((error.key, Some(error.errorCode), Some(error.errorMessage), error.errorRequestId, error.errorRequestId))
+    Some((error.key, Some(error.errorCode), Some(error.errorMessage), error.errorRequestId, error.errorResource))
 }
