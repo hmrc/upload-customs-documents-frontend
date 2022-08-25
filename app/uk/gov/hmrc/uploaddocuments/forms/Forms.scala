@@ -30,19 +30,19 @@ object Forms {
 
   val UpscanUploadSuccessForm = Form[S3UploadSuccess](
     mapping(
-      "key" -> nonEmptyText,
+      "key"    -> nonEmptyText,
       "bucket" -> optional(nonEmptyText)
     )(S3UploadSuccess.apply)(S3UploadSuccess.unapply)
   )
 
   val UpscanUploadErrorForm = Form[S3UploadError](
     mapping(
-      "key" -> nonEmptyText,
-      "errorCode" -> text,
-      "errorMessage" -> text,
+      "key"            -> nonEmptyText,
+      "errorCode"      -> optional(text),
+      "errorMessage"   -> optional(text),
       "errorRequestId" -> optional(text),
-      "errorResource" -> optional(text)
-    )(S3UploadError.apply)(S3UploadError.unapply)
+      "errorResource"  -> optional(text)
+    )(S3UploadError.from)(S3UploadError.unapplyOptional)
   )
 
 }
