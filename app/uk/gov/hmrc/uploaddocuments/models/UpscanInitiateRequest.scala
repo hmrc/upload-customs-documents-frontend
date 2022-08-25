@@ -35,10 +35,15 @@ import play.api.libs.json.{Format, Json}
 case class UpscanInitiateRequest(
   callbackUrl: String,
   successRedirect: Option[String] = None,
-  errorRedirect: Option[String]   = None,
-  minimumFileSize: Option[Int]    = None,
-  maximumFileSize: Option[Int]    = None
-)
+  errorRedirect: Option[String] = None,
+  minimumFileSize: Option[Int] = None,
+  maximumFileSize: Option[Int] = None,
+  consumingService: Option[String] = None
+) {
+
+  def withConsumingService(consumingService: String): UpscanInitiateRequest =
+    copy(consumingService = Some(consumingService))
+}
 
 object UpscanInitiateRequest {
   implicit val formats: Format[UpscanInitiateRequest] = Json.format[UpscanInitiateRequest]

@@ -32,29 +32,30 @@ import scala.concurrent.{ExecutionContext, Future}
 /** Connects to the upscan-initiate service API.
   */
 @Singleton
-class UpscanInitiateConnector @Inject()(appConfig: AppConfig, http: HttpGet with HttpPost, metrics: Metrics)
+class UpscanInitiateConnector @Inject() (appConfig: AppConfig, http: HttpGet with HttpPost, metrics: Metrics)
     extends HttpAPIMonitor {
 
-  lazy val baseUrl: String      = appConfig.upscanInitiateBaseUrl
+  lazy val baseUrl: String = appConfig.upscanInitiateBaseUrl
   val upscanInitiatev2Path = "/upscan/v2/initiate"
   val userAgent            = "upload-customs-documents-frontend"
 
   override lazy val kenshooRegistry: MetricRegistry = metrics.defaultRegistry
 
   def initiate(
-    hostUserAgent: String,
+    consumingService: String,
     request: UpscanInitiateRequest
   )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[UpscanInitiateResponse] =
-    monitor(s"ConsumedAPI-upscan-v2-initiate-$hostUserAgent-POST") {
+    monitor(s"ConsumedAPI-upscan-v2-initiate-$consumingService-POST") {
       val url = new URL(baseUrl + upscanInitiatev2Path).toExternalForm
-      Logger.debug(s"[initiate] Making call to Upscan Initiate. Url '$url', body: \n${Json.prettyPrint(Json.toJson(request))}")
+      val requestWithConsumingService: UpscanInitiateRequest =
+        request.withConsumingService(consumingService)
+      Logger.debug(
+        s"[initiate] Making call to Upscan Initiate. Url '$url', body: \n${Json.prettyPrint(Json.toJson(requestWithConsumingService))}"
+      )
       http
-        .POST[UpscanInitiateRequest, UpscanInitiateResponse](
-          url,
-          request,
-          Seq("User-Agent" -> hostUserAgent))
-        .recoverWith {
-          case e: Throwable => Future.failed(UpscanInitiateError(e))
+        .POST[UpscanInitiateRequest, UpscanInitiateResponse](url, requestWithConsumingService)
+        .recoverWith { case e: Throwable =>
+          Future.failed(UpscanInitiateError(e))
         }
     }
 }

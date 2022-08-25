@@ -19,6 +19,7 @@ class InitiateUpscanControllerISpec extends ControllerISpecBase with UpscanIniti
 
         val callbackUrl =
           appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+
         givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
         val result = await(request("/initiate-upscan/001").post(""))
@@ -79,9 +80,11 @@ class InitiateUpscanControllerISpec extends ControllerISpecBase with UpscanIniti
       "initialise next file upload" in {
 
         setContext()
-        setFileUploads(FileUploads(
-          Seq(FileUpload.Posted(Nonce.Any, Timestamp.Any, "23370e18-6e24-453e-b45a-76d3e32ea389"))
-        ))
+        setFileUploads(
+          FileUploads(
+            Seq(FileUpload.Posted(Nonce.Any, Timestamp.Any, "23370e18-6e24-453e-b45a-76d3e32ea389"))
+          )
+        )
 
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
