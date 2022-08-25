@@ -71,7 +71,7 @@ class FormsSpec extends UnitSpec with FormValidator {
       validateErrors(
         form,
         Map(),
-        Seq("key" -> "error.required", "errorCode" -> "error.required", "errorMessage" -> "error.required")
+        Seq("key" -> "error.required")
       )
     }
   }

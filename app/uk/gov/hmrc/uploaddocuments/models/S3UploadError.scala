@@ -46,4 +46,18 @@ case class S3UploadError(
 
 object S3UploadError {
   implicit val formats: Format[S3UploadError] = Json.format[S3UploadError]
+
+  def from(
+    key: String,
+    errorCode: Option[String],
+    errorMessage: Option[String],
+    errorRequestId: Option[String],
+    errorResource: Option[String]
+  ): S3UploadError =
+    S3UploadError(key, errorCode.getOrElse("UNDEFINED"), errorMessage.getOrElse(""), errorRequestId, errorResource)
+
+  def unapplyOptional(
+    error: S3UploadError
+  ): Option[(String, Option[String], Option[String], Option[String], Option[String])] =
+    Some((error.key, Some(error.errorCode), Some(error.errorMessage), error.errorRequestId, error.errorResource))
 }
