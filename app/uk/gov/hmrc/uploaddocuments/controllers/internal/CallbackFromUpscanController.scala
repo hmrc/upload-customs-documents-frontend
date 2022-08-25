@@ -24,6 +24,7 @@ import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextSe
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
+import scala.concurrent.Future
 
 @Singleton
 class CallbackFromUpscanController @Inject() (
@@ -37,20 +38,32 @@ class CallbackFromUpscanController @Inject() (
   final def callbackFromUpscan(journeyId: JourneyId, nonce: String): Action[JsValue] =
     Action.async(parse.tolerantJson) { implicit request =>
       withJsonBody[UpscanNotification] { payload =>
-        logResponse(payload)
         implicit val journey: JourneyId = journeyId
-        withJourneyContext { implicit journeyContext =>
+        withJourneyContextWithErrorHandler {
+          logErrorResponse(payload)
+          Future.successful(NoContent)
+        } { implicit journeyContext =>
+          logSuccessResponse(payload)
           fileUploadService.markFileWithUpscanResponseAndNotifyHost(payload, Nonce(nonce)).map(_ => NoContent)
         }
       }
     }
 
-  private val logResponse: UpscanNotification => Unit = {
+  private val logSuccessResponse: UpscanNotification => Unit = {
     case UpscanFileReady(reference, _, _) =>
       Logger.info(s"[callbackFromUpscan] UpscanRef: '$reference', Status: 'READY'")
     case UpscanFileFailed(reference, failureDetails) =>
       Logger.info(
         s"[callbackFromUpscan] UpscanRef: '$reference', Status: '${failureDetails.failureReason.toString.toUpperCase}'"
+      )
+  }
+
+  private val logErrorResponse: UpscanNotification => Unit = {
+    case UpscanFileReady(reference, _, _) =>
+      Logger.error(s"[callbackFromUpscan][missingJourneyContext] UpscanRef: '$reference', Status: 'READY'")
+    case UpscanFileFailed(reference, failureDetails) =>
+      Logger.error(
+        s"[callbackFromUpscan][missingJourneyContext] UpscanRef: '$reference', Status: '${failureDetails.failureReason.toString.toUpperCase}'"
       )
   }
 }
