@@ -26,8 +26,16 @@ trait JourneyContextControllerHelper { baseController: BaseController =>
 
   val journeyContextService: JourneyContextService
 
-  def withJourneyContext(body: FileUploadContext => Future[Result])
-                        (implicit journeyId: JourneyId): Future[Result] =
-    journeyContextService.withJourneyContext(Future.successful(Redirect(baseController.components.appConfig.govukStartUrl)))(body)
+  def withJourneyContext(body: FileUploadContext => Future[Result])(implicit journeyId: JourneyId): Future[Result] =
+    journeyContextService.withJourneyContext(
+      Future.successful(Redirect(baseController.components.appConfig.govukStartUrl))
+    )(body)
+
+  def withJourneyContextWithErrorHandler(
+    journeyNotFoundResult: => Future[Result]
+  )(body: FileUploadContext => Future[Result])()(implicit
+    journeyId: JourneyId
+  ): Future[Result] =
+    journeyContextService.withJourneyContext(journeyNotFoundResult)(body)
 
 }
