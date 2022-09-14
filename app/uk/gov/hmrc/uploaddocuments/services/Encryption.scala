@@ -17,7 +17,6 @@
 package uk.gov.hmrc.uploaddocuments.services
 
 import com.typesafe.config.Config
-import org.apache.commons.codec.binary.Base64
 import play.api.libs.json._
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
@@ -27,6 +26,7 @@ import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
 import scala.collection.JavaConverters._
 import scala.util.Try
+import java.util.Base64
 
 object Encryption extends LoggerUtil {
 
@@ -37,7 +37,7 @@ object Encryption extends LoggerUtil {
       val cipher: Cipher = Cipher.getInstance(key.getAlgorithm)
       cipher.init(Cipher.ENCRYPT_MODE, key, cipher.getParameters)
       new String(
-        Base64.encodeBase64(cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8))),
+        Base64.getEncoder().encode(cipher.doFinal(plainText.getBytes(StandardCharsets.UTF_8))),
         StandardCharsets.UTF_8
       )
     } catch {
@@ -53,7 +53,7 @@ object Encryption extends LoggerUtil {
             val cipher: Cipher = Cipher.getInstance(key.getAlgorithm)
             cipher.init(Cipher.DECRYPT_MODE, key, cipher.getParameters)
             val plainText = new String(
-              cipher.doFinal(Base64.decodeBase64(encrypted.getBytes(StandardCharsets.UTF_8))),
+              cipher.doFinal(Base64.getDecoder().decode(encrypted.getBytes(StandardCharsets.UTF_8))),
               StandardCharsets.UTF_8
             )
             val json = Json.parse(plainText)
@@ -62,9 +62,8 @@ object Encryption extends LoggerUtil {
               case JsError(jsonErrors) =>
                 val errorMsg =
                   s"Encountered an issue with de-serialising JSON state: ${jsonErrors
-                    .map {
-                      case (p, s) =>
-                        s"${if (p.toString().isEmpty) "" else s"$p -> "}${s.map(_.message).mkString(", ")}"
+                    .map { case (p, s) =>
+                      s"${if (p.toString().isEmpty) "" else s"$p -> "}${s.map(_.message).mkString(", ")}"
                     }
                     .mkString(", ")}. \nCheck if all your states have relevant entries declared in the *JourneyStateFormats.serializeStateProperties and *JourneyStateFormats.deserializeState functions."
                 Logger.error(errorMsg)
@@ -89,7 +88,7 @@ object KeyProvider {
   def apply(base64Keys: Seq[String]): KeyProvider = {
     val secretKeys: Seq[Key] = base64Keys
       .map { encryptionKey =>
-        new SecretKeySpec(Base64.decodeBase64(encryptionKey.getBytes(StandardCharsets.UTF_8)), "AES")
+        new SecretKeySpec(Base64.getDecoder().decode(encryptionKey.getBytes(StandardCharsets.UTF_8)), "AES")
       }
     new KeyProvider {
       override val keys: Seq[Key] = secretKeys
