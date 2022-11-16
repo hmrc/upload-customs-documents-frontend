@@ -6,7 +6,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "upload-customs-documents-frontend",
     organization := "uk.gov.hmrc",
-    scalaVersion := "2.12.15",
+    scalaVersion := "2.12.17",
     PlayKeys.playDefaultPort := 10110,
     RoutesKeys.routesImport += "uk.gov.hmrc.uploaddocuments.models.JourneyId",
     TwirlKeys.templateImports ++= Seq(
