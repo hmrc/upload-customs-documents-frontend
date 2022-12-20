@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.uploaddocuments.connectors
 
-import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.auth.core.PlayAuthConnector
-import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 import uk.gov.hmrc.http.HttpPost
+import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
+
+import javax.inject.{Inject, Singleton}
 
 @Singleton
 class FrontendAuthConnector @Inject()(appConfig: AppConfig, val http: HttpPost) extends PlayAuthConnector {

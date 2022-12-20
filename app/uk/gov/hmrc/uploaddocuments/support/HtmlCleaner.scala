@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.uploaddocuments.support
 
-import org.jsoup.safety.Safelist
 import org.jsoup.Jsoup
+import org.jsoup.safety.Safelist
 
 object HtmlCleaner {
 

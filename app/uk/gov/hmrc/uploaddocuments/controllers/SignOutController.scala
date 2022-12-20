@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
-import javax.inject.Inject
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
+import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
+
+import javax.inject.Inject
 
 class SignOutController @Inject()(controllerComponents: MessagesControllerComponents,
                                   appConfig: AppConfig) extends FrontendController(controllerComponents) {

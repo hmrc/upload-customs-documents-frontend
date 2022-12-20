@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.uploaddocuments.support
 
-import play.api.i18n.Messages
-import play.api.i18n.Lang
+import play.api.i18n.{Lang, Messages}
 import play.i18n
+
 import java.text.MessageFormat
 
 class EnhancedMessages(inherited: Messages, custom: Map[String, String]) extends Messages {

@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.models
 
-import play.api.libs.json.{Format, JsError, JsSuccess, Reads, Writes}
-import play.api.libs.json.JsNumber
+import play.api.libs.json.{Format, JsError, JsNumber, JsSuccess, Reads, Writes}
 
 object SimpleDecimalFormat {
 

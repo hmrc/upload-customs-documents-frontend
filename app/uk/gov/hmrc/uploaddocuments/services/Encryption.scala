@@ -22,12 +22,11 @@ import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import java.nio.charset.StandardCharsets
 import java.security.Key
+import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
-import scala.util.Try
-import java.util.Base64
-
 import scala.jdk.CollectionConverters._
+import scala.util.Try
 
 object Encryption extends LoggerUtil {
 

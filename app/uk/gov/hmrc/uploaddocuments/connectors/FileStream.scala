@@ -16,20 +16,15 @@
 
 package uk.gov.hmrc.uploaddocuments.connectors
 
-import akka.stream.scaladsl.Flow
-import akka.http.scaladsl.model.HttpRequest
-import scala.util.Try
-import akka.http.scaladsl.model.HttpResponse
 import akka.NotUsed
-import akka.http.scaladsl.Http
-import play.api.mvc.Result
-import akka.http.scaladsl.model.HttpMethods
 import akka.actor.ActorSystem
-import play.api.mvc.Results
-import scala.util.Failure
-import scala.util.Success
-import akka.stream.scaladsl.Source
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.{HttpMethods, HttpRequest, HttpResponse}
+import akka.stream.scaladsl.{Flow, Source}
+import play.api.mvc.{Result, Results}
+
 import scala.concurrent.Future
+import scala.util.{Failure, Success, Try}
 
 trait FileStream {
 

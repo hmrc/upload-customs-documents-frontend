@@ -16,16 +16,15 @@
 
 package uk.gov.hmrc.uploaddocuments.models
 
-import play.api.libs.json.{Format, JsString, JsSuccess, Json, Reads, Writes}
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.http.HeaderNames
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import play.api.mvc.Headers
-import play.api.mvc.RequestHeader
 import play.api.http.HeaderNames.USER_AGENT
-import java.util.UUID
 import play.api.i18n.Messages
+import play.api.libs.json.{Format, JsString, JsSuccess, Json, Reads, Writes}
+import play.api.mvc.{Headers, RequestHeader}
+import uk.gov.hmrc.http.{HeaderCarrier, HeaderNames}
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.support.EnhancedMessages
+
+import java.util.UUID
 
 final case class FileUploadContext(
   config: FileUploadSessionConfig,

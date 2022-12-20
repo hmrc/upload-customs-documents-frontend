@@ -23,8 +23,8 @@ import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.Response
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.Request
-import uk.gov.hmrc.uploaddocuments.repository.{JourneyCacheRepository, JourneyLocking}
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
+import uk.gov.hmrc.uploaddocuments.repository.{JourneyCacheRepository, JourneyLocking}
 import uk.gov.hmrc.uploaddocuments.support.UploadLog
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
