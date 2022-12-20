@@ -32,11 +32,8 @@ class FileUploadResultPushConnectorReads(hostService: HostService)(implicit jour
       s"[push]  JourneyId: '$journeyId' - Response from host: Status: '${response.status}', Body: '${response.body}'"
     )
     response.status match {
-      case NO_CONTENT => SuccessResponse
-      case ACCEPTED | CREATED | OK =>
-        val msg = s"Got ${response.status}, pls check with the host service to send back 204 NoContent instead."
-        Logger.warn(msg)
-        SuccessResponse
+      case NO_CONTENT | ACCEPTED | CREATED => SuccessResponse
+
       case _ =>
         val msg = s"Failure pushing uploaded files to $url: ${response.body.take(1024)} $hostService"
         Logger.error(msg)

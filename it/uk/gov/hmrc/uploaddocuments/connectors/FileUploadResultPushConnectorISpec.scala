@@ -52,13 +52,15 @@ class FileUploadResultPushConnectorISpec extends FileUploadResultPushConnectorIS
           Some(Json.obj("foo" -> Json.obj("bar" -> JsNumber(123), "url" -> JsString(url))))
         )
 
-      "accept valid request and return success when response 204" in {
-        val path = s"/dummy-host-endpoint"
-        val url  = s"$wireMockBaseUrlAsString$path"
-        givenResultPushEndpoint(path, Payload(request(url), "http://base.external.callback"), 204)
-        val result: Response = await(connector.push(request(url)))
-        result.isRight shouldBe true
-        verifyResultPushHasHappened(path, 1)
+      "accept valid request and return success when response is 201,202,204" in {
+        Set(201, 202, 204).foreach { status =>
+          val path = s"/dummy-host-endpoint-$status"
+          val url  = s"$wireMockBaseUrlAsString$path"
+          givenResultPushEndpoint(path, Payload(request(url), "http://base.external.callback"), status)
+          val result: Response = await(connector.push(request(url)))
+          result.isRight shouldBe true
+          verifyResultPushHasHappened(path, 1)
+        }
       }
 
       "accept valid request and return an error without retrying if 3xx" in {
@@ -72,7 +74,7 @@ class FileUploadResultPushConnectorISpec extends FileUploadResultPushConnectorIS
         }
       }
       "accept valid request and return an error without retrying" in {
-        (200 to 498).filterNot(Set(204, 301, 302, 303, 307, 308)).map { status =>
+        (200 to 498).filterNot(Set(201, 202, 204, 301, 302, 303, 307, 308)).map { status =>
           val path = s"/dummy-host-endpoint-$status"
           val url  = s"$wireMockBaseUrlAsString$path"
           givenResultPushEndpoint(path, Payload(request(url), "http://base.external.callback"), status)
