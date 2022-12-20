@@ -22,14 +22,18 @@ import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 @Singleton
-class WipeOutController @Inject()(components: BaseControllerComponents,
-                                  journeyCacheRepository: JourneyCacheRepository)
-                                 (implicit ec: ExecutionContext) extends BaseController(components) {
+class WipeOutController @Inject() (
+  components: BaseControllerComponents,
+  journeyCacheRepository: JourneyCacheRepository
+)(implicit ec: ExecutionContext)
+    extends BaseController(components) {
 
   // POST /internal/wipe-out
   final val wipeOut: Action[AnyContent] = Action.async { implicit request =>
+    implicit val hc = HeaderCarrierConverter.fromRequest(request) // required to process Session-ID from the cookie
     whenInSession { implicit journeyId =>
       whenAuthenticatedInBackchannel {
         Logger.debug(s"[wipeOut] Call to delete journey for journeyId: '$journeyId'")
