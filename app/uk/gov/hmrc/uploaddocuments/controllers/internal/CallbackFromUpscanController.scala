@@ -45,7 +45,7 @@ class CallbackFromUpscanController @Inject() (
         } { implicit journeyContext =>
           logSuccessResponse(payload)
           fileUploadService.markFileWithUpscanResponseAndNotifyHost(payload, Nonce(nonce)).map(_ => NoContent)
-        }
+        }()
       }
     }
 

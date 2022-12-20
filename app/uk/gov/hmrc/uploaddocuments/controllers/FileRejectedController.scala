@@ -39,7 +39,8 @@ class FileRejectedController @Inject() (
     whenInSession { implicit journeyId =>
       whenAuthenticated {
         withJourneyContext { implicit journeyContext =>
-          Forms.UpscanUploadErrorForm.bindFromRequest
+          Forms.UpscanUploadErrorForm
+            .bindFromRequest()
             .fold(
               _ => {
                 Logger.error("[markFileUploadAsRejected] Query Parameters from Upscan could not be bound to form")
@@ -75,7 +76,8 @@ class FileRejectedController @Inject() (
     status: => Result
   )(implicit request: Request[AnyContent], journeyId: JourneyId): Future[Result] =
     withJourneyContext { implicit journeyContext =>
-      Forms.UpscanUploadErrorForm.bindFromRequest
+      Forms.UpscanUploadErrorForm
+        .bindFromRequest()
         .fold(
           _ => {
             Logger.error("[rejectedAsyncLogicWithStatus] Query Parameters from Upscan could not be bound to form")

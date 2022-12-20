@@ -43,8 +43,8 @@ class forms @Inject() (
     _formWithCSRF.apply(
       action,
       (Seq(
-        'id         -> "upload-documents",
-        'novalidate -> "novalidate"
+        Symbol("id")         -> "upload-documents",
+        Symbol("novalidate") -> "novalidate"
       ) ++ args): _*
     )(body)
 }

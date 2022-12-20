@@ -62,12 +62,10 @@ trait ExternalApiStubs {
         .willReturn(aResponse().withStatus(status))
     )
 
-  def verifyResultPushHasHappened(path: String, times: Int = 1) {
+  def verifyResultPushHasHappened(path: String, times: Int = 1): Unit =
     verify(times, postRequestedFor(urlEqualTo(path)))
-  }
 
-  def verifyResultPushHasNotHappened(path: String) {
+  def verifyResultPushHasNotHappened(path: String): Unit =
     verify(0, postRequestedFor(urlEqualTo(path)))
-  }
 
 }

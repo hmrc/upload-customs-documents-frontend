@@ -27,7 +27,7 @@ import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import java.net.InetAddress
 import java.nio.charset.StandardCharsets
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters.MapHasAsScala
 import scala.util.Try
 
 class JsonEncoder extends EncoderBase[ILoggingEvent] with LoggerUtil {
@@ -71,7 +71,7 @@ class JsonEncoder extends EncoderBase[ILoggingEvent] with LoggerUtil {
       eventNode.put("message", message.drop(4))
       try {
         val messageNode: JsonNode = mapper.readTree(message.drop(4))
-        eventNode.put("ucdf", messageNode)
+        eventNode.set("ucdf", messageNode)
       } catch {
         case e: Exception => Logger.error(e.getMessage)
       }

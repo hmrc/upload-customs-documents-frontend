@@ -66,7 +66,7 @@ class AuthActionsISpec extends AuthActionISpecSetup {
 
 trait AuthActionISpecSetup extends AppISpec {
 
-  override def fakeApplication: Application = appBuilder.build()
+  override def fakeApplication(): Application = appBuilder.build()
 
   object TestController extends AuthActions {
 

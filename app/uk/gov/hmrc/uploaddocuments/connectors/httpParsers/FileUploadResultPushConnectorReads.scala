@@ -24,12 +24,19 @@ import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.Error
 import uk.gov.hmrc.uploaddocuments.models.{HostService, JourneyId}
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
-class FileUploadResultPushConnectorReads(hostService: HostService)(implicit journeyId: JourneyId) extends HttpReads[FileUploadResultPushConnector.Response] with LoggerUtil {
+class FileUploadResultPushConnectorReads(hostService: HostService)(implicit journeyId: JourneyId)
+    extends HttpReads[FileUploadResultPushConnector.Response] with LoggerUtil {
 
   def read(method: String, url: String, response: HttpResponse): FileUploadResultPushConnector.Response = {
-    Logger.debug(s"[push]  JourneyId: '$journeyId' - Response from host: Status: '${response.status}', Body: '${response.body}'")
+    Logger.debug(
+      s"[push]  JourneyId: '$journeyId' - Response from host: Status: '${response.status}', Body: '${response.body}'"
+    )
     response.status match {
       case NO_CONTENT => SuccessResponse
+      case ACCEPTED | CREATED | OK =>
+        val msg = s"Got ${response.status}, pls check with the host service to send back 204 NoContent instead."
+        Logger.warn(msg)
+        SuccessResponse
       case _ =>
         val msg = s"Failure pushing uploaded files to $url: ${response.body.take(1024)} $hostService"
         Logger.error(msg)

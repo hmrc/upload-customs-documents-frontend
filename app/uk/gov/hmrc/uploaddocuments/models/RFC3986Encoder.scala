@@ -26,7 +26,7 @@ object RFC3986Encoder {
 
   def encode(string: String): String = {
     val bytes = StandardCharsets.UTF_8.encode(
-      CharBuffer.wrap(string.replaceAllLiterally("%", "%25").replaceAllLiterally("+", "%2B"))
+      CharBuffer.wrap(string.replace("%", "%25").replace("+", "%2B"))
     )
     val sb = new StringBuffer(bytes.limit())
     while (bytes.hasRemaining) {

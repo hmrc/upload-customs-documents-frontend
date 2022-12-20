@@ -30,28 +30,37 @@ import scala.concurrent.duration.Duration
 
 class JourneyLockingSpec extends UnitSpec with MockFactory with LogCapturing {
 
-  implicit val journeyId = JourneyId("foo")
+  implicit val journeyId            = JourneyId("foo")
   implicit val scheduler: Scheduler = ActorSystem("JourneyLockingTestsActor").scheduler
-  implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val ec                   = scala.concurrent.ExecutionContext.Implicits.global
 
   class fixture {
-    lazy val mockLockRepo = mock[LockRepository]
+    lazy val mockLockRepo  = mock[LockRepository]
     lazy val mockAppConfig = mock[AppConfig]
 
     object TestJourneyLocking extends JourneyLocking {
-      override val appConfig: AppConfig = mockAppConfig
+      override val appConfig: AppConfig                   = mockAppConfig
       override val lockRepositoryProvider: LockRepository = mockLockRepo
     }
 
-    mockAppConfig.lockTimeout _ expects() returns Duration(1, TimeUnit.SECONDS) anyNumberOfTimes()
-    mockAppConfig.lockReleaseCheckInterval _ expects() returns Duration(100, TimeUnit.MILLISECONDS) anyNumberOfTimes()
-    (mockLockRepo.releaseLock(_: String, _: String)).expects(*, *) returns Future.successful((): Unit) anyNumberOfTimes()
+    (() => mockAppConfig.lockTimeout).expects().returns(Duration(1, TimeUnit.SECONDS)).anyNumberOfTimes()
+    (() => mockAppConfig.lockReleaseCheckInterval)
+      .expects()
+      .returns(Duration(100, TimeUnit.MILLISECONDS))
+      .anyNumberOfTimes()
+    (mockLockRepo
+      .releaseLock(_: String, _: String))
+      .expects(*, *)
+      .returns(Future.successful((): Unit))
+      .anyNumberOfTimes()
 
-    def mockTakeLock(isTaken: Future[Boolean] = Future.successful(true)): CallHandler3[String, String, Duration, Future[Boolean]] = {
-      (mockLockRepo.takeLock(_: String, _: String, _: Duration))
+    def mockTakeLock(
+      isTaken: Future[Boolean] = Future.successful(true)
+    ): CallHandler3[String, String, Duration, Future[Boolean]] =
+      (mockLockRepo
+        .takeLock(_: String, _: String, _: Duration))
         .expects(journeyId.value, *, mockAppConfig.lockTimeout)
         .returns(isTaken)
-    }
 
   }
 
@@ -62,7 +71,6 @@ class JourneyLockingSpec extends UnitSpec with MockFactory with LogCapturing {
       "return the f result" in new fixture {
 
         withCaptureOfLoggingFrom(TestJourneyLocking.logger) { logs =>
-
           mockTakeLock().once()
 
           val result = TestJourneyLocking.takeLock(Future.successful("TimedOut"))(Future.successful("Executed"))
@@ -79,13 +87,15 @@ class JourneyLockingSpec extends UnitSpec with MockFactory with LogCapturing {
         "return the timeout result" in new fixture {
 
           withCaptureOfLoggingFrom(TestJourneyLocking.logger) { logs =>
-
             mockTakeLock(Future.successful(false)).repeat(10)
             val result = TestJourneyLocking.takeLock(Future.successful("TimedOut"))(Future.successful("Executed"))
 
             await(result) shouldBe "TimedOut"
 
-            logExists(s"[tryLock] for journeyId: '$journeyId' was locked. Waiting for 100 millis before trying again.", nTimes = 9)(logs)
+            logExists(
+              s"[tryLock] for journeyId: '$journeyId' was locked. Waiting for 100 millis before trying again.",
+              nTimes = 9
+            )(logs)
             logExists(s"[tryLock] for journeyId: '$journeyId' was not released - could not process")(logs)
           }
         }
@@ -96,14 +106,16 @@ class JourneyLockingSpec extends UnitSpec with MockFactory with LogCapturing {
         "return the f result" in new fixture {
 
           withCaptureOfLoggingFrom(TestJourneyLocking.logger) { logs =>
-
             mockTakeLock(Future.successful(false)).repeat(4)
             mockTakeLock().once()
 
             val result = TestJourneyLocking.takeLock(Future.successful("TimedOut"))(Future.successful("Executed"))
             await(result) shouldBe "Executed"
 
-            logExists(s"[tryLock] for journeyId: '$journeyId' was locked. Waiting for 100 millis before trying again.", nTimes = 4)(logs)
+            logExists(
+              s"[tryLock] for journeyId: '$journeyId' was locked. Waiting for 100 millis before trying again.",
+              nTimes = 4
+            )(logs)
           }
         }
       }
@@ -114,13 +126,12 @@ class JourneyLockingSpec extends UnitSpec with MockFactory with LogCapturing {
       "throw exception with log" in new fixture {
 
         withCaptureOfLoggingFrom(TestJourneyLocking.logger) { logs =>
-
           val exception = new Exception("error")
           mockTakeLock(Future.failed(exception)).once()
 
           val result = TestJourneyLocking.takeLock(Future.successful("TimedOut"))(Future.successful("Executed"))
 
-          intercept[Exception] { await(result) }
+          intercept[Exception](await(result))
 
           logExists(s"[tryLock] for journeyId: '$journeyId' failed with exception ${exception.getMessage}")(logs)
         }

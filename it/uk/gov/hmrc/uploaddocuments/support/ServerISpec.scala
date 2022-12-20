@@ -9,10 +9,10 @@ import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 abstract class ServerISpec extends BaseISpec with GuiceOneServerPerSuite {
 
-  override def fakeApplication: Application = appBuilder.build()
+  override def fakeApplication(): Application = appBuilder.build()
 
-  lazy val appConfig = fakeApplication.injector.instanceOf[AppConfig]
-  lazy val sessionCookieBaker: SessionCookieBaker = app.injector.instanceOf[SessionCookieBaker]
+  lazy val appConfig                                = fakeApplication().injector.instanceOf[AppConfig]
+  lazy val sessionCookieBaker: SessionCookieBaker   = app.injector.instanceOf[SessionCookieBaker]
   lazy val sessionCookieCrypto: SessionCookieCrypto = app.injector.instanceOf[SessionCookieCrypto]
 
   def wsClient = {
@@ -27,7 +27,7 @@ abstract class ServerISpec extends BaseISpec with GuiceOneServerPerSuite {
     new StandaloneAhcWSClient(asyncHttpClient)
   }
 
-  val baseUrl: String = s"http://localhost:$port/upload-customs-documents"
+  val baseUrl: String            = s"http://localhost:$port/upload-customs-documents"
   val backchannelBaseUrl: String = s"http://localhost:$port/internal"
 
   def requestWithoutSessionId(path: String) =

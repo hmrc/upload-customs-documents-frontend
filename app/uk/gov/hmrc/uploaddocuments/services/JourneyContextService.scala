@@ -26,8 +26,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class JourneyContextService @Inject()(repo: JourneyCacheRepository)
-                                     (implicit ec: ExecutionContext) extends LoggerUtil {
+class JourneyContextService @Inject() (repo: JourneyCacheRepository)(implicit ec: ExecutionContext) extends LoggerUtil {
 
   def getJourneyContext()(implicit journeyId: JourneyId): Future[Option[FileUploadContext]] =
     repo.get(journeyId.value)(DataKeys.journeyContext)
@@ -35,9 +34,10 @@ class JourneyContextService @Inject()(repo: JourneyCacheRepository)
   def putJourneyContext(journeyContext: FileUploadContext)(implicit journeyId: JourneyId): Future[CacheItem] =
     repo.put(journeyId.value)(DataKeys.journeyContext, journeyContext)
 
-  def withJourneyContext[T](journeyNotFoundResult: => Future[T])(f: FileUploadContext => Future[T])
-                           (implicit journeyId: JourneyId): Future[T] =
-    getJourneyContext.flatMap(_.fold {
+  def withJourneyContext[T](
+    journeyNotFoundResult: => Future[T]
+  )(f: FileUploadContext => Future[T])(implicit journeyId: JourneyId): Future[T] =
+    getJourneyContext().flatMap(_.fold {
       Logger.error("[withFiles] No files exist for the supplied journeyID")
       Logger.debug(s"[withFiles] journeyId: '$journeyId'")
       journeyNotFoundResult

@@ -21,14 +21,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.TextNode
 
-import scala.collection.convert.AsJavaConverters
+import scala.jdk.CollectionConverters
 import ch.qos.logback.classic.spi.ILoggingEvent
 import ch.qos.logback.classic.LoggerContext
 import ch.qos.logback.core.OutputStreamAppender
 import java.io.OutputStream
 import java.nio.ByteBuffer
+import com.fasterxml.jackson.databind.JsonNode
 
-class JsonEncoderSpec extends UnitSpec with AsJavaConverters {
+class JsonEncoderSpec extends UnitSpec {
 
   val encoder = new JsonEncoder()
   val jnf     = JsonNodeFactory.instance
@@ -51,7 +52,7 @@ class JsonEncoderSpec extends UnitSpec with AsJavaConverters {
       encoder.decodeMessage(node, """json{"foo":"bar"}""")
       node.get("ucdf") shouldBe new ObjectNode(
         jnf,
-        mapAsJavaMap(Map("foo" -> new TextNode("bar")))
+        CollectionConverters.MapHasAsJava[String, JsonNode](Map("foo" -> new TextNode("bar"))).asJava
       )
       node.get("message") shouldBe new TextNode("""{"foo":"bar"}""")
     }
