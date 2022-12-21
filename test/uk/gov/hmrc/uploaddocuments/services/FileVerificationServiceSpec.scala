@@ -31,11 +31,11 @@ import scala.concurrent.duration._
 
 class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService with TestData {
 
-  override implicit val defaultTimeout: FiniteDuration = 20 seconds
+  override implicit val defaultTimeout: FiniteDuration = 20.seconds
 
-  implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val hc = HeaderCarrier()
-  implicit val jid = journeyId
+  implicit val ec       = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val hc       = HeaderCarrier()
+  implicit val jid      = journeyId
   implicit val messages = mock[Messages]
 
   implicit val scheduler: Scheduler = ActorSystem("FileVerificationTestsActor").scheduler
@@ -141,13 +141,20 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
             "return FileVerificationStatus with the expected hint as the allowedFileTypesHint" in {
 
               val hint = "Hint"
-              val context = journeyContext.copy(config = fileUploadSessionConfig.copy(content = CustomizedServiceContent(
-                allowedFilesTypesHint = Some(hint)
-              )))
+              val context = journeyContext.copy(config =
+                fileUploadSessionConfig.copy(content =
+                  CustomizedServiceContent(
+                    allowedFilesTypesHint = Some(hint)
+                  )
+                )
+              )
 
               mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
-              await(TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)) shouldBe Some(
+              await(
+                TestFileVerificationService
+                  .getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)
+              ) shouldBe Some(
                 FileVerificationStatus(
                   fileUpload = acceptedFileUpload,
                   filePreviewUrl = routes.PreviewController.previewFileUploadByReference,
@@ -165,11 +172,15 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
               "return FileVerificationStatus with the expected file extensions as the allowedFileTypesHint" in {
 
                 val extensions = "Extensions"
-                val context = journeyContext.copy(config = fileUploadSessionConfig.copy(allowedFileExtensions = Some(extensions)))
+                val context =
+                  journeyContext.copy(config = fileUploadSessionConfig.copy(allowedFileExtensions = Some(extensions)))
 
                 mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
-                await(TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)) shouldBe
+                await(
+                  TestFileVerificationService
+                    .getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)
+                ) shouldBe
                   Some(
                     FileVerificationStatus(
                       fileUpload = acceptedFileUpload,
@@ -187,7 +198,9 @@ class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService wi
 
                 mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
-                await(TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)) shouldBe Some(
+                await(
+                  TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)
+                ) shouldBe Some(
                   FileVerificationStatus(
                     fileUpload = acceptedFileUpload,
                     filePreviewUrl = routes.PreviewController.previewFileUploadByReference,

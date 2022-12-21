@@ -85,16 +85,24 @@ class FileUploadsSpec extends UnitSpec {
     "filter accepted uploads" in {
       FileUploads(Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "foo"))).onlyAccepted shouldBe FileUploads()
 
-      FileUploads(Seq(initiatedFileUpload1, initiatedFileUpload2, initiatedFileUpload3, acceptedFileUpload)).onlyAccepted shouldBe
+      FileUploads(
+        Seq(initiatedFileUpload1, initiatedFileUpload2, initiatedFileUpload3, acceptedFileUpload)
+      ).onlyAccepted shouldBe
         FileUploads(Seq(acceptedFileUpload))
 
-      FileUploads(Seq(postedFileUpload1, acceptedFileUpload, initiatedFileUpload2, initiatedFileUpload3)).onlyAccepted shouldBe
+      FileUploads(
+        Seq(postedFileUpload1, acceptedFileUpload, initiatedFileUpload2, initiatedFileUpload3)
+      ).onlyAccepted shouldBe
         FileUploads(Seq(acceptedFileUpload))
 
-      FileUploads(Seq(postedFileUpload1, initiatedFileUpload2, acceptedFileUpload, postedFileUpload3)).onlyAccepted shouldBe
+      FileUploads(
+        Seq(postedFileUpload1, initiatedFileUpload2, acceptedFileUpload, postedFileUpload3)
+      ).onlyAccepted shouldBe
         FileUploads(Seq(acceptedFileUpload))
 
-      FileUploads(Seq(postedFileUpload1, acceptedFileUpload, postedFileUpload2, postedFileUpload3)).onlyAccepted shouldBe
+      FileUploads(
+        Seq(postedFileUpload1, acceptedFileUpload, postedFileUpload2, postedFileUpload3)
+      ).onlyAccepted shouldBe
         FileUploads(Seq(acceptedFileUpload))
 
     }
@@ -105,12 +113,12 @@ class FileUploadsSpec extends UnitSpec {
         case _                                   => "foo"
       }) shouldBe "Chrysanthemum.jpg"
 
-      ("""C:\Users\Public\Pictures\Sample \u1213Pictures\Chrysanthemum.jpg""" match {
+      ("C:\\Users\\Public\\Pictures\\Sample \u1213Pictures\\Chrysanthemum.jpg" match {
         case FileUpload.isWindowPathHaving(name) => name
         case _                                   => "foo"
       }) shouldBe "Chrysanthemum.jpg"
 
-      ("""C:\Users\Public\Pictures\Sample \u1213Pictures\C\u1213hrysanthemum.jpg""" match {
+      ("C:\\Users\\Public\\Pictures\\Sample \u1213Pictures\\C\u1213hrysanthemum.jpg" match {
         case FileUpload.isWindowPathHaving(name) => name
         case _                                   => "foo"
       }) shouldBe "C\u1213hrysanthemum.jpg"
@@ -148,11 +156,13 @@ class FileUploadsSpec extends UnitSpec {
       FileUpload.sanitizeFileName("123456780.abc") shouldBe "123456780.abc"
       FileUpload.sanitizeFileName("""C:\Users\Public\Pictures\Sample Pictures\Chrysanthemum.jpg""") shouldBe
         "Chrysanthemum.jpg"
-      FileUpload.sanitizeFileName("""C:\Users\Public\Pictures\Sample \u1213Pictures\Chrysanthemum.jpg""") shouldBe
+      FileUpload.sanitizeFileName("C:\\Users\\Public\\Pictures\\Sample \u1213Pictures\\Chrysanthemum.jpg") shouldBe
         "Chrysanthemum.jpg"
-      FileUpload.sanitizeFileName("""C:\Users\Public\Pictures\Sample \u1213Pictures\Chrysanthemum\u1213jpg""") shouldBe
+      FileUpload.sanitizeFileName("C:\\Users\\Public\\Pictures\\Sample \u1213Pictures\\Chrysanthemum\u1213jpg") shouldBe
         "Chrysanthemum\u1213jpg"
-      FileUpload.sanitizeFileName("""C:\Users\Public\Pictures\Sample \u1213Pictures\0000Chry*[(anth]?)emum\u1213jpg""") shouldBe
+      FileUpload.sanitizeFileName(
+        "C:\\Users\\Public\\Pictures\\Sample \u1213Pictures\\0000Chry*[(anth]?)emum\u1213jpg"
+      ) shouldBe
         "0000Chry*[(anth]?)emum\u1213jpg"
     }
 
@@ -167,11 +177,13 @@ class FileUploadsSpec extends UnitSpec {
           duplicateFileUpload,
           rejectedFileUpload,
           failedFileUpload
-        )).acceptedCount shouldBe 2
+        )
+      ).acceptedCount shouldBe 2
     }
 
     "count initiated or accepted" in {
-      FileUploads(Seq(
+      FileUploads(
+        Seq(
           postedFileUpload1,
           acceptedFileUpload,
           initiatedFileUpload2,

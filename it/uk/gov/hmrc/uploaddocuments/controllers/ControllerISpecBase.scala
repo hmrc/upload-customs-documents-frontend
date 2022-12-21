@@ -9,6 +9,7 @@ import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.support.{SHA256, ServerISpec, TestData}
+import uk.gov.hmrc.http.HeaderNames
 
 trait ControllerISpecBase extends ServerISpec {
 
@@ -52,12 +53,13 @@ trait ControllerISpecBase extends ServerISpec {
     withHeaders {
       wsClient
         .url(s"$backchannelBaseUrl$path")
-        .withCookies(
-          DefaultWSCookie(
-            sessionCookie.name,
-            sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value
-          )
-        )
+        .withHttpHeaders(HeaderNames.xSessionId -> hc.sessionId.map(_.value).getOrElse(""))
+      // .withCookies(
+      //   DefaultWSCookie(
+      //     sessionCookie.name,
+      //     sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value
+      //   )
+      // )
     }
 
   final def requestWithCookies(path: String, cookies: (String, String)*)(implicit

@@ -22,11 +22,11 @@ import ch.qos.logback.core.read.ListAppender
 import org.scalatest.Assertion
 import play.api.LoggerLike
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 trait LogCapturing { _: UnitSpec =>
 
-  def withCaptureOfLoggingFrom(logger: LogbackLogger)(body: (=> List[ILoggingEvent]) => Unit) {
+  def withCaptureOfLoggingFrom(logger: LogbackLogger)(body: (=> List[ILoggingEvent]) => Unit): Unit = {
     val appender = new ListAppender[ILoggingEvent]()
     appender.setContext(logger.getLoggerContext)
     appender.start()
@@ -36,15 +36,20 @@ trait LogCapturing { _: UnitSpec =>
     body(appender.list.asScala.toList)
   }
 
-  def withCaptureOfLoggingFrom(logger: LoggerLike)(body: (=> List[ILoggingEvent]) => Unit) {
+  def withCaptureOfLoggingFrom(logger: LoggerLike)(body: (=> List[ILoggingEvent]) => Unit): Unit =
     withCaptureOfLoggingFrom(logger.logger.asInstanceOf[LogbackLogger])(body)
-  }
 
   def logExists(msg: String)(logs: List[ILoggingEvent]): Assertion =
-    assert(logs.exists(_.getMessage.contains(msg)), s"The log msg '$msg' did not appear within the captured log messages.")
+    assert(
+      logs.exists(_.getMessage.contains(msg)),
+      s"The log msg '$msg' did not appear within the captured log messages."
+    )
 
   def logExists(msg: String, nTimes: Int)(logs: List[ILoggingEvent]): Assertion = {
     val numberOfLogs = logs.collect { case log if log.getMessage.contains(msg) => log }.size
-    assert(numberOfLogs == nTimes, s"The log msg '$msg' did not appear $nTimes times within logs. Actually occurred $numberOfLogs times.")
+    assert(
+      numberOfLogs == nTimes,
+      s"The log msg '$msg' did not appear $nTimes times within logs. Actually occurred $numberOfLogs times."
+    )
   }
 }

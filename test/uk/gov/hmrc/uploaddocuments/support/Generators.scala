@@ -28,7 +28,7 @@ object Generators {
       value.exists(set.contains)
   }
 
-  final val upperCaseChar = Gen.oneOf("ABCDEFGHIJKLMNOPRSUWXYZ".toCharArray())
+  final val upperCaseChar = Gen.oneOf("ABCDEFGHIJKLMNOPRSUWXYZ".toIndexedSeq)
 
   final def nonEmptyString(maxSize: Int, noOfSpaces: Int = 0): Gen[String] =
     Gen
@@ -41,8 +41,8 @@ object Generators {
       )
       .map(_.mkString(" "))
 
-  final val booleanGen = Gen.frequency((20, Gen.const(false)), (80, Gen.const(true)))
-  final val noneGen = Gen.const(None)
+  final val booleanGen                           = Gen.frequency((20, Gen.const(false)), (80, Gen.const(true)))
+  final val noneGen                              = Gen.const(None)
   final def some[A](gen: Gen[A]): Gen[Option[A]] = gen.map(Some.apply)
 
   final def conditional[A](b: Option[Any], gen: Gen[A]): Gen[Option[A]] =

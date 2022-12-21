@@ -91,7 +91,7 @@ object FileUpload extends SealedTraitFormats[FileUpload] {
       uploadId = uploadId
     )
 
-  final val isWindowPathHaving: Regex = "[a-zA-Z]:.*\\\\(.+)".r("name")
+  final val isWindowPathHaving: Regex = "[a-zA-Z]:.*\\\\(?<name>.+)".r
 
   final def sanitizeFileName(fileName: String): String =
     fileName match {

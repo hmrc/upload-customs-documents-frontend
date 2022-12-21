@@ -16,10 +16,8 @@
 
 package uk.gov.hmrc.uploaddocuments.models
 
-import play.api.libs.json.Format
-import play.api.libs.json.Json
-
-import CustomizedServiceContent._
+import play.api.libs.json.{Format, Json}
+import uk.gov.hmrc.uploaddocuments.models.CustomizedServiceContent._
 import uk.gov.hmrc.uploaddocuments.support.HtmlCleaner
 
 final case class CustomizedServiceContent(

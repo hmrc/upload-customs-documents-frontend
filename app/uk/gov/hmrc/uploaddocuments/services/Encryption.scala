@@ -22,11 +22,11 @@ import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import java.nio.charset.StandardCharsets
 import java.security.Key
+import java.util.Base64
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 import scala.util.Try
-import java.util.Base64
 
 object Encryption extends LoggerUtil {
 
@@ -100,7 +100,7 @@ object KeyProvider {
       .getOrElse(throw new SecurityException(s"Missing required configuration entry: json.encryption.key"))
 
     val previousEncryptionKeys: Seq[String] =
-      Try(config.getStringList("json.encryption.previousKeys")).fold(_ => Seq.empty, _.asScala)
+      Try(config.getStringList("json.encryption.previousKeys")).fold(_ => Seq.empty, _.asScala.toSeq)
 
     KeyProvider(currentEncryptionKey +: previousEncryptionKeys)
   }

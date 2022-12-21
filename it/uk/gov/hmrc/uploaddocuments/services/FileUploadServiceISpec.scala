@@ -34,9 +34,9 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
 
   implicit lazy val ec = scala.concurrent.ExecutionContext.Implicits.global
 
-  lazy val repo = app.injector.instanceOf[JourneyCacheRepository]
+  lazy val repo                  = app.injector.instanceOf[JourneyCacheRepository]
   lazy val testFileUploadService = app.injector.instanceOf[FileUploadService]
-  lazy val appConfig = app.injector.instanceOf[AppConfig]
+  lazy val appConfig             = app.injector.instanceOf[AppConfig]
 
   override def beforeEach(): Unit = {
     super.beforeEach()
@@ -108,17 +108,17 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
 
     "calling .withFiles()" should {
 
-      def testWithFiles(): Option[FileUploads] = {
-        await(testFileUploadService.withFiles[Option[FileUploads]](
-          journeyNotFoundResult = Future.successful(None)
-        )(files => Future.successful(Some(files)))(journeyId))
-      }
+      def testWithFiles(): Option[FileUploads] =
+        await(
+          testFileUploadService.withFiles[Option[FileUploads]](
+            journeyNotFoundResult = Future.successful(None)
+          )(files => Future.successful(Some(files)))(journeyId)
+        )
 
       "execute the journeyNotFound result when no journey found" in {
 
         withCaptureOfLoggingFrom(testFileUploadService.logger) { logs =>
-
-          testWithFiles shouldBe None
+          testWithFiles() shouldBe None
 
           logExists("[withFiles] No files exist for the supplied journeyID")(logs)
           logExists(s"[withFiles] journeyId: '$journeyId'")(logs)
@@ -128,7 +128,7 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
       "execute f() when no journey is found" in {
 
         await(testFileUploadService.putFiles(FileUploads())(journeyId))
-        testWithFiles shouldBe Some(FileUploads())
+        testWithFiles() shouldBe Some(FileUploads())
       }
     }
 
@@ -139,15 +139,17 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
         "update the file and mark its state as POSTED" in {
 
           val files = FileUploads(Seq(acceptedFileUpload, fileUploadInitiated))
-          val key = fileUploadInitiated.reference
+          val key   = fileUploadInitiated.reference
 
           await(testFileUploadService.putFiles(files)(journeyId))
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
-          val updatedFiles = FileUploads(Seq(
-            acceptedFileUpload,
-            FileUpload.Posted(Nonce.Any, Timestamp.Any, key)
-          ))
+          val updatedFiles = FileUploads(
+            Seq(
+              acceptedFileUpload,
+              FileUpload.Posted(Nonce.Any, Timestamp.Any, key)
+            )
+          )
 
           await(testFileUploadService.markFileAsPosted(key)(journeyId)) shouldBe Some(updatedFiles)
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
@@ -165,13 +167,15 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
           await(testFileUploadService.putFiles(files)(journeyId))
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
-
           withCaptureOfLoggingFrom(testFileUploadService.logger) { logs =>
-
             await(testFileUploadService.markFileAsPosted("invalidKey")(journeyId)) shouldBe None
 
-            logExists("[markFileAsPosted] No file with the supplied journeyID & key was updated and marked as posted")(logs)
-            logExists(s"[markFileAsPosted] No file with the supplied journeyID: '$journeyId' & key: 'invalidKey' was updated and marked as posted")(logs)
+            logExists("[markFileAsPosted] No file with the supplied journeyID & key was updated and marked as posted")(
+              logs
+            )
+            logExists(
+              s"[markFileAsPosted] No file with the supplied journeyID: '$journeyId' & key: 'invalidKey' was updated and marked as posted"
+            )(logs)
           }
 
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
@@ -185,7 +189,6 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
         "do nothing but log error" in {
 
           withCaptureOfLoggingFrom(testFileUploadService.logger) { logs =>
-
             await(testFileUploadService.markFileAsPosted("invalidKey")(JourneyId("invalidJourneyId"))) shouldBe None
 
             logExists("[withFiles] No files exist for the supplied journeyID")(logs)
@@ -202,17 +205,22 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
         "update the file and mark its state as REJECTED" in {
 
           val files = FileUploads(Seq(acceptedFileUpload, fileUploadPosted))
-          val key = fileUploadPosted.reference
+          val key   = fileUploadPosted.reference
 
           await(testFileUploadService.putFiles(files)(journeyId))
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
-          val updatedFiles = FileUploads(Seq(
-            acceptedFileUpload,
-            FileUpload.Rejected(Nonce.Any, Timestamp.Any, key, s3Errors(key))
-          ))
+          val updatedFiles = FileUploads(
+            Seq(
+              acceptedFileUpload,
+              FileUpload.Rejected(Nonce.Any, Timestamp.Any, key, s3Errors(key))
+            )
+          )
 
-          await(testFileUploadService.markFileAsRejected(s3Errors(key))(journeyId, FileUploadContext(fileUploadSessionConfig))) shouldBe Some(updatedFiles)
+          await(
+            testFileUploadService
+              .markFileAsRejected(s3Errors(key))(journeyId, FileUploadContext(fileUploadSessionConfig))
+          ) shouldBe Some(updatedFiles)
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
           await(testFileUploadService.getFiles(journeyId)) shouldBe Some(updatedFiles)
@@ -229,11 +237,17 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
           withCaptureOfLoggingFrom(testFileUploadService.logger) { logs =>
+            await(
+              testFileUploadService
+                .markFileAsRejected(s3Errors("invalidKey"))(journeyId, FileUploadContext(fileUploadSessionConfig))
+            ) shouldBe None
 
-            await(testFileUploadService.markFileAsRejected(s3Errors("invalidKey"))(journeyId, FileUploadContext(fileUploadSessionConfig))) shouldBe None
-
-            logExists("[markFileAsRejected] No file with the supplied journeyID & key was updated and marked as rejected")(logs)
-            logExists(s"[markFileAsRejected] No file with the supplied journeyID: '$journeyId' & key: 'invalidKey' was updated and marked as rejected")(logs)
+            logExists(
+              "[markFileAsRejected] No file with the supplied journeyID & key was updated and marked as rejected"
+            )(logs)
+            logExists(
+              s"[markFileAsRejected] No file with the supplied journeyID: '$journeyId' & key: 'invalidKey' was updated and marked as rejected"
+            )(logs)
           }
 
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
@@ -247,8 +261,12 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
         "do nothing but log error" in {
 
           withCaptureOfLoggingFrom(testFileUploadService.logger) { logs =>
-
-            await(testFileUploadService.markFileAsRejected(s3Errors("invalidKey"))(JourneyId("invalidJourneyId"), FileUploadContext(fileUploadSessionConfig))) shouldBe None
+            await(
+              testFileUploadService.markFileAsRejected(s3Errors("invalidKey"))(
+                JourneyId("invalidJourneyId"),
+                FileUploadContext(fileUploadSessionConfig)
+              )
+            ) shouldBe None
 
             logExists("[withFiles] No files exist for the supplied journeyID")(logs)
             logExists("[withFiles] journeyId: 'invalidJourneyId'")(logs)
@@ -274,22 +292,26 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
                 await(testFileUploadService.putFiles(files)(journeyId))
                 await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
-                val updatedFiles = FileUploads(Seq(
-                  acceptedFileUpload,
-                  FileUpload.Duplicate(
-                    nonce = fileUploadPosted.nonce,
-                    timestamp = Timestamp.Any,
-                    reference = fileUploadPosted.reference,
-                    checksum = acceptedFileUpload.checksum,
-                    existingFileName = acceptedFileUpload.fileName,
-                    duplicateFileName = "file.png"
+                val updatedFiles = FileUploads(
+                  Seq(
+                    acceptedFileUpload,
+                    FileUpload.Duplicate(
+                      nonce = fileUploadPosted.nonce,
+                      timestamp = Timestamp.Any,
+                      reference = fileUploadPosted.reference,
+                      checksum = acceptedFileUpload.checksum,
+                      existingFileName = acceptedFileUpload.fileName,
+                      duplicateFileName = "file.png"
+                    )
                   )
-                ))
+                )
 
-                await(testFileUploadService.markFileWithUpscanResponseAndNotifyHost(
-                  notification = upscanFileReady(fileUploadPosted.reference, acceptedFileUpload.checksum),
-                  requestNonce = fileUploadPosted.nonce
-                )(FileUploadContext(fileUploadSessionConfig), journeyId, hc(FakeRequest()))) shouldBe Some(updatedFiles)
+                await(
+                  testFileUploadService.markFileWithUpscanResponseAndNotifyHost(
+                    notification = upscanFileReady(fileUploadPosted.reference, acceptedFileUpload.checksum),
+                    requestNonce = fileUploadPosted.nonce
+                  )(FileUploadContext(fileUploadSessionConfig), journeyId, hc(FakeRequest()))
+                ) shouldBe Some(updatedFiles)
 
                 await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
@@ -301,27 +323,29 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
 
               "update the files to mark it as ACCEPTED and push a notification to inform the host service" in {
 
-                val files = FileUploads(Seq(acceptedFileUpload, fileUploadPosted))
+                val files             = FileUploads(Seq(acceptedFileUpload, fileUploadPosted))
                 val fileUploadContext = FileUploadContext(fileUploadSessionConfig)
 
                 await(testFileUploadService.putFiles(files)(journeyId))
                 await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
                 val upscanNotification = upscanFileReady(fileUploadPosted.reference)
-                val updatedFiles = FileUploads(Seq(
-                  acceptedFileUpload,
-                  FileUpload.Accepted(
-                    nonce = fileUploadPosted.nonce,
-                    timestamp = Timestamp.Any,
-                    reference = fileUploadPosted.reference,
-                    checksum = upscanNotification.uploadDetails.checksum,
-                    url = upscanNotification.downloadUrl,
-                    uploadTimestamp = upscanNotification.uploadDetails.uploadTimestamp,
-                    fileName = upscanNotification.uploadDetails.fileName,
-                    fileMimeType = upscanNotification.uploadDetails.fileMimeType,
-                    fileSize = upscanNotification.uploadDetails.size
+                val updatedFiles = FileUploads(
+                  Seq(
+                    acceptedFileUpload,
+                    FileUpload.Accepted(
+                      nonce = fileUploadPosted.nonce,
+                      timestamp = Timestamp.Any,
+                      reference = fileUploadPosted.reference,
+                      checksum = upscanNotification.uploadDetails.checksum,
+                      url = upscanNotification.downloadUrl,
+                      uploadTimestamp = upscanNotification.uploadDetails.uploadTimestamp,
+                      fileName = upscanNotification.uploadDetails.fileName,
+                      fileMimeType = upscanNotification.uploadDetails.fileMimeType,
+                      fileSize = upscanNotification.uploadDetails.size
+                    )
                   )
-                ))
+                )
 
                 givenResultPushEndpoint(
                   path = "/result-post-url",
@@ -329,10 +353,12 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
                   status = 204
                 )
 
-                await(testFileUploadService.markFileWithUpscanResponseAndNotifyHost(
-                  notification = upscanNotification,
-                  requestNonce = fileUploadPosted.nonce
-                )(fileUploadContext, journeyId, hc(FakeRequest()))) shouldBe Some(updatedFiles)
+                await(
+                  testFileUploadService.markFileWithUpscanResponseAndNotifyHost(
+                    notification = upscanNotification,
+                    requestNonce = fileUploadPosted.nonce
+                  )(fileUploadContext, journeyId, hc(FakeRequest()))
+                ) shouldBe Some(updatedFiles)
 
                 await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
@@ -343,29 +369,38 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
 
           "the response is FAILED (QUARANTINED)" must {
 
-              "update the files to mark it as FAILED and do NOT push a notification to inform the host service" in {
+            "update the files to mark it as FAILED and do NOT push a notification to inform the host service" in {
 
-                val files = FileUploads(Seq(acceptedFileUpload, fileUploadPosted))
-                val fileUploadContext = FileUploadContext(fileUploadSessionConfig)
+              val files             = FileUploads(Seq(acceptedFileUpload, fileUploadPosted))
+              val fileUploadContext = FileUploadContext(fileUploadSessionConfig)
 
-                await(testFileUploadService.putFiles(files)(journeyId))
-                await(repo.collection.countDocuments().toFuture()) shouldBe 1
+              await(testFileUploadService.putFiles(files)(journeyId))
+              await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
-                val upscanNotification = upscanFailed(fileUploadPosted.reference)
-                val updatedFiles = FileUploads(Seq(
+              val upscanNotification = upscanFailed(fileUploadPosted.reference)
+              val updatedFiles = FileUploads(
+                Seq(
                   acceptedFileUpload,
-                  FileUpload.Failed(fileUploadPosted.nonce, Timestamp.Any, fileUploadPosted.reference, upscanNotification.failureDetails)
-                ))
+                  FileUpload.Failed(
+                    fileUploadPosted.nonce,
+                    Timestamp.Any,
+                    fileUploadPosted.reference,
+                    upscanNotification.failureDetails
+                  )
+                )
+              )
 
-                await(testFileUploadService.markFileWithUpscanResponseAndNotifyHost(
+              await(
+                testFileUploadService.markFileWithUpscanResponseAndNotifyHost(
                   notification = upscanNotification,
                   requestNonce = fileUploadPosted.nonce
-                )(fileUploadContext, journeyId, hc(FakeRequest()))) shouldBe Some(updatedFiles)
+                )(fileUploadContext, journeyId, hc(FakeRequest()))
+              ) shouldBe Some(updatedFiles)
 
-                await(repo.collection.countDocuments().toFuture()) shouldBe 1
+              await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
-                await(testFileUploadService.getFiles(journeyId)) shouldBe Some(updatedFiles)
-              }
+              await(testFileUploadService.getFiles(journeyId)) shouldBe Some(updatedFiles)
+            }
           }
         }
       }
@@ -380,14 +415,19 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
           withCaptureOfLoggingFrom(testFileUploadService.logger) { logs =>
+            await(
+              testFileUploadService.markFileWithUpscanResponseAndNotifyHost(
+                notification = upscanFileReady("invalidKey"),
+                requestNonce = Nonce("notExist")
+              )(FileUploadContext(fileUploadSessionConfig), journeyId, hc(FakeRequest()))
+            ) shouldBe Some(files)
 
-            await(testFileUploadService.markFileWithUpscanResponseAndNotifyHost(
-              notification = upscanFileReady("invalidKey"),
-              requestNonce = Nonce("notExist")
-            )(FileUploadContext(fileUploadSessionConfig), journeyId, hc(FakeRequest()))) shouldBe Some(files)
-
-            logExists("[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan")(logs)
-            logExists(s"[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan. journeyId: '$journeyId', upscanRef: 'invalidKey'")(logs)
+            logExists(
+              "[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan"
+            )(logs)
+            logExists(
+              s"[markFileWithUpscanResponseAndNotifyHost] No files were updated following the callback from Upscan. journeyId: '$journeyId', upscanRef: 'invalidKey'"
+            )(logs)
           }
 
           await(repo.collection.countDocuments().toFuture()) shouldBe 1
@@ -401,11 +441,12 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
         "do nothing but log error" in {
 
           withCaptureOfLoggingFrom(testFileUploadService.logger) { logs =>
-
-            await(testFileUploadService.markFileWithUpscanResponseAndNotifyHost(
-              notification = upscanFileReady("foo"),
-              requestNonce = Nonce.Any
-            )(FileUploadContext(fileUploadSessionConfig), JourneyId("invalidJourneyId"), hc(FakeRequest()))) shouldBe None
+            await(
+              testFileUploadService.markFileWithUpscanResponseAndNotifyHost(
+                notification = upscanFileReady("foo"),
+                requestNonce = Nonce.Any
+              )(FileUploadContext(fileUploadSessionConfig), JourneyId("invalidJourneyId"), hc(FakeRequest()))
+            ) shouldBe None
 
             logExists("[withFiles] No files exist for the supplied journeyID")(logs)
             logExists("[withFiles] journeyId: 'invalidJourneyId'")(logs)

@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.uploaddocuments.support
 
-import java.net.URI
-
 import play.api.{Configuration, Environment, Mode}
+
+import java.net.URI
 
 object CallOps {
 

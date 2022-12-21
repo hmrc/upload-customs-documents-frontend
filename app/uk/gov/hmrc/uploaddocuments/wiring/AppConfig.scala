@@ -17,16 +17,15 @@
 package uk.gov.hmrc.uploaddocuments.wiring
 
 import com.google.inject.ImplementedBy
+import play.api.Configuration
 import play.api.i18n.Lang
 import play.api.mvc.{Call, RequestHeader}
 import uk.gov.hmrc.play.bootstrap.binders.SafeRedirectUrl
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
+import uk.gov.hmrc.uploaddocuments.connectors.Retries
 
 import javax.inject.Inject
-import scala.concurrent.duration.Duration
-import scala.concurrent.duration.FiniteDuration
-import uk.gov.hmrc.uploaddocuments.connectors.Retries
-import play.api.Configuration
+import scala.concurrent.duration.{Duration, FiniteDuration}
 
 @ImplementedBy(classOf[AppConfigImpl])
 trait AppConfig {

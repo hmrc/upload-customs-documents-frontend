@@ -16,10 +16,9 @@
 
 package uk.gov.hmrc.uploaddocuments.models
 
+import play.api.libs.json.{Format, JsValue, Json}
+
 import java.time.ZonedDateTime
-import play.api.libs.json.Format
-import play.api.libs.json.Json
-import play.api.libs.json.JsValue
 
 case class UploadedFile(
   upscanReference: String,

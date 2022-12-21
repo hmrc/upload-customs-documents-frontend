@@ -23,8 +23,7 @@ import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class CallbackFromUpscanController @Inject() (
@@ -45,7 +44,7 @@ class CallbackFromUpscanController @Inject() (
         } { implicit journeyContext =>
           logSuccessResponse(payload)
           fileUploadService.markFileWithUpscanResponseAndNotifyHost(payload, Nonce(nonce)).map(_ => NoContent)
-        }
+        }()
       }
     }
 

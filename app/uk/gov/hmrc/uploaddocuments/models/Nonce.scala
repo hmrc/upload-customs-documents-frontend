@@ -17,10 +17,10 @@
 package uk.gov.hmrc.uploaddocuments.models
 
 import play.api.libs.json.Format
-import java.util.Base64
+
 import java.nio.charset.StandardCharsets
-import scala.util.Random
-import scala.util.Try
+import java.util.Base64
+import scala.util.{Random, Try}
 
 /** Random integer value container. */
 sealed trait Nonce {

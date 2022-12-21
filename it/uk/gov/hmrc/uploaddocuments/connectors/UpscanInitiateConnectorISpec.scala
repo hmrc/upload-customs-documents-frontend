@@ -35,7 +35,7 @@ trait UpscanInitiateConnectorISpecSetup extends AppISpec with UpscanInitiateStub
 
   implicit val hc: HeaderCarrier = HeaderCarrier()
 
-  override def fakeApplication: Application = appBuilder.build()
+  override def fakeApplication(): Application = appBuilder.build()
 
   lazy val connector: UpscanInitiateConnector =
     app.injector.instanceOf[UpscanInitiateConnector]

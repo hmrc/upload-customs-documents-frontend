@@ -16,15 +16,15 @@
 
 package uk.gov.hmrc.uploaddocuments.views
 
-import javax.inject.Singleton
 import play.api.data.Form
 import play.api.i18n.Messages
-import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
-import uk.gov.hmrc.uploaddocuments.models.FileUploads
-import uk.gov.hmrc.uploaddocuments.models.FileUpload
-import uk.gov.hmrc.govukfrontend.views.viewmodels.content.Text
-import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryList
 import play.api.mvc.Call
+import uk.gov.hmrc.govukfrontend.views.viewmodels.content.Text
+import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
+import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryList
+import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploads}
+
+import javax.inject.Singleton
 
 @Singleton
 class SummaryViewHelper extends SummaryListRowHelper {

@@ -16,8 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.models
 
-import play.api.libs.json.Json
-import play.api.libs.json.Format
+import play.api.libs.json.{Format, Json}
 
 case class Features(
   showUploadMultiple: Boolean              = true,

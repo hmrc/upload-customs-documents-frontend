@@ -44,7 +44,7 @@ class SessionControllerISpec extends SessionControllerISpecSetup() {
 
 trait SessionControllerISpecSetup extends ServerISpec {
 
-  override def fakeApplication: Application = appBuilder.build()
+  override def fakeApplication(): Application = appBuilder.build()
 
   def givenSignOut(): Unit =
     stubFor(

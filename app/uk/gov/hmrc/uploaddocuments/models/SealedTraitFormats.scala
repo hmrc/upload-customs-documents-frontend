@@ -17,6 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.models
 
 import play.api.libs.json._
+
 import scala.reflect.ClassTag
 
 /** Helper trait providing JSON formatter based on the set of case classes of the sealed trait. Designed to be mixed in

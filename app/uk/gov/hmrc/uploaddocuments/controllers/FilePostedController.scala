@@ -33,7 +33,8 @@ class FilePostedController @Inject() (components: BaseControllerComponents, file
   // GET /journey/:journeyId/file-posted
   final def asyncMarkFileUploadAsPosted(implicit journeyId: JourneyId): Action[AnyContent] = Action.async {
     implicit request =>
-      Forms.UpscanUploadSuccessForm.bindFromRequest
+      Forms.UpscanUploadSuccessForm
+        .bindFromRequest()
         .fold(
           _ => {
             Logger.error("[asyncMarkFileUploadAsPosted] Query Parameters from Upscan could not be bound to form")

@@ -18,7 +18,7 @@ abstract class BaseISpec
     extends UnitSpec with WireMockSupport with AuthStubs with DataStreamStubs with MetricsTestSupport {
 
   import scala.concurrent.duration._
-  override implicit val defaultTimeout: FiniteDuration = 5 seconds
+  override implicit val defaultTimeout: FiniteDuration = 5.seconds
 
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
@@ -57,7 +57,7 @@ abstract class BaseISpec
     bodyOf(result) should include(expectedSubstring)
   }
 
-  private lazy val messagesApi = app.injector.instanceOf[MessagesApi]
+  private lazy val messagesApi            = app.injector.instanceOf[MessagesApi]
   private implicit val messages: Messages = messagesApi.preferred(Seq.empty[Lang])
 
   final def htmlEscapedMessage(key: String, args: String*): String = HtmlFormat.escape(Messages(key, args: _*)).toString
@@ -73,7 +73,7 @@ abstract class BaseISpec
 
   final val fileUploadSessionConfig =
     FileUploadSessionConfig(
-      nonce       = Nonce.random,
+      nonce = Nonce.random,
       continueUrl = s"$wireMockBaseUrlAsString/continue-url",
       backlinkUrl = s"$wireMockBaseUrlAsString/backlink-url",
       callbackUrl = s"$wireMockBaseUrlAsString/result-post-url"

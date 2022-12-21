@@ -16,10 +16,11 @@
 
 package uk.gov.hmrc.uploaddocuments.views.components
 
-import javax.inject.{Inject, Singleton}
-import play.api.mvc.Request
 import play.api.i18n.Messages
+import play.api.mvc.Request
 import play.twirl.api.Html
+
+import javax.inject.{Inject, Singleton}
 
 @Singleton
 class forms @Inject() (
@@ -43,8 +44,8 @@ class forms @Inject() (
     _formWithCSRF.apply(
       action,
       (Seq(
-        'id         -> "upload-documents",
-        'novalidate -> "novalidate"
+        Symbol("id")         -> "upload-documents",
+        Symbol("novalidate") -> "novalidate"
       ) ++ args): _*
     )(body)
 }
