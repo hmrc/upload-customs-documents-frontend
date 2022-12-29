@@ -72,9 +72,11 @@ class ChooseMultipleFilesController @Inject() (
                 {
                   case true =>
                     Future.successful(
-                      Redirect(
-                        journeyConfig.config.continueAfterYesAnswerUrl.getOrElse(journeyConfig.config.backlinkUrl)
-                      )
+                      journeyConfig.config.continueAfterYesAnswerUrl
+                        .orElse(journeyConfig.config.backlinkUrl) match {
+                        case Some(location) => Redirect(location)
+                        case None           => Ok(renderView(journeyConfig, files, Forms.YesNoChoiceForm))
+                      }
                     )
                   case false =>
                     Future.successful(Redirect(routes.ContinueToHostController.continueToHost))
@@ -108,7 +110,7 @@ class ChooseMultipleFilesController @Inject() (
       continueAction = if (context.config.features.showYesNoQuestionBeforeContinue) {
         routes.ChooseMultipleFilesController.continueWithYesNo
       } else { routes.ContinueToHostController.continueToHost },
-      backLink = Call("GET", context.config.backlinkUrl),
+      backLink = context.config.backlinkUrl.map(Call("GET", _)),
       context.config.features.showYesNoQuestionBeforeContinue,
       context.config.content.yesNoQuestionText,
       form

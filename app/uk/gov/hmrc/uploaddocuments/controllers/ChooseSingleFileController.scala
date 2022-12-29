@@ -27,13 +27,15 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ChooseSingleFileController @Inject()(initiateUpscanService: InitiateUpscanService,
-                                           components: BaseControllerComponents,
-                                           view: UploadSingleFileView,
-                                           override val fileUploadService: FileUploadService,
-                                           override val journeyContextService: JourneyContextService)
-                                          (implicit ec: ExecutionContext)
-  extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper with LoggerUtil {
+class ChooseSingleFileController @Inject() (
+  initiateUpscanService: InitiateUpscanService,
+  components: BaseControllerComponents,
+  view: UploadSingleFileView,
+  override val fileUploadService: FileUploadService,
+  override val journeyContextService: JourneyContextService
+)(implicit ec: ExecutionContext)
+    extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper
+    with LoggerUtil {
 
   // GET /choose-file
   def showChooseFile(backLinkToSummary: Option[Boolean]): Action[AnyContent] = Action.async { implicit request =>
@@ -41,7 +43,7 @@ class ChooseSingleFileController @Inject()(initiateUpscanService: InitiateUpscan
       whenAuthenticated {
         withJourneyContext { implicit journeyContext =>
           withFileUploads { files =>
-            if(files.acceptedCount < journeyContext.config.maximumNumberOfFiles) {
+            if (files.acceptedCount < journeyContext.config.maximumNumberOfFiles) {
               initiateUpscanService.initiateNextSingleFileUpload().map {
                 case None => Redirect(components.appConfig.govukStartUrl)
                 case Some((upscanResponse, updatedFiles, oError)) =>
@@ -57,33 +59,34 @@ class ChooseSingleFileController @Inject()(initiateUpscanService: InitiateUpscan
     }
   }
 
-  private def renderView(journeyConfig: FileUploadContext,
-                         initiateResponse: UpscanInitiateResponse,
-                         files: FileUploads,
-                         maybeUploadError: Option[FileUploadError],
-                         backLinkToSummary: Option[Boolean])
-                        (implicit request: Request[_]): HtmlFormat.Appendable = {
+  private def renderView(
+    journeyConfig: FileUploadContext,
+    initiateResponse: UpscanInitiateResponse,
+    files: FileUploads,
+    maybeUploadError: Option[FileUploadError],
+    backLinkToSummary: Option[Boolean]
+  )(implicit request: Request[_]): HtmlFormat.Appendable = {
 
     val backRoute = backLinkToSummary match {
-      case Some(true) => routes.SummaryController.showSummary
-      case _          => Call("GET", journeyConfig.config.backlinkUrl)
+      case Some(true) => Some(routes.SummaryController.showSummary)
+      case _          => journeyConfig.config.backlinkUrl.map(Call("GET", _))
     }
 
     view(
-      maxFileUploadsNumber   = journeyConfig.config.maximumNumberOfFiles,
-      maximumFileSizeBytes   = journeyConfig.config.maximumFileSizeBytes,
+      maxFileUploadsNumber = journeyConfig.config.maximumNumberOfFiles,
+      maximumFileSizeBytes = journeyConfig.config.maximumFileSizeBytes,
       filePickerAcceptFilter = journeyConfig.config.getFilePickerAcceptFilter,
       allowedFileTypesHint = journeyConfig.config.content.allowedFilesTypesHint
         .orElse(journeyConfig.config.allowedFileExtensions)
         .getOrElse(journeyConfig.config.allowedContentTypes),
       journeyConfig.config.newFileDescription,
-      uploadRequest     = initiateResponse.uploadRequest,
-      fileUploads       = files,
-      maybeUploadError  = maybeUploadError,
-      successAction     = routes.SummaryController.showSummary,
-      failureAction     = routes.ChooseSingleFileController.showChooseFile(backLinkToSummary),
+      uploadRequest = initiateResponse.uploadRequest,
+      fileUploads = files,
+      maybeUploadError = maybeUploadError,
+      successAction = routes.SummaryController.showSummary,
+      failureAction = routes.ChooseSingleFileController.showChooseFile(backLinkToSummary),
       checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(initiateResponse.reference),
-      backLink          = backRoute
+      backLink = backRoute
     )(implicitly[Request[_]], journeyConfig.messages, journeyConfig.config.features, journeyConfig.config.content)
   }
 }

@@ -18,4 +18,14 @@ export default function
         return true;
       });
     });
+
+  const backLinkAnchor = document.querySelector('.govuk-back-link');
+
+  if (backLinkAnchor && backLinkAnchor.getAttribute("href") == "#") {
+    backLinkAnchor.addEventListener('click', function (event) {
+      event.preventDefault();
+      history.back();
+    });
+  }
+
 }

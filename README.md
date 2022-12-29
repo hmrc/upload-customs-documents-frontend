@@ -113,7 +113,6 @@ Minimal payload example:
         "config":{
             "nonce": 12345,
             "continueUrl":"https://www.tax.service.gov.uk/my-service/page-after-upload",
-            "backlinkUrl":"https://www.tax.service.gov.uk/my-service/page-before-upload",
             "callbackUrl":"https://my-service.public.mdtp/my-service/receive-file-uploads"
         }
     }
@@ -121,7 +120,7 @@ Minimal payload example:
 
 **IMPORTANT**
 
-- `continueUrl` and `backlinkUrl` MUST be absolute URLs in `localhost` or `*.gov.uk` domain,
+- `continueUrl` and optional `backlinkUrl` MUST be absolute URLs in `localhost` or `*.gov.uk` domain,
 - `callbackUrl` MUST be an absolute URL in the `localhost` or `*.mdtp` domain
 
 <a name="api-initialize-payload"></a>
@@ -139,11 +138,11 @@ Minimal payload example:
 |-----|----|--------|-----------|
 |`nonce`|number|required|Unique integer known only to the host session|
 |`continueUrl`|string|required|A host URL where to proceed after user clicks `Continue` button|
-|`backlinkUrl`|string|required|A host URL where to retreat when user clicks backlink|
 |`callbackUrl`|string|required|A host URL where to push a callback with the uploaded files metadata|
 |`continueAfterYesAnswerUrl`|string|optional|A host URL where to redirect after user selects `Yes`, defaults to `backlinkUrl`.|
 |`continueWhenFullUrl`|string|optional|A host URL where to proceed after user clicks `Continue` (or selects `No` in the form) and there are no more file slots left, defaults to `continueUrl`|
 |`continueWhenEmptyUrl`|string|optional|A host URL where to proceed after user clicks `Continue` (or selects `No` in the form) and none file has been uploaded yet, defaults to `continueUrl`|
+|`backlinkUrl`|string|optional|A host URL where to retreat when user clicks backlink, otherwise a default `history.back()` action.|
 |`minimumNumberOfFiles`|number|optional|Minimum number of files user can upload, usually 0 or 1, defaults to 1|
 |`maximumNumberOfFiles`|number|optional|Maximum number of files user can upload, defaults to 10|
 |`initialNumberOfEmptyRows`|number|optional|Initial number of empty choose file rows, defaults to 3|

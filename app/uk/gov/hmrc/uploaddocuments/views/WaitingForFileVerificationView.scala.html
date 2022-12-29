@@ -24,11 +24,11 @@
         appConfig: AppConfig
 )
 
-@(successAction: Call, failureAction: Call, checkStatusAction: Call, backLink: Call)(implicit request: Request[_], messages: Messages,features:Features, serviceContent: CustomizedServiceContent)
+@(successAction: Call, failureAction: Call, checkStatusAction: Call, backLink: Option[Call])(implicit request: Request[_], messages: Messages,features:Features, serviceContent: CustomizedServiceContent)
 
 @govukLayout(
   pageTitle = pageTitle("view.upload-file.waiting")(messages, CustomizedServiceContent()),
-  backLink = Some(backLink.url),
+  backLink = backLink.map(_.url),
   refresh = 3) {
 
     <h1 class="@serviceContent.pageTitleClasses.getOrElse("govuk-heading-l")">@messages("view.upload-file.waiting")</h1>

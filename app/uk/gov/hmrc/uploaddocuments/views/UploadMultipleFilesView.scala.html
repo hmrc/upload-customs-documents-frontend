@@ -46,7 +46,7 @@ appConfig: AppConfig
   previewFile: (String,String) => Call,
   markFileRejected: Call,
   continueAction: Call,
-  backLink: Call,
+  backLink: Option[Call],
   showYesNoQuestion: Boolean,
   yesNoQuestionText: Option[String],
   form: Form[Boolean]
@@ -54,7 +54,7 @@ appConfig: AppConfig
 
 @govukLayout(
   pageTitle = pageTitle("view.upload-multiple-files.title"),
-  backLink = Some(backLink.url)
+  backLink = backLink.map(_.url)
 ) {
 
   @*
