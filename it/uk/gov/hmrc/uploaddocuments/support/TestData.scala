@@ -12,58 +12,63 @@ object TestData {
   val journeyId = JourneyId("testJourneyId")
 
   val fileUploadContext = FileUploadContext(
-    FileUploadSessionConfig(Nonce(0), "/continue-url", "/backlink-url", "callback-url")
+    config = FileUploadSessionConfig(
+      nonce = Nonce(0),
+      continueUrl = "/continue-url",
+      backlinkUrl = Some("/backlink-url"),
+      callbackUrl = "callback-url"
+    )
   )
 
   val fileUploadInitiated = FileUpload.Initiated(
-    Nonce(1),
-    Timestamp.Any,
-    "foo-bar-ref-1"
+    nonce = Nonce(1),
+    timestamp = Timestamp.Any,
+    reference = "foo-bar-ref-1"
   )
 
   val fileUploadPosted = FileUpload.Posted(
-    Nonce(2),
-    Timestamp.Any,
-    "foo-bar-ref-2"
+    nonce = Nonce(2),
+    timestamp = Timestamp.Any,
+    reference = "foo-bar-ref-2"
   )
 
   val acceptedFileUpload =
     FileUpload.Accepted(
-      Nonce(1),
-      Timestamp.Any,
-      "foo-bar-ref-3",
-      "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
-      ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-      "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-      "test.pdf",
-      "application/pdf",
-      4567890
+      nonce = Nonce(1),
+      timestamp = Timestamp.Any,
+      reference = "foo-bar-ref-3",
+      url = "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
+      uploadTimestamp = ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+      checksum = "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+      fileName = "test.pdf",
+      fileMimeType = "application/pdf",
+      fileSize = 4567890
     )
 
   val fileUploadFailed = FileUpload.Failed(
-    Nonce(4),
-    Timestamp.Any,
-    "foo-bar-ref-4",
-    UpscanNotification.FailureDetails(
-      UpscanNotification.QUARANTINE,
-      "e.g. This file has a virus"
+    nonce = Nonce(4),
+    timestamp = Timestamp.Any,
+    reference = "foo-bar-ref-4",
+    details = UpscanNotification.FailureDetails(
+      failureReason = UpscanNotification.QUARANTINE,
+      message = "e.g. This file has a virus"
     )
   )
 
   val fileUploadRejected = FileUpload.Rejected(
-    Nonce(5),
-    Timestamp.Any,
-    "foo-bar-ref-5",
-    S3UploadError("a", "b", "c")
+    nonce = Nonce(5),
+    timestamp = Timestamp.Any,
+    reference = "foo-bar-ref-5",
+    details = S3UploadError("a", "b", "c")
   )
 
   val fileUploadDuplicate = FileUpload.Duplicate(
-    Nonce(6),
-    Timestamp.Any,
-    "foo-bar-ref-6",
-    "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-    "test.pdf",
-    "test2.png"
+    nonce = Nonce(6),
+    timestamp = Timestamp.Any,
+    reference = "foo-bar-ref-6",
+    checksum = "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+    existingFileName = "test.pdf",
+    duplicateFileName = "test2.png"
   )
 
   val nonEmptyFileUploads = FileUploads(files = Seq(acceptedFileUpload))
@@ -91,8 +96,8 @@ object TestData {
   def upscanFailed(upscanRef: String) = UpscanFileFailed(
     reference = upscanRef,
     failureDetails = FailureDetails(
-      QUARANTINE,
-      "Virus Detected"
+      failureReason = QUARANTINE,
+      message = "Virus Detected"
     )
   )
 

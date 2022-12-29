@@ -70,7 +70,7 @@ class FileVerificationController @Inject() (
       successAction = routes.SummaryController.showSummary,
       failureAction = routes.ChooseSingleFileController.showChooseFile(None),
       checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(reference),
-      backLink = routes.ChooseSingleFileController.showChooseFile(None)
+      backLink = None
     )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
 
   // GET /file-verification/:reference/status

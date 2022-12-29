@@ -75,7 +75,7 @@ abstract class BaseISpec
     FileUploadSessionConfig(
       nonce = Nonce.random,
       continueUrl = s"$wireMockBaseUrlAsString/continue-url",
-      backlinkUrl = s"$wireMockBaseUrlAsString/backlink-url",
+      backlinkUrl = Some(s"$wireMockBaseUrlAsString/backlink-url"),
       callbackUrl = s"$wireMockBaseUrlAsString/result-post-url"
     )
 

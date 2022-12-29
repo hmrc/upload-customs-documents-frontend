@@ -26,11 +26,19 @@
         context: SummaryViewHelper
 )
 
-@(maxFileUploadsNumber: Int, fileUploads: FileUploads, postAction: Call, previewFileCall: (String,String) => Call, removeFileCall: String => Call, backLink: Call)(implicit request: Request[_], messages: Messages, features: Features, serviceContent: CustomizedServiceContent)
+@(
+  maxFileUploadsNumber: Int, 
+  fileUploads: FileUploads, 
+  postAction: Call, 
+  previewFileCall: (String,String) => Call, 
+  removeFileCall: String => Call, 
+  backLink: Option[Call]
+)(implicit request: Request[_], messages: Messages, features: Features, serviceContent: CustomizedServiceContent)
 
 @govukLayout(
   pageTitle = pageTitle(if(fileUploads.isEmpty) "view.summary.empty.title" else if(fileUploads.isSingle) "view.summary.singular.title" else "view.summary.plural.title", fileUploads.acceptedCount)(messages, CustomizedServiceContent()),
-  backLink = Some(backLink.url)) {
+  backLink = backLink.map(_.url)
+) {
 
   @html.h1(
       messages(if(fileUploads.isEmpty) "view.summary.empty.heading" else if(fileUploads.isSingle) "view.summary.singular.heading" else "view.summary.plural.heading", fileUploads.acceptedCount),

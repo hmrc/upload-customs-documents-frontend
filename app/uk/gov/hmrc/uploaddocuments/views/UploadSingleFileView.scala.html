@@ -40,12 +40,12 @@ appConfig: AppConfig
   successAction: Call, 
   failureAction: Call, 
   checkStatusAction: Call, 
-  backLink: Call
+  backLink: Option[Call]
 )(implicit request: Request[_], messages: Messages, features: Features, serviceContent: CustomizedServiceContent)
 
 @govukLayout(
   pageTitle = pageTitle(if(fileUploads.isEmpty) "view.upload-file.first.title" else "view.upload-file.next.title", maybeUploadError.isDefined),
-  backLink = Some(backLink.url)
+  backLink = backLink.map(_.url)
 ) {
 
   @maybeUploadError.map { fileUploadError =>

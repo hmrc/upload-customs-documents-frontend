@@ -33,7 +33,7 @@ import java.time.ZonedDateTime
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{ExecutionContext, Future}
 
-class InitiateUpscanServiceSpec
+class InitiateUpscanServiceWithBacklinkSpec
     extends UnitSpec with MockFactory with GuiceOneAppPerSuite with Injecting with MockFileUploadService {
 
   val mockUpscanInitiateConnector = mock[UpscanInitiateConnector]
@@ -52,7 +52,7 @@ class InitiateUpscanServiceSpec
   val upscanResponse   = UpscanInitiateResponse("reference", UploadRequest("href", Map.empty[String, String]))
 
   val fileUploadContext =
-    FileUploadContext(FileUploadSessionConfig(Nonce(0), "/continue-url", None, "callback-url"))
+    FileUploadContext(FileUploadSessionConfig(Nonce(0), "/continue-url", Some("/backlink-url"), "callback-url"))
   val fileUploadRejected =
     FileUpload.Rejected(Nonce(5), Timestamp.Any, "foo-bar-ref-5", S3UploadError("a", "b", "c"))
   val fileUploadPosted = FileUpload.Posted(Nonce(2), Timestamp.Any, "foo-bar-ref-2")

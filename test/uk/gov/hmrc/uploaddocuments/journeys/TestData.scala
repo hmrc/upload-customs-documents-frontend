@@ -23,10 +23,10 @@ import scala.concurrent.Future
 
 trait TestData {
 
-  val uidAndEori = (Some("user-123"), Some("foo"))
-  val eoriNumber = Some("foo")
+  val uidAndEori    = (Some("user-123"), Some("foo"))
+  val eoriNumber    = Some("foo")
   val correlationId = "123"
-  val generatedAt = java.time.LocalDateTime.of(2018, 12, 11, 10, 20, 0)
+  val generatedAt   = java.time.LocalDateTime.of(2018, 12, 11, 10, 20, 0)
 
   val reasonText = "our supplier went bankrupt"
 
@@ -34,10 +34,10 @@ trait TestData {
 
   val fileUploadSessionConfig =
     FileUploadSessionConfig(
-      nonce       = Nonce.random,
-      continueUrl = s"/continue-url",
-      backlinkUrl = s"/backlink-url",
-      callbackUrl = s"/result-post-url"
+      nonce = Nonce.random,
+      continueUrl = "/continue-url",
+      backlinkUrl = Some("/backlink-url"),
+      callbackUrl = "/result-post-url"
     )
 
   implicit val journeyContext = FileUploadContext(

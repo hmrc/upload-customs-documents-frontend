@@ -17,7 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.data.Form
-import play.api.mvc.{Action, AnyContent, Call, Request}
+import play.api.mvc.{Action, AnyContent, Request}
 import uk.gov.hmrc.uploaddocuments.forms.Forms
 import uk.gov.hmrc.uploaddocuments.forms.Forms.YesNoChoiceForm
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads}
@@ -57,18 +57,20 @@ class SummaryController @Inject() (
         withJourneyContext { journeyContext =>
           withFileUploads { files =>
             Future.successful(
-              Forms.YesNoChoiceForm.bindFromRequest().fold(
-                formWithErrors => BadRequest(renderView(formWithErrors, journeyContext, files)),
-                {
-                  case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
-                    val redirect = journeyContext.config.continueAfterYesAnswerUrl.getOrElse(
-                      routes.ChooseSingleFileController.showChooseFile(Some(true)).url
-                    )
-                    Redirect(redirect)
-                  case _ =>
-                    Redirect(routes.ContinueToHostController.continueToHost)
-                }
-              )
+              Forms.YesNoChoiceForm
+                .bindFromRequest()
+                .fold(
+                  formWithErrors => BadRequest(renderView(formWithErrors, journeyContext, files)),
+                  {
+                    case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
+                      val redirect = journeyContext.config.continueAfterYesAnswerUrl.getOrElse(
+                        routes.ChooseSingleFileController.showChooseFile(Some(true)).url
+                      )
+                      Redirect(redirect)
+                    case _ =>
+                      Redirect(routes.ContinueToHostController.continueToHost)
+                  }
+                )
             )
           }
         }
@@ -88,7 +90,7 @@ class SummaryController @Inject() (
         postAction = routes.SummaryController.submitUploadAnotherFileChoice,
         previewFileCall = routes.PreviewController.previewFileUploadByReference,
         removeFileCall = routes.RemoveController.removeFileUploadByReference,
-        backLink = routes.ChooseSingleFileController.showChooseFile(None)
+        backLink = None
       )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
     else
       viewNoChoice(
@@ -97,6 +99,6 @@ class SummaryController @Inject() (
         postAction = routes.ContinueToHostController.continueToHost,
         previewFileCall = routes.PreviewController.previewFileUploadByReference,
         removeFileCall = routes.RemoveController.removeFileUploadByReference,
-        backLink = Call("GET", context.config.backlinkUrl)
+        backLink = None
       )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
 }

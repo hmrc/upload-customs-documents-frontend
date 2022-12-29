@@ -26,21 +26,22 @@ import scala.util.Try
 final case class FileUploadSessionConfig(
   nonce: Nonce, // unique secret shared by the host and upload microservices
   continueUrl: String, // url to continue after uploading the files
-  backlinkUrl: String, // backlink url
+  backlinkUrl: Option[String] = None, // backlink url
   callbackUrl: String, // url where to post uploaded files
-  continueAfterYesAnswerUrl: Option[String] = None, // optional url to continue after user selects YES answer in the form
-  continueWhenFullUrl: Option[String]       = None, // optional url to continue after all possible files has been uploaded
-  continueWhenEmptyUrl: Option[String]      = None, // optional url to continue after none file uploaded
-  minimumNumberOfFiles: Int                 = defaultMinimumNumberOfFiles,
-  maximumNumberOfFiles: Int                 = defaultMaximumNumberOfFiles,
-  initialNumberOfEmptyRows: Int             = defaultInitialNumberOfEmptyRows,
-  maximumFileSizeBytes: Long                = defaultMaximumFileSizeBytes,
-  allowedContentTypes: String               = defaultAllowedContentTypes,
-  allowedFileExtensions: Option[String]     = None,
-  cargo: Option[JsValue]                    = None, // opaque data carried through, from and to the host service,
-  newFileDescription: Option[String]        = None, // description of the new file added,
-  features: Features                        = Features(), // upload feature switches
-  content: CustomizedServiceContent         = CustomizedServiceContent() // page content customizations
+  continueAfterYesAnswerUrl: Option[String] =
+    None, // optional url to continue after user selects YES answer in the form
+  continueWhenFullUrl: Option[String] = None, // optional url to continue after all possible files has been uploaded
+  continueWhenEmptyUrl: Option[String] = None, // optional url to continue after none file uploaded
+  minimumNumberOfFiles: Int = defaultMinimumNumberOfFiles,
+  maximumNumberOfFiles: Int = defaultMaximumNumberOfFiles,
+  initialNumberOfEmptyRows: Int = defaultInitialNumberOfEmptyRows,
+  maximumFileSizeBytes: Long = defaultMaximumFileSizeBytes,
+  allowedContentTypes: String = defaultAllowedContentTypes,
+  allowedFileExtensions: Option[String] = None,
+  cargo: Option[JsValue] = None, // opaque data carried through, from and to the host service,
+  newFileDescription: Option[String] = None, // description of the new file added,
+  features: Features = Features(), // upload feature switches
+  content: CustomizedServiceContent = CustomizedServiceContent() // page content customizations
 ) {
 
   final def getContinueWhenFullUrl: String    = continueWhenFullUrl.getOrElse(continueUrl)
@@ -50,7 +51,7 @@ final case class FileUploadSessionConfig(
   final def isValid: Boolean =
     isValidCallbackUrl(callbackUrl) &&
       isValidFrontendUrl(continueUrl) &&
-      isValidFrontendUrl(backlinkUrl) &&
+      backlinkUrl.forall(isValidFrontendUrl) &&
       continueWhenFullUrl.forall(isValidFrontendUrl) &&
       continueWhenEmptyUrl.forall(isValidFrontendUrl) &&
       continueAfterYesAnswerUrl.forall(isValidFrontendUrl) &&
@@ -73,7 +74,7 @@ object FileUploadSessionConfig {
     Format(
       ((JsPath \ "nonce").read[Nonce]
         and (JsPath \ "continueUrl").read[String]
-        and (JsPath \ "backlinkUrl").read[String]
+        and (JsPath \ "backlinkUrl").readNullable[String]
         and (JsPath \ "callbackUrl").read[String]
         and (JsPath \ "continueAfterYesAnswerUrl").readNullable[String]
         and (JsPath \ "continueWhenFullUrl").readNullable[String]
@@ -91,7 +92,7 @@ object FileUploadSessionConfig {
           .readWithDefault[CustomizedServiceContent](CustomizedServiceContent()))(FileUploadSessionConfig.apply _),
       ((JsPath \ "nonce").write[Nonce]
         and (JsPath \ "continueUrl").write[String]
-        and (JsPath \ "backlinkUrl").write[String]
+        and (JsPath \ "backlinkUrl").writeNullable[String]
         and (JsPath \ "callbackUrl").write[String]
         and (JsPath \ "continueAfterYesAnswerUrl").writeNullable[String]
         and (JsPath \ "continueWhenFullUrl").writeNullable[String]
