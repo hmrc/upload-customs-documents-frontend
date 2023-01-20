@@ -23,13 +23,19 @@ import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.uploaddocuments.controllers.JourneyContextControllerHelper
+import scala.concurrent.Future
+import uk.gov.hmrc.uploaddocuments.services.JourneyContextService
+import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 
 @Singleton
 class WipeOutController @Inject() (
   components: BaseControllerComponents,
-  journeyCacheRepository: JourneyCacheRepository
+  journeyCacheRepository: JourneyCacheRepository,
+  val fileUploadService: FileUploadService,
+  override val journeyContextService: JourneyContextService
 )(implicit ec: ExecutionContext)
-    extends BaseController(components) {
+    extends BaseController(components) with JourneyContextControllerHelper {
 
   // POST /internal/wipe-out
   final val wipeOut: Action[AnyContent] = Action.async { implicit request =>
@@ -37,7 +43,14 @@ class WipeOutController @Inject() (
     whenInSession { implicit journeyId =>
       whenAuthenticatedInBackchannel {
         Logger.debug(s"[wipeOut] Call to delete journey for journeyId: '$journeyId'")
-        journeyCacheRepository.deleteEntity(journeyId.value).map(_ => NoContent)
+        withJourneyContextWithErrorHandler {
+          Future.successful(NoContent)
+        } { implicit journeyContext =>
+          for {
+            _ <- fileUploadService.wipeOut()
+            _ <- journeyContextService.putJourneyContext(journeyContext.deactivate())
+          } yield NoContent
+        }()
       }
     }
   }

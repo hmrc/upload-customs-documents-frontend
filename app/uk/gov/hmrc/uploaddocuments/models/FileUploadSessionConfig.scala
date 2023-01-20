@@ -32,6 +32,8 @@ final case class FileUploadSessionConfig(
     None, // optional url to continue after user selects YES answer in the form
   continueWhenFullUrl: Option[String] = None, // optional url to continue after all possible files has been uploaded
   continueWhenEmptyUrl: Option[String] = None, // optional url to continue after none file uploaded
+  sendoffUrl: Option[String] =
+    None, // optional url where to send off the user when the session has been cleared by the host service
   minimumNumberOfFiles: Int = defaultMinimumNumberOfFiles,
   maximumNumberOfFiles: Int = defaultMaximumNumberOfFiles,
   initialNumberOfEmptyRows: Int = defaultInitialNumberOfEmptyRows,
@@ -79,6 +81,7 @@ object FileUploadSessionConfig {
         and (JsPath \ "continueAfterYesAnswerUrl").readNullable[String]
         and (JsPath \ "continueWhenFullUrl").readNullable[String]
         and (JsPath \ "continueWhenEmptyUrl").readNullable[String]
+        and (JsPath \ "sendoffUrl").readNullable[String]
         and (JsPath \ "minimumNumberOfFiles").readWithDefault[Int](defaultMinimumNumberOfFiles)
         and (JsPath \ "maximumNumberOfFiles").readWithDefault[Int](defaultMaximumNumberOfFiles)
         and (JsPath \ "initialNumberOfEmptyRows").readWithDefault[Int](defaultInitialNumberOfEmptyRows)
@@ -97,6 +100,7 @@ object FileUploadSessionConfig {
         and (JsPath \ "continueAfterYesAnswerUrl").writeNullable[String]
         and (JsPath \ "continueWhenFullUrl").writeNullable[String]
         and (JsPath \ "continueWhenEmptyUrl").writeNullable[String]
+        and (JsPath \ "sendoffUrl").writeNullable[String]
         and (JsPath \ "minimumNumberOfFiles").write[Int]
         and (JsPath \ "maximumNumberOfFiles").write[Int]
         and (JsPath \ "initialNumberOfEmptyRows").write[Int]

@@ -16,7 +16,7 @@ class WipeOutControllerISpec extends ControllerISpecBase {
         result.status shouldBe 404
       }
 
-      "return 204 and cleanup session state" in {
+      "return 204 and cleanup uploaded files" in {
 
         val context = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files =
@@ -32,8 +32,8 @@ class WipeOutControllerISpec extends ControllerISpecBase {
         val result = await(backchannelRequest("/wipe-out").post(""))
         result.status shouldBe 204
 
-        getContext() shouldBe None
         getFileUploads() shouldBe None
+        getContext() shouldBe Some(context.deactivate())
       }
     }
   }
