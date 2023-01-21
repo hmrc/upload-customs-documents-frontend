@@ -184,7 +184,7 @@ Minimal payload example:
 |`chooseFirstFileLabel`|string|The label of the first file-input element. If files have descriptions then the label of the first file-input with description as defined in `newFileDescription`|
 |`chooseNextFileLabel`|string|The label of each next file-input element|
 |`addAnotherDocumentButtonText`|string|The text of the `Add Another Document` button, if enabled|
-|`yesNoQuestionText`|string|optional|The text of the Yes/No question displayed before the `Continue` button if `showYesNoQuestionBeforeContinue` enabled.|
+|`yesNoQuestionText`|string|optional|The text of the Yes/No question displayed before the `Continue` button if `showYesNoQuestionBeforeContinue` enabled. If the text starts with `h2.` then the question will be displayed as H2 header.|
 |`yesNoQuestionRequiredError`|string|optional|The text of the error displayed when user didn't provide an answer to the Yes/No question|
 
 <a name="api-initialize-payload-config-features"></a>

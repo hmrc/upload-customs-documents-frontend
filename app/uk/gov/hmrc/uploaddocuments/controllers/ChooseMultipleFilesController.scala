@@ -112,7 +112,7 @@ class ChooseMultipleFilesController @Inject() (
       } else { routes.ContinueToHostController.continueToHost },
       backLink = context.config.backlinkUrl.map(Call("GET", _)),
       context.config.features.showYesNoQuestionBeforeContinue,
-      context.config.content.yesNoQuestionText,
+      context.config.content.getYesNoQuestionText,
       form
     )(request, context.messages, context.config.features, context.config.content)
 }
