@@ -16,19 +16,28 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.mvc.Result
+import play.api.mvc.{Result, Results}
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, JourneyId}
 import uk.gov.hmrc.uploaddocuments.services.JourneyContextService
 
 import scala.concurrent.Future
 
-trait JourneyContextControllerHelper { baseController: BaseController =>
+trait JourneyContextControllerHelper {
 
   val journeyContextService: JourneyContextService
+  def govukStartUrl: String
 
   def withJourneyContext(body: FileUploadContext => Future[Result])(implicit journeyId: JourneyId): Future[Result] =
     journeyContextService.withJourneyContext(
-      Future.successful(Redirect(baseController.components.appConfig.govukStartUrl))
+      Future.successful(Results.Redirect(govukStartUrl))
+    )(c =>
+      Future.successful(
+        Results.Redirect(
+          c.config.sendoffUrl
+            .orElse(c.content.serviceUrl)
+            .getOrElse(govukStartUrl)
+        )
+      )
     )(body)
 
   def withJourneyContextWithErrorHandler(
@@ -36,6 +45,7 @@ trait JourneyContextControllerHelper { baseController: BaseController =>
   )(body: FileUploadContext => Future[Result])()(implicit
     journeyId: JourneyId
   ): Future[Result] =
-    journeyContextService.withJourneyContext(journeyNotFoundResult)(body)
+    journeyContextService
+      .withJourneyContext(journeyNotFoundResult)(_ => journeyNotFoundResult)(body)
 
 }

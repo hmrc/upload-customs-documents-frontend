@@ -36,10 +36,20 @@ class JourneyContextService @Inject() (repo: JourneyCacheRepository)(implicit ec
 
   def withJourneyContext[T](
     journeyNotFoundResult: => Future[T]
-  )(f: FileUploadContext => Future[T])(implicit journeyId: JourneyId): Future[T] =
+  )(
+    journeyNotActiveResult: FileUploadContext => Future[T]
+  )(body: FileUploadContext => Future[T])(implicit journeyId: JourneyId): Future[T] =
     getJourneyContext().flatMap(_.fold {
-      Logger.error("[withFiles] No files exist for the supplied journeyID")
+      Logger.error("[withFiles] No files exist for the supplied journeyID, redirecting user to gov.uk")
       Logger.debug(s"[withFiles] journeyId: '$journeyId'")
       journeyNotFoundResult
-    }(f))
+    } { c =>
+      if (c.active)
+        body(c)
+      else {
+        Logger.info("[withFiles] Files are already not available, sending user off to the host.")
+        Logger.debug(s"[withFiles] journeyId: '$journeyId'")
+        journeyNotActiveResult(c)
+      }
+    })
 }

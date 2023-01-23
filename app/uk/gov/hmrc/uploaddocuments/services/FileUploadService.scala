@@ -49,6 +49,9 @@ class FileUploadService @Inject() (
   def putFiles(files: FileUploads)(implicit journeyId: JourneyId): Future[FileUploads] =
     repo.put(journeyId.value)(DataKeys.uploadedFiles, files).map(_ => files)
 
+  def wipeOut()(implicit journeyId: JourneyId): Future[Unit] =
+    repo.delete(journeyId.value)(DataKeys.uploadedFiles)
+
   def withFiles[T](
     journeyNotFoundResult: => Future[T]
   )(f: FileUploads => Future[T])(implicit journeyId: JourneyId): Future[T] =

@@ -28,7 +28,8 @@ import java.util.UUID
 
 final case class FileUploadContext(
   config: FileUploadSessionConfig,
-  hostService: HostService = HostService.Any
+  hostService: HostService = HostService.Any,
+  active: Boolean = true
 ) {
   def isValid: Boolean = config.isValid && hostService.userAgent.nonEmpty
 
@@ -39,6 +40,9 @@ final case class FileUploadContext(
     if (config.content.yesNoQuestionRequiredError.isDefined)
       new EnhancedMessages(m, Map("error.choice.required" -> config.content.yesNoQuestionRequiredError.getOrElse("")))
     else m
+
+  def deactivate(): FileUploadContext =
+    copy(active = false)
 }
 
 sealed trait HostService {
@@ -55,14 +59,15 @@ object HostService {
     override val userAgent: String =
       headers.collectFirst { case (USER_AGENT, value) => value }.getOrElse("")
 
+    @annotation.nowarn
     override def populate(hc: HeaderCarrier): HeaderCarrier =
       HeaderCarrierConverter.fromHeadersAndSession(Headers(headers: _*), None)
 
     override def equals(obj: scala.Any): Boolean =
       obj match {
         case other: InitializationRequestHeaders => other.headers.equals(this.headers)
-        case Any => true
-        case _ => false
+        case Any                                 => true
+        case _                                   => false
       }
 
     override val hashCode: Int    = 0
@@ -102,5 +107,6 @@ object HostService {
 }
 
 object FileUploadContext {
-  implicit val format: Format[FileUploadContext] = Json.format[FileUploadContext]
+  implicit val format: Format[FileUploadContext] =
+    Json.using[Json.WithDefaultValues].format[FileUploadContext]
 }

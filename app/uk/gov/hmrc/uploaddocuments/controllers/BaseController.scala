@@ -32,7 +32,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 
 @Singleton
-class BaseControllerComponents @Inject()(
+class BaseControllerComponents @Inject() (
   val appConfig: AppConfig,
   val authConnector: FrontendAuthConnector,
   val environment: Environment,
@@ -58,5 +58,7 @@ abstract class BaseController(
 
   final def preferUploadMultipleFiles(implicit rh: RequestHeader): Boolean =
     rh.cookies.get(COOKIE_JSENABLED).isDefined
+
+  final def govukStartUrl: String = components.appConfig.govukStartUrl
 
 }

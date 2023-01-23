@@ -143,6 +143,7 @@ Minimal payload example:
 |`continueWhenFullUrl`|string|optional|A host URL where to proceed after user clicks `Continue` (or selects `No` in the form) and there are no more file slots left, defaults to `continueUrl`|
 |`continueWhenEmptyUrl`|string|optional|A host URL where to proceed after user clicks `Continue` (or selects `No` in the form) and none file has been uploaded yet, defaults to `continueUrl`|
 |`backlinkUrl`|string|optional|A host URL where to retreat when user clicks backlink, otherwise a default `history.back()` action.|
+|`sendoffUrl`|string|optional|A host URL where to send off the user if the current session has been deactivated (wiped out), defaults to `content.serviceUrl` or `http://www.gov.uk` if missing.|
 |`minimumNumberOfFiles`|number|optional|Minimum number of files user can upload, usually 0 or 1, defaults to 1|
 |`maximumNumberOfFiles`|number|optional|Maximum number of files user can upload, defaults to 10|
 |`initialNumberOfEmptyRows`|number|optional|Initial number of empty choose file rows, defaults to 3|
