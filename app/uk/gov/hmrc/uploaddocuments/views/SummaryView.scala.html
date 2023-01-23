@@ -89,10 +89,10 @@
           conditionalHtml = None
         )
       ),
-      legend = if(features.showYesNoQuestionBeforeContinue) serviceContent.yesNoQuestionText
+      legend = if(features.showYesNoQuestionBeforeContinue) serviceContent.getYesNoQuestionText
         else Some(if(fileUploads.isEmpty) "view.summary.uploadFile.heading" else "view.summary.uploadAnotherFile.heading"),
       legendAsHeading = false,
-      legendAsH2 = false,
+      legendAsH2 = serviceContent.yesNoQuestionAsHeader,
       legendClasses = ""
     )
 

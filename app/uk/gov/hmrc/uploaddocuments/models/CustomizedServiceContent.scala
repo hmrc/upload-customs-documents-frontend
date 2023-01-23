@@ -41,10 +41,17 @@ final case class CustomizedServiceContent(
   chooseFirstFileLabel: Option[String] = None,
   chooseNextFileLabel: Option[String] = None,
   addAnotherDocumentButtonText: Option[String] = None,
-  yesNoQuestionText: Option[String] = None,
+  private val yesNoQuestionText: Option[String] = None,
   yesNoQuestionRequiredError: Option[String] = None
 ) {
+
   lazy val safeDescriptionHtml: Option[String] = descriptionHtml.map(HtmlCleaner.cleanBlock)
+
+  def getYesNoQuestionText: Option[String] =
+    yesNoQuestionText.map(_.stripPrefix("h2."))
+
+  def yesNoQuestionAsHeader: Boolean =
+    yesNoQuestionText.exists(_.startsWith("h2."))
 }
 
 object CustomizedServiceContent {
@@ -56,6 +63,7 @@ object CustomizedServiceContent {
     override val values: Set[PhaseBanner] = Set(alpha, beta)
   }
 
-  implicit val format: Format[CustomizedServiceContent] = Json.format[CustomizedServiceContent]
+  implicit val format: Format[CustomizedServiceContent] =
+    Json.format[CustomizedServiceContent]
 
 }
