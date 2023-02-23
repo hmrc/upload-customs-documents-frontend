@@ -23,3 +23,16 @@ $hmrc-assets-path: "/upload-customs-documents/assets/lib/hmrc-frontend/hmrc/";
 #print-receipt{display: none;}
 
 .js-enabled #print-receipt{display: inline-block; }
+
+
+
+
+// Fix for non-JS back link
+
+.govuk-back-link {
+    display:none;
+}
+
+.js-enabled .govuk-back-link {
+    display:inline-block;
+}
