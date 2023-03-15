@@ -28,7 +28,7 @@ File upload session is attached to the initial Session-ID and defined by the lat
 
 ## Glossary
 
-- **UDF**: upload-customs-documents-frontend service/journey
+- **UCDF**: upload-customs-documents-frontend service/journey
 - **Host**, **Host service**: some frontend microservice integrating with upload-customs-documents-frontend and calling /initialize endpoint
 - **Upscan**: dedicated MDTP subsystem responsible for hosting and verifying uploaded files
 
