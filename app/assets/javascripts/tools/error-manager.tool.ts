@@ -10,6 +10,8 @@ export default class ErrorManager {
   private errorSummary: HTMLElement;
   private errorSummaryList: HTMLUListElement;
   private errors: ErrorList = {};
+  private metaTitle: string;
+  private metaTitleErrorPrefix: string;
 
   constructor() {
     this.classes = {
@@ -21,6 +23,7 @@ export default class ErrorManager {
 
     this.cacheTemplates();
     this.cacheElements();
+    this.cacheMetaTitle();
   }
 
   private static getH1() {
@@ -38,6 +41,11 @@ export default class ErrorManager {
     this.errorSummaryList = this.errorSummary.querySelector(`.${this.classes.errorSummaryList}`);
   }
 
+  private cacheMetaTitle(): void {
+    this.metaTitle = document.title;
+    this.metaTitleErrorPrefix = this.errorSummary.dataset.errorPrefix;
+  }
+
   public addError(inputId: string, message: string): void {
     this.removeError(inputId);
 
@@ -50,6 +58,7 @@ export default class ErrorManager {
     };
 
     this.updateErrorSummaryVisibility();
+    this.updateMetaTitle();
   }
 
   public removeError(inputId: string): void {
@@ -128,6 +137,15 @@ export default class ErrorManager {
     }
     else {
       this.errorSummary.remove();
+    }
+  }
+
+  private updateMetaTitle(): void {
+    if (this.hasErrors()) {
+      document.title = `${this.metaTitleErrorPrefix} ${this.metaTitle}`;
+    }
+    else {
+      document.title = `${this.metaTitle}`;
     }
   }
 
