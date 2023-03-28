@@ -16,7 +16,7 @@
 
 @(implicit messages: Messages)
 
-<div class="govuk-error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary">
+<div class="govuk-error-summary" id="error-summary" aria-labelledby="error-summary-title" role="alert" tabindex="-1" data-module="govuk-error-summary" data-error-prefix="@messages("error.prefix")">
  <h2 class="govuk-error-summary__title" id="error-summary-title">
   @messages("error.summary.heading")
  </h2>
