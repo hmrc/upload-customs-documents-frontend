@@ -118,7 +118,7 @@ appConfig: AppConfig
     data-multi-file-upload-uploaded-files="@UploadFileViewHelper.initialScriptStateFrom(initialFileUploads, previewFile, maximumFileSizeBytes, allowedFileTypesHint)"
     data-multi-file-upload-error-generic="@messages("error.file-upload.try-again")"
     data-multi-file-upload-error-remove-file="@messages("error.file-upload.remove.try-again")"
-    data-multi-file-upload-error-invalid-size-large="@messages("error.file-upload.invalid-size-large",(maximumFileSizeBytes / (1024 * 1024)))"
+    data-multi-file-upload-error-invalid-size-large="@messages("error.file-upload.invalid-size-large",UploadFileViewHelper.humanReadableFileSize(maximumFileSizeBytes))"
     data-multi-file-upload-error-invalid-size-small="@messages("error.file-upload.invalid-size-small")"
     data-multi-file-upload-error-invalid-type="@messages("error.file-upload.invalid-type","",allowedFileTypesHint)"
     data-multi-file-upload-error-select-file="@messages("error.file-upload.required")"

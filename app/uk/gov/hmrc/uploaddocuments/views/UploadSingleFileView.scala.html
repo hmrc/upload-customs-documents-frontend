@@ -89,7 +89,7 @@ appConfig: AppConfig
       attributes = Map(
         "accept" -> filePickerAcceptFilter,
         "data-msg-required" -> messages("error.file-upload.required"),
-        "data-msg-filesize" -> messages("error.file-upload.invalid-size-large",(maximumFileSizeBytes / (1024 * 1024))),
+        "data-msg-filesize" -> messages("error.file-upload.invalid-size-large",UploadFileViewHelper.humanReadableFileSize(maximumFileSizeBytes)),
         "data-msg-accept" -> messages("error.upload-file.other", allowedFileTypesHint)
       ))
     )
