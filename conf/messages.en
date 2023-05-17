@@ -164,7 +164,7 @@ form.upload-multiple-files.continue=Continue
 
 error.file-upload.required=Select a file
 error.file-upload.invalid-size-small=The selected file is empty
-error.file-upload.invalid-size-large=The selected file must be smaller than {0}MB
+error.file-upload.invalid-size-large=The selected file must be smaller than {0}
 error.file-upload.invalid-type=The selected file must be {1}
 error.file-upload.quarantine=The selected file contains a virus - upload a different one
 error.file-upload.unknown=The selected file could not be uploaded

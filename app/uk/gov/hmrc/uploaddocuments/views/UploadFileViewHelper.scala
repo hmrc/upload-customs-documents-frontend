@@ -31,16 +31,19 @@ object UploadFileViewHelper {
     allowedFileTypesHint: String
   )(implicit messages: Messages): String = {
     val fileVerificationStatuses = initialFileUploads.map(file =>
-      FileVerificationStatus(file, previewFile, maximumFileSizeBytes, allowedFileTypesHint))
+      FileVerificationStatus(file, previewFile, maximumFileSizeBytes, allowedFileTypesHint)
+    )
     Json.stringify(Json.toJson(fileVerificationStatuses))
   }
 
-  def toFormError(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(
-    implicit messages: Messages): FormError =
+  def toFormError(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(implicit
+    messages: Messages
+  ): FormError =
     FormError("file", Seq(toMessage(error, maximumFileSizeBytes, allowedFileTypesHint)))
 
-  def toMessage(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(
-    implicit messages: Messages): String = error match {
+  def toMessage(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(implicit
+    messages: Messages
+  ): String = error match {
     case FileTransmissionFailed(error) =>
       messages(UploadFileViewHelper.toMessageKey(error), maximumFileSizeBytes / (1024 * 1024), allowedFileTypesHint)
     case FileVerificationFailed(details) =>
@@ -63,4 +66,10 @@ object UploadFileViewHelper {
   }
 
   val duplicateFileMessageKey: String = "error.file-upload.duplicate"
+
+  def humanReadableFileSize(bytes: Long): String =
+    if (bytes >= 1000000000) s"${(bytes / 1000000000)} GB"
+    else if (bytes >= 1000000) s"${(bytes / 1000000)} MB"
+    else if (bytes >= 1000) s"${(bytes / 1000)} kB"
+    else s"$bytes B"
 }
