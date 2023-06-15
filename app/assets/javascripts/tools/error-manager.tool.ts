@@ -127,7 +127,12 @@ export default class ErrorManager {
     errorItem.querySelector('a').addEventListener('click', (e) => {
       e.preventDefault();
 
-      document.getElementById(inputId).focus();
+      if (inputId == 'initial') {
+        document.getElementById('choice').focus();
+      } else {
+        document.getElementById(inputId).focus();
+      }
+
     });
   }
 
