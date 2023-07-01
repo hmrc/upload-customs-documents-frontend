@@ -45,9 +45,17 @@ object UploadFileViewHelper {
     messages: Messages
   ): String = error match {
     case FileTransmissionFailed(error) =>
-      messages(UploadFileViewHelper.toMessageKey(error), maximumFileSizeBytes / (1024 * 1024), allowedFileTypesHint)
+      messages(
+        UploadFileViewHelper.toMessageKey(error),
+        humanReadableFileSize(maximumFileSizeBytes),
+        allowedFileTypesHint
+      )
     case FileVerificationFailed(details) =>
-      messages(UploadFileViewHelper.toMessageKey(details), maximumFileSizeBytes / (1024 * 1024), allowedFileTypesHint)
+      messages(
+        UploadFileViewHelper.toMessageKey(details),
+        humanReadableFileSize(maximumFileSizeBytes),
+        allowedFileTypesHint
+      )
     case _: DuplicateFileUpload => messages(duplicateFileMessageKey)
   }
 
