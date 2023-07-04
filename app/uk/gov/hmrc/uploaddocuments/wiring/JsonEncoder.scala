@@ -29,9 +29,11 @@ import java.net.InetAddress
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters.MapHasAsScala
 import scala.util.Try
+import scala.annotation.nowarn
 
 class JsonEncoder extends EncoderBase[ILoggingEvent] with LoggerUtil {
 
+  @nowarn
   private val mapper = new ObjectMapper().configure(Feature.ESCAPE_NON_ASCII, true)
 
   lazy val appName: String = Try(ConfigFactory.load().getString("appName")).getOrElse("APP NAME NOT SET")
