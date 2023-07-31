@@ -4,6 +4,7 @@ import { UploadState } from '../enums/upload-state.enum';
 import parseTemplate from '../utils/parse-template.util';
 import parseHtml from '../utils/parse-html.util';
 import toggleElement from '../utils/toggle-element.util';
+import toggleElementVisually from '../utils/toggle-element-visually.util';
 import ErrorManager from '../tools/error-manager.tool';
 
 export class MultiFileUpload extends Component {
@@ -591,7 +592,7 @@ export class MultiFileUpload extends Component {
   }
 
   private toggleItemLabel(item: HTMLElement, state: boolean): void {
-    toggleElement(this.getItemLabelElement(item), state);
+    toggleElementVisually(this.getItemLabelElement(item), state);
   }
 
   private toggleUploadMoreMessage(state: boolean): void {
