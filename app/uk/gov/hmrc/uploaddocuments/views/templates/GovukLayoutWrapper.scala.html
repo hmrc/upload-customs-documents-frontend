@@ -113,6 +113,12 @@ None, refresh: Int = 0)(contentBlock: Html)(implicit request: Request[_], messag
   }
 }
 
+@phaseBannerContent = {
+  @messages("feedback.before")
+  <a class='govuk-link' href='@{serviceContent.phaseBannerUrl.getOrElse("")}' target='_blank' rel='noopener noreferrer'>@messages("feedback.link")</a>
+  @messages("feedback.after")
+}
+
 @govukLayout(
   pageTitle = pageTitle.map(title => s"$title - ${serviceContent.serviceName.getOrElse(messages("site.serviceName"))} - ${messages("site.govuk")}" ), headBlock = Some(head),
   beforeContentBlock = Some(beforeContentBlock),
@@ -122,10 +128,7 @@ None, refresh: Int = 0)(contentBlock: Html)(implicit request: Request[_], messag
     serviceName = serviceContent.serviceName.orElse(Some(messages("site.serviceName"))),
     serviceUrl = serviceContent.serviceUrl,
     signOutUrl = if(timeout) Some(SignOutController.signOut(serviceContent.signOutUrl).url) else None,
-    phaseBanner = serviceContent.phaseBanner.map{
-      case CustomizedServiceContent.PhaseBanner.alpha => standardAlphaBanner(url = serviceContent.phaseBannerUrl.getOrElse(""))
-      case CustomizedServiceContent.PhaseBanner.beta => standardBetaBanner(url = serviceContent.phaseBannerUrl.getOrElse(""))
-    },
+    phaseBanner = Some(PhaseBanner(tag = Some(Tag(content = Text("BETA"))), content = HtmlContent(phaseBannerContent))),
     userResearchBanner = serviceContent.userResearchBannerUrl.map(url => (UserResearchBanner(url = url))),
     displayHmrcBanner = false
   )),

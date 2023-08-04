@@ -62,6 +62,10 @@ error.month.invalid-format=Enter a month
 button.continue=Continue
 button.submit=Submit
 
+feedback.before=This is a new service – your
+feedback.link=feedback (opens in a new tab)
+feedback.after=will help us to improve it.
+
 # Global errors
 global.error.404.title=Page not found
 global.error.404.heading=Page not found
