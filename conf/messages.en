@@ -65,10 +65,6 @@ error.month.invalid-format=Enter a month
 button.continue=Continue
 button.submit=Submit
 
-feedback.before=This is a new service – your
-feedback.link=feedback (opens in a new tab)
-feedback.after=will help us to improve it.
-
 # Global errors
 global.error.404.title=Page not found
 global.error.404.heading=Page not found
@@ -90,9 +86,9 @@ external.update.error.500.line2=Try to <a class="govuk-link" href="{0}">enter yo
 
 # Banner
 # ----------------------------------------------------------
-feedback.before = This is a new service - your
-feedback.link = feedback
-feedback.after = will help us to improve it.
+feedback.before=This is a new service – your
+feedback.link=feedback (opens in a new tab)
+feedback.after=will help us to improve it.
 
 # Footer Links
 # -----------------------
