@@ -22,8 +22,6 @@
 @import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcStandardHeader
 @import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcStandardFooter
 @import views.html.helper.CSPNonce
-@import uk.gov.hmrc.hmrcfrontend.views.config.StandardAlphaBanner
-@import uk.gov.hmrc.hmrcfrontend.views.config.StandardBetaBanner
 @import uk.gov.hmrc.uploaddocuments.controllers.routes.SignOutController
 @import uk.gov.hmrc.hmrcfrontend.views.Aliases.UserResearchBanner
 @import uk.gov.hmrc.uploaddocuments.models.CustomizedServiceContent
@@ -41,8 +39,6 @@ hmrcReportTechnicalIssueHelper: HmrcReportTechnicalIssueHelper,
 hmrcTrackingConsentSnippet: HmrcTrackingConsentSnippet,
 hmrcStandardHeader: HmrcStandardHeader,
 hmrcStandardFooter: HmrcStandardFooter,
-standardBetaBanner:StandardBetaBanner,
-standardAlphaBanner:StandardAlphaBanner,
 languageSelection: components.languageSelection,
 hmrcReportTechnicalIssue: HmrcReportTechnicalIssue, 
 contactFrontendConfig: ContactFrontendConfig
@@ -128,7 +124,12 @@ None, refresh: Int = 0)(contentBlock: Html)(implicit request: Request[_], messag
     serviceName = serviceContent.serviceName.orElse(Some(messages("site.serviceName"))),
     serviceUrl = serviceContent.serviceUrl,
     signOutUrl = if(timeout) Some(SignOutController.signOut(serviceContent.signOutUrl).url) else None,
-    phaseBanner = Some(PhaseBanner(tag = Some(Tag(content = Text("BETA"))), content = HtmlContent(phaseBannerContent))),
+    phaseBanner = serviceContent.phaseBanner.map{
+      case CustomizedServiceContent.PhaseBanner.alpha => 
+        PhaseBanner(tag = Some(Tag(content = Text("ALPHA"))), content = HtmlContent(phaseBannerContent))
+      case CustomizedServiceContent.PhaseBanner.beta => 
+        PhaseBanner(tag = Some(Tag(content = Text("BETA"))), content = HtmlContent(phaseBannerContent))
+    },
     userResearchBanner = serviceContent.userResearchBannerUrl.map(url => (UserResearchBanner(url = url))),
     displayHmrcBanner = false
   )),
