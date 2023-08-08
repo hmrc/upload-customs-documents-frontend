@@ -1,4 +1,9 @@
 service.name=Anfon dogfennau i’w gwirio gan y tollau
+
+phase.alpha=ALPHA
+phase.beta=BETA
+
+
 site.back=Yn ôl
 site.review=Adolygu
 site.delete=Dileu

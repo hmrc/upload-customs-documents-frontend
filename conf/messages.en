@@ -1,5 +1,8 @@
 service.name = Upload documents
 
+phase.alpha=ALPHA
+phase.beta=BETA
+
 # Site wide messages
 # ----------------------------------------------------------
 site.fullStop =.

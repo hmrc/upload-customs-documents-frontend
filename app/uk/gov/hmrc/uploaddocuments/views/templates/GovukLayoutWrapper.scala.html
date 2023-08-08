@@ -126,9 +126,9 @@ None, refresh: Int = 0)(contentBlock: Html)(implicit request: Request[_], messag
     signOutUrl = if(timeout) Some(SignOutController.signOut(serviceContent.signOutUrl).url) else None,
     phaseBanner = serviceContent.phaseBanner.map{
       case CustomizedServiceContent.PhaseBanner.alpha => 
-        PhaseBanner(tag = Some(Tag(content = Text("ALPHA"))), content = HtmlContent(phaseBannerContent))
+        PhaseBanner(tag = Some(Tag(content = Text(messages("phase.alpha")))), content = HtmlContent(phaseBannerContent))
       case CustomizedServiceContent.PhaseBanner.beta => 
-        PhaseBanner(tag = Some(Tag(content = Text("BETA"))), content = HtmlContent(phaseBannerContent))
+        PhaseBanner(tag = Some(Tag(content = Text(messages("phase.beta")))), content = HtmlContent(phaseBannerContent))
     },
     userResearchBanner = serviceContent.userResearchBannerUrl.map(url => (UserResearchBanner(url = url))),
     displayHmrcBanner = false
