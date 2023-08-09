@@ -20,8 +20,7 @@ import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, JsPath, JsValue}
 import uk.gov.hmrc.uploaddocuments.models.FileUploadSessionConfig._
 
-import java.net.URL
-import scala.util.Try
+import UrlValidator._
 
 final case class FileUploadSessionConfig(
   nonce: Nonce, // unique secret shared by the host and upload microservices
@@ -113,21 +112,4 @@ object FileUploadSessionConfig {
         and (JsPath \ "content").write[CustomizedServiceContent])(unlift(FileUploadSessionConfig.unapply))
     )
 
-  final def isValidFrontendUrl(url: String): Boolean =
-    url.nonEmpty && Try(new URL(url))
-      .map { url =>
-        val isHttps = url.getProtocol == "https"
-        val host    = url.getHost
-        (host == "localhost") || (isHttps && host.endsWith(".gov.uk"))
-      }
-      .getOrElse(false)
-
-  final def isValidCallbackUrl(url: String): Boolean =
-    url.nonEmpty && Try(new URL(url))
-      .map { url =>
-        val isHttps = url.getProtocol == "https"
-        val host    = url.getHost
-        (host == "localhost") || (isHttps && host.endsWith(".mdtp"))
-      }
-      .getOrElse(false)
 }

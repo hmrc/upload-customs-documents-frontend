@@ -56,8 +56,11 @@ abstract class BaseController(
   final def whenInSession(body: JourneyId => Future[Result])(implicit hc: HeaderCarrier): Future[Result] =
     journeyIdFromSession.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
 
-  final def preferUploadMultipleFiles(implicit rh: RequestHeader): Boolean =
-    rh.cookies.get(COOKIE_JSENABLED).isDefined
+  final def preferUploadMultipleFiles(implicit rh: RequestHeader): Boolean = {
+    val isEnabled = rh.cookies.get(COOKIE_JSENABLED).exists(_.value == "true")
+    if (!isEnabled) logger.debug("javascript is disabled")
+    isEnabled
+  }
 
   final def govukStartUrl: String = components.appConfig.govukStartUrl
 

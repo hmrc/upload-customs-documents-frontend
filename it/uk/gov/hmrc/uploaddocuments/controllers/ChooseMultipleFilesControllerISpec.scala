@@ -102,7 +102,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
 
           val journeyContext = fileUploadSessionConfig.copy(features = Features(showUploadMultiple = false))
 
-          setContext(FileUploadContext(journeyContext))
+          setContext(FileUploadContext(journeyContext, userWantsToUploadNextFile = false))
           setFileUploads(nFileUploads(1))
 
           givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
@@ -118,7 +118,47 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
           result.body should include(htmlEscapedMessage("view.summary.singular.title"))
         }
 
-        "show the upload single file per page when js is disabled set" in {
+        "show the upload first single file page when JS-Detection cookie set but the feature is turned off" in {
+
+          val journeyContext = fileUploadSessionConfig.copy(features = Features(showUploadMultiple = false))
+
+          setContext(FileUploadContext(journeyContext, userWantsToUploadNextFile = true))
+          setFileUploads(nFileUploads(0))
+
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+          val callbackUrl =
+            appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+          givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+          val result = await(requestWithCookies("/choose-files", JsEnabled.COOKIE_JSENABLED -> "true").get())
+
+          result.status shouldBe 200
+          result.body should include(htmlEscapedPageTitle("view.upload-file.first.title"))
+          result.body should include(htmlEscapedMessage("view.upload-file.first.title"))
+        }
+
+        "show the upload next single file page when JS-Detection cookie set but the feature is turned off" in {
+
+          val journeyContext = fileUploadSessionConfig.copy(features = Features(showUploadMultiple = false))
+
+          setContext(FileUploadContext(journeyContext, userWantsToUploadNextFile = true))
+          setFileUploads(nFileUploads(1))
+
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+          val callbackUrl =
+            appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+          givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+          val result = await(requestWithCookies("/choose-files", JsEnabled.COOKIE_JSENABLED -> "true").get())
+
+          result.status shouldBe 200
+          result.body should include(htmlEscapedPageTitle("view.upload-file.next.title"))
+          result.body should include(htmlEscapedMessage("view.upload-file.next.title"))
+        }
+
+        "show the upload next single file per page when js is disabled" in {
 
           setContext()
           setFileUploads(nFileUploads(1))
@@ -133,8 +173,27 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
           val result = await(request("/choose-files").get())
 
           result.status shouldBe 200
-          result.body should include(htmlEscapedPageTitle("view.summary.singular.title"))
-          result.body should include(htmlEscapedMessage("view.summary.singular.title"))
+          result.body should include(htmlEscapedPageTitle("view.upload-file.next.title"))
+          result.body should include(htmlEscapedMessage("view.upload-file.next.title"))
+        }
+
+        "show the upload first single file per page when js is disabled" in {
+
+          setContext()
+          setFileUploads(nFileUploads(0))
+
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+          val callbackUrl =
+            appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+          givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+          //Follows a redirect which then renders the Choose Single File page
+          val result = await(request("/choose-files").get())
+
+          result.status shouldBe 200
+          result.body should include(htmlEscapedPageTitle("view.upload-file.first.title"))
+          result.body should include(htmlEscapedMessage("view.upload-file.first.title"))
         }
       }
     }

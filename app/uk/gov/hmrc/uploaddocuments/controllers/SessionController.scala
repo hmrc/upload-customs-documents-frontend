@@ -22,16 +22,25 @@ import uk.gov.hmrc.uploaddocuments.views.html.TimedOutView
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
+import uk.gov.hmrc.uploaddocuments.models.UrlValidator
 
 @Singleton
-class SessionController @Inject()(controllerComponents: MessagesControllerComponents,
-                                  timedOutView: TimedOutView) extends FrontendController(controllerComponents) {
+class SessionController @Inject() (controllerComponents: MessagesControllerComponents, timedOutView: TimedOutView)
+    extends FrontendController(controllerComponents) {
 
   final val showTimeoutPage: Action[AnyContent] = Action.async { implicit request =>
     Future.successful(Ok(timedOutView()))
   }
 
   final def keepAlive(continueUrl: Option[String]): Action[AnyContent] = Action.async { _ =>
-    Future.successful(continueUrl.map(url => Redirect(url)).getOrElse(Ok("{}")))
+    Future.successful(
+      continueUrl
+        .flatMap(url =>
+          if (UrlValidator.isReleativeUrl(url) || UrlValidator.isValidFrontendUrl(url))
+            Some(Redirect(url))
+          else None
+        )
+        .getOrElse(Ok("{}"))
+    )
   }
 }
