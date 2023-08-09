@@ -41,9 +41,13 @@ class SummaryController @Inject() (
   final val showSummary: Action[AnyContent] = Action.async { implicit request =>
     whenInSession { implicit journeyId =>
       whenAuthenticated {
-        withJourneyContext { journeyConfig =>
+        withJourneyContext { journeyContext =>
           withFileUploads { files =>
-            Future.successful(Ok(renderView(YesNoChoiceForm, journeyConfig, files)))
+            journeyContextService
+              .putJourneyContext(journeyContext.copy(userWantsToUploadNextFile = false))
+              .map { _ =>
+                Ok(renderView(YesNoChoiceForm, journeyContext, files))
+              }
           }
         }
       }
@@ -56,22 +60,24 @@ class SummaryController @Inject() (
       whenAuthenticated {
         withJourneyContext { journeyContext =>
           withFileUploads { files =>
-            Future.successful(
-              Forms.YesNoChoiceForm
-                .bindFromRequest()
-                .fold(
-                  formWithErrors => BadRequest(renderView(formWithErrors, journeyContext, files)),
-                  {
-                    case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
-                      val redirect = journeyContext.config.continueAfterYesAnswerUrl.getOrElse(
-                        routes.ChooseSingleFileController.showChooseFile(Some(true)).url
-                      )
-                      Redirect(redirect)
-                    case _ =>
-                      Redirect(routes.ContinueToHostController.continueToHost)
-                  }
-                )
-            )
+            Forms.YesNoChoiceForm
+              .bindFromRequest()
+              .fold(
+                formWithErrors => Future.successful(BadRequest(renderView(formWithErrors, journeyContext, files))),
+                {
+                  case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
+                    journeyContextService
+                      .putJourneyContext(journeyContext.copy(userWantsToUploadNextFile = true))
+                      .map { _ =>
+                        val redirect = journeyContext.config.continueAfterYesAnswerUrl.getOrElse(
+                          routes.ChooseSingleFileController.showChooseFile(Some(true)).url
+                        )
+                        Redirect(redirect)
+                      }
+                  case _ =>
+                    Future.successful(Redirect(routes.ContinueToHostController.continueToHost))
+                }
+              )
           }
         }
       }

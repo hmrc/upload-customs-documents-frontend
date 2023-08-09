@@ -20,17 +20,17 @@ import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.uploaddocuments.views.html.StartView
 
 import javax.inject.{Inject, Singleton}
+import uk.gov.hmrc.uploaddocuments.support.JsEnabled
+import play.api.mvc.DiscardingCookie
 
 @Singleton
-class StartController @Inject()(view: StartView,
-                                components: BaseControllerComponents) extends BaseController(components) {
+class StartController @Inject() (view: StartView, components: BaseControllerComponents)
+    extends BaseController(components) {
 
   // GET /
-  final val start: Action[AnyContent] = Action { implicit request =>
-    if (preferUploadMultipleFiles)
-      Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles)
-    else
-      Ok(view(routes.ChooseMultipleFilesController.showChooseMultipleFiles))
+  final val start: Action[AnyContent] = Action { _ =>
+    Ok(view(routes.ChooseMultipleFilesController.showChooseMultipleFiles))
+      .discardingCookies(DiscardingCookie(JsEnabled.COOKIE_JSENABLED))
   }
 
 }

@@ -29,10 +29,11 @@ import uk.gov.hmrc.uploaddocuments.support.{AppISpec, LogCapturing}
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
 class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapturing with BeforeAndAfterEach {
 
-  implicit lazy val ec = scala.concurrent.ExecutionContext.Implicits.global
+  implicit lazy val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   lazy val repo                  = app.injector.instanceOf[JourneyCacheRepository]
   lazy val testFileUploadService = app.injector.instanceOf[FileUploadService]

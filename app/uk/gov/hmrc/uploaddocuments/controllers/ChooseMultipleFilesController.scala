@@ -46,7 +46,7 @@ class ChooseMultipleFilesController @Inject() (
               if (preferUploadMultipleFiles && journeyConfig.config.features.showUploadMultiple) {
                 Ok(renderView(journeyConfig, files, YesNoChoiceForm))
               } else {
-                if (files.acceptedCount > 0) {
+                if (files.acceptedCount > 0 && !journeyConfig.userWantsToUploadNextFile) {
                   Redirect(routes.SummaryController.showSummary)
                 } else {
                   Redirect(routes.ChooseSingleFileController.showChooseFile(None))

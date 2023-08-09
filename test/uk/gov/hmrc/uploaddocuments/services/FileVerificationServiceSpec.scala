@@ -28,15 +28,16 @@ import uk.gov.hmrc.uploaddocuments.support.UnitSpec
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
 
 class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService with TestData {
 
   override implicit val defaultTimeout: FiniteDuration = 20.seconds
 
-  implicit val ec       = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val hc       = HeaderCarrier()
-  implicit val jid      = journeyId
-  implicit val messages = mock[Messages]
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val hc: HeaderCarrier    = HeaderCarrier()
+  implicit val jid: JourneyId       = journeyId
+  implicit val messages: Messages   = mock[Messages]
 
   implicit val scheduler: Scheduler = ActorSystem("FileVerificationTestsActor").scheduler
 

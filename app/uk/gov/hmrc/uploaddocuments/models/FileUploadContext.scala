@@ -29,7 +29,8 @@ import java.util.UUID
 final case class FileUploadContext(
   config: FileUploadSessionConfig,
   hostService: HostService = HostService.Any,
-  active: Boolean = true
+  active: Boolean = true,
+  userWantsToUploadNextFile: Boolean = true
 ) {
   def isValid: Boolean = config.isValid && hostService.userAgent.nonEmpty
 

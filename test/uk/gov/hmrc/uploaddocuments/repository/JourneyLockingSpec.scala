@@ -27,12 +27,13 @@ import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 import java.util.concurrent.TimeUnit
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
+import scala.concurrent.ExecutionContext
 
 class JourneyLockingSpec extends UnitSpec with MockFactory with LogCapturing {
 
-  implicit val journeyId            = JourneyId("foo")
+  implicit val journeyId: JourneyId = JourneyId("foo")
   implicit val scheduler: Scheduler = ActorSystem("JourneyLockingTestsActor").scheduler
-  implicit val ec                   = scala.concurrent.ExecutionContext.Implicits.global
+  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   class fixture {
     lazy val mockLockRepo  = mock[LockRepository]

@@ -11,6 +11,7 @@ import uk.gov.hmrc.http.SessionKeys
 import uk.gov.hmrc.uploaddocuments.support.AppISpec
 
 import scala.concurrent.Future
+import play.api.mvc.AnyContentAsEmpty
 
 class AuthActionsISpec extends AuthActionISpecSetup {
 
@@ -78,7 +79,7 @@ trait AuthActionISpecSetup extends AppISpec {
 
     import scala.concurrent.ExecutionContext.Implicits.global
 
-    implicit val request = FakeRequest()
+    implicit val request: FakeRequest[AnyContentAsEmpty.type] = FakeRequest()
       .withSession(SessionKeys.authToken -> "Bearer XYZ")
       .withHeaders(HeaderNames.AUTHORIZATION -> "Bearer XYZ")
 

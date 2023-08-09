@@ -21,12 +21,18 @@ import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.Inject
+import uk.gov.hmrc.uploaddocuments.models.UrlValidator
 
-class SignOutController @Inject()(controllerComponents: MessagesControllerComponents,
-                                  appConfig: AppConfig) extends FrontendController(controllerComponents) {
+class SignOutController @Inject() (controllerComponents: MessagesControllerComponents, appConfig: AppConfig)
+    extends FrontendController(controllerComponents) {
 
   final def signOut(continueUrl: Option[String]): Action[AnyContent] = Action { _ =>
-    continueUrl.fold(Redirect(appConfig.signOutUrl))(url => Redirect(appConfig.signOutUrl, Map("continue" -> Seq(url))))
+    continueUrl.fold(Redirect(appConfig.signOutUrl))(url =>
+      if (UrlValidator.isReleativeUrl(url) || UrlValidator.isValidFrontendUrl(url))
+        Redirect(appConfig.signOutUrl, Map("continue" -> Seq(url)))
+      else
+        Redirect(appConfig.signOutUrl)
+    )
   }
 
   final def signOutTimeout(continueUrl: Option[String]): Action[AnyContent] = signOut(continueUrl)

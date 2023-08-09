@@ -40,7 +40,7 @@ trait TestData {
       callbackUrl = "/result-post-url"
     )
 
-  implicit val journeyContext = FileUploadContext(
+  implicit val journeyContext: FileUploadContext = FileUploadContext(
     fileUploadSessionConfig,
     HostService.Any
   )

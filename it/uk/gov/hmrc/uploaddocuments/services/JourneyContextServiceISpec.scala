@@ -24,10 +24,11 @@ import uk.gov.hmrc.uploaddocuments.support.TestData._
 import uk.gov.hmrc.uploaddocuments.support.{AppISpec, LogCapturing}
 import play.api.mvc.Results
 import scala.concurrent.Future
+import scala.concurrent.ExecutionContext
 
 class JourneyContextServiceISpec extends AppISpec with LogCapturing with BeforeAndAfterEach {
 
-  implicit lazy val ec = scala.concurrent.ExecutionContext.Implicits.global
+  implicit lazy val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   lazy val repo                      = app.injector.instanceOf[JourneyCacheRepository]
   lazy val testjourneyContextService = app.injector.instanceOf[JourneyContextService]
