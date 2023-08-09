@@ -41,12 +41,12 @@ class SummaryController @Inject() (
   final val showSummary: Action[AnyContent] = Action.async { implicit request =>
     whenInSession { implicit journeyId =>
       whenAuthenticated {
-        withJourneyContext { journeyContext =>
+        withJourneyContext { journeyConfig =>
           withFileUploads { files =>
             journeyContextService
-              .putJourneyContext(journeyContext.copy(userWantsToUploadNextFile = false))
+              .putJourneyContext(journeyConfig.copy(userWantsToUploadNextFile = false))
               .map { _ =>
-                Ok(renderView(YesNoChoiceForm, journeyContext, files))
+                Ok(renderView(YesNoChoiceForm, journeyConfig, files))
               }
           }
         }
@@ -58,18 +58,18 @@ class SummaryController @Inject() (
   final val submitUploadAnotherFileChoice: Action[AnyContent] = Action.async { implicit request =>
     whenInSession { implicit journeyId =>
       whenAuthenticated {
-        withJourneyContext { journeyContext =>
+        withJourneyContext { journeyConfig =>
           withFileUploads { files =>
             Forms.YesNoChoiceForm
               .bindFromRequest()
               .fold(
-                formWithErrors => Future.successful(BadRequest(renderView(formWithErrors, journeyContext, files))),
+                formWithErrors => Future.successful(BadRequest(renderView(formWithErrors, journeyConfig, files))),
                 {
-                  case true if files.initiatedOrAcceptedCount < journeyContext.config.maximumNumberOfFiles =>
+                  case true if files.initiatedOrAcceptedCount < journeyConfig.config.maximumNumberOfFiles =>
                     journeyContextService
-                      .putJourneyContext(journeyContext.copy(userWantsToUploadNextFile = true))
+                      .putJourneyContext(journeyConfig.copy(userWantsToUploadNextFile = true))
                       .map { _ =>
-                        val redirect = journeyContext.config.continueAfterYesAnswerUrl.getOrElse(
+                        val redirect = journeyConfig.config.continueAfterYesAnswerUrl.getOrElse(
                           routes.ChooseSingleFileController.showChooseFile(Some(true)).url
                         )
                         Redirect(redirect)

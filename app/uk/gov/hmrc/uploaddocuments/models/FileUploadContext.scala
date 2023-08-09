@@ -30,7 +30,7 @@ final case class FileUploadContext(
   config: FileUploadSessionConfig,
   hostService: HostService = HostService.Any,
   active: Boolean = true,
-  userWantsToUploadNextFile: Boolean = true
+  userWantsToUploadNextFile: Boolean = false
 ) {
   def isValid: Boolean = config.isValid && hostService.userAgent.nonEmpty
 
