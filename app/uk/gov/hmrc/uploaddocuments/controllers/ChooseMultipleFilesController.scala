@@ -42,17 +42,20 @@ class ChooseMultipleFilesController @Inject() (
       whenAuthenticated {
         withJourneyContext { journeyConfig =>
           withFileUploads { files =>
-            Future.successful {
-              if (preferUploadMultipleFiles && journeyConfig.config.features.showUploadMultiple) {
-                Ok(renderView(journeyConfig, files, YesNoChoiceForm))
-              } else {
-                if (files.acceptedCount > 0 && !journeyConfig.userWantsToUploadNextFile) {
-                  Redirect(routes.SummaryController.showSummary)
+            val userWantsToUploadNextFile = journeyConfig.userWantsToUploadNextFile
+            journeyContextService
+              .putJourneyContext(journeyConfig.copy(userWantsToUploadNextFile = false))
+              .map { _ =>
+                if (preferUploadMultipleFiles && journeyConfig.config.features.showUploadMultiple) {
+                  Ok(renderView(journeyConfig, files, YesNoChoiceForm))
                 } else {
-                  Redirect(routes.ChooseSingleFileController.showChooseFile(None))
+                  if (files.acceptedCount > 0 && !userWantsToUploadNextFile) {
+                    Redirect(routes.SummaryController.showSummary)
+                  } else {
+                    Redirect(routes.ChooseSingleFileController.showChooseFile(None))
+                  }
                 }
               }
-            }
           }
         }
       }
@@ -71,13 +74,15 @@ class ChooseMultipleFilesController @Inject() (
                 formWithErrors => Future.successful(BadRequest(renderView(journeyConfig, files, formWithErrors))),
                 {
                   case true =>
-                    Future.successful(
-                      journeyConfig.config.continueAfterYesAnswerUrl
-                        .orElse(journeyConfig.config.backlinkUrl) match {
-                        case Some(location) => Redirect(location)
-                        case None           => Ok(renderView(journeyConfig, files, Forms.YesNoChoiceForm))
+                    journeyContextService
+                      .putJourneyContext(journeyConfig.copy(userWantsToUploadNextFile = true))
+                      .map { _ =>
+                        journeyConfig.config.continueAfterYesAnswerUrl
+                          .orElse(journeyConfig.config.backlinkUrl) match {
+                          case Some(location) => Redirect(location)
+                          case None           => Ok(renderView(journeyConfig, files, Forms.YesNoChoiceForm))
+                        }
                       }
-                    )
                   case false =>
                     Future.successful(Redirect(routes.ContinueToHostController.continueToHost))
                 }
