@@ -39,10 +39,15 @@ object HtmlCleaner {
       "em",
       "strong",
       "details",
-      "summary"
+      "summary",
+      "a"
     )
     .addAttributes(":all", "class", "title")
     .addAttributes(":all", "id")
+    .addAttributes("a", "href", "rel", "target")
+    .addProtocols("a", "href", "https")
+    .addEnforcedAttribute("a", "target", "_blank")
+    .addEnforcedAttribute("a", "rel", "noreferrer noopener")
 
   final val simpleTextSafelist =
     Safelist.simpleText
