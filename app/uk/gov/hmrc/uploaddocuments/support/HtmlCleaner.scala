@@ -45,7 +45,7 @@ object HtmlCleaner {
     .addAttributes(":all", "class", "title")
     .addAttributes(":all", "id")
     .addAttributes("a", "href", "rel", "target")
-    .addProtocols("a", "href", "https")
+    .addProtocols("a", "href", "https", "http")
     .addEnforcedAttribute("a", "target", "_blank")
     .addEnforcedAttribute("a", "rel", "noreferrer noopener")
 
