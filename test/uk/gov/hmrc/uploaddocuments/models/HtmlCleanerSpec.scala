@@ -36,6 +36,10 @@ class HtmlCleanerSpec extends UnitSpec {
 
       HtmlCleaner.cleanBlock(
         """<a href="http://gov.uk">test</a>"""
+      ) shouldBe """<a href="http://gov.uk" rel="noreferrer noopener" target="_blank">test</a>"""
+
+      HtmlCleaner.cleanBlock(
+        """<a href="ftp://gov.uk">test</a>"""
       ) shouldBe """<a rel="noreferrer noopener" target="_blank">test</a>"""
     }
 
