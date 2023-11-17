@@ -117,6 +117,8 @@ export default class ErrorManager {
       errorMessage: message
     });
 
+    document.getElementById(inputId).setAttribute('aria-describedBy', 'multi-file-upload-error');
+
     this.bindErrorEvents(summaryRow, inputId);
     this.errorSummaryList.append(summaryRow);
 
