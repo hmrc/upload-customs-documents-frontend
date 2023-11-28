@@ -29,8 +29,7 @@
 .multi-file-upload__file-name {
   display: none;
   word-break: break-all;
-  margin-bottom: 10px;
-  margin-right: 10px;
+  margin: 10px 10px 10px 0;
   @include govuk-font($size: 19);
 
   @include govuk-media-query($from: tablet) {
@@ -54,8 +53,9 @@
 
 .multi-file-upload__meta-container {
   display: flex;
-  justify-content: flex-end;
-  flex-direction: row-reverse;
+  // justify-content: flex-end;
+  // flex-direction: row-reverse;
+  justify-content:space-between;
 
   @include govuk-media-query($from: tablet) {
     flex-direction: row;

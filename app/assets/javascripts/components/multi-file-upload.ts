@@ -592,7 +592,7 @@ export class MultiFileUpload extends Component {
   }
 
   private toggleItemLabel(item: HTMLElement, state: boolean): void {
-    toggleElementVisually(this.getItemLabelElement(item), state);
+    toggleElement(this.getItemLabelElement(item), state);
   }
 
   private toggleUploadMoreMessage(state: boolean): void {
