@@ -114,7 +114,7 @@ export class MultiFileUpload extends Component {
   private bindItemEvents(item: HTMLElement): void {
     this.getFileFromItem(item).addEventListener('change', this.handleFileChange.bind(this));
     this.getRemoveButtonFromItem(item).addEventListener('click', this.handleRemoveItem.bind(this));
-    this.getFileUploadButtonFromItem(item).addEventListener('click', this.handleAccessibleFileUploadButton.bind(this));
+    this.getFileUploadButtonFromItem(item).addEventListener('click', this.handleFileUploadButton.bind(this));
   }
 
   public init(): void {
@@ -196,7 +196,7 @@ export class MultiFileUpload extends Component {
     file.focus();
   }
 
-  private handleAccessibleFileUploadButton(e: Event): void {
+  private handleFileUploadButton(e: Event): void {
     e.preventDefault();
 
     const target = e.target as HTMLElement;
