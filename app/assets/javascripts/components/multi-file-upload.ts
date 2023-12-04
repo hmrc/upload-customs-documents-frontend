@@ -15,8 +15,7 @@ export class MultiFileUpload extends Component {
   private formStatus: HTMLElement;
   private submitBtn: HTMLInputElement;
   private addAnotherBtn: HTMLButtonElement;
-  // private fileNameInput: HTMLInputElement;
-  private fileNameInputBtn: HTMLButtonElement;
+  private fileUploadButton: HTMLButtonElement;
   private uploadMoreMessage: HTMLElement;
   private notifications: HTMLElement;
   private itemTpl: string;
@@ -69,8 +68,7 @@ export class MultiFileUpload extends Component {
       removing: 'multi-file-upload__item--removing',
       file: 'multi-file-upload__file',
       fileName: 'multi-file-upload__file-name',
-      // fileNameInput: 'multi-file-upload__file-name-input',
-      fileNameInputBtn: 'multi-file-upload__file-upload-button',
+      fileUploadButton: 'multi-file-upload__file-upload-button',
       filePreview: 'multi-file-upload__file-preview',
       remove: 'multi-file-upload__remove-item',
       addAnother: 'multi-file-upload__add-another',
@@ -100,8 +98,7 @@ export class MultiFileUpload extends Component {
     this.uploadMoreMessage = this.container.querySelector(`.${this.classes.uploadMore}`);
     this.formStatus = this.container.querySelector(`.${this.classes.formStatus}`);
     this.submitBtn = this.container.querySelector(`.${this.classes.submit}`);
-    // this.fileNameInput = this.container.querySelector(`.${this.classes.fileNameInput}`);
-    this.fileNameInputBtn = this.container.querySelector(`.${this.classes.fileNameInputBtn}`);
+    this.fileUploadButton = this.container.querySelector(`.${this.classes.fileUploadButton}`);
     this.notifications = this.container.querySelector(`.${this.classes.notifications}`);
   }
 
@@ -117,8 +114,7 @@ export class MultiFileUpload extends Component {
   private bindItemEvents(item: HTMLElement): void {
     this.getFileFromItem(item).addEventListener('change', this.handleFileChange.bind(this));
     this.getRemoveButtonFromItem(item).addEventListener('click', this.handleRemoveItem.bind(this));
-    // this.getFileNameInputFromItem(item).addEventListener('click', this.handleProxyFileNameInput.bind(this));
-    this.getFileNameInputButtonFromItem(item).addEventListener('click', this.handleProxyFileNameInputButton.bind(this));
+    this.getFileUploadButtonFromItem(item).addEventListener('click', this.handleAccessibleFileUploadButton.bind(this));
   }
 
   public init(): void {
@@ -158,7 +154,7 @@ export class MultiFileUpload extends Component {
     this.getFileNameElement(item).textContent = fileName;
     this.getDescriptionElement(item).textContent = fileData['description'];
     this.toggleItemLabel(item, false);
-    this.toggleFileButton(item, false);
+    this.toggleFileUploadButton(item, false);
 
     filePreview.textContent = fileName;
     filePreview.href = fileData['previewUrl'];
@@ -200,28 +196,14 @@ export class MultiFileUpload extends Component {
     file.focus();
   }
 
-  private handleProxyFileNameInputButton(e: Event): void {
+  private handleAccessibleFileUploadButton(e: Event): void {
     e.preventDefault();
 
     const target = e.target as HTMLElement;
     const item = target.closest(`.${this.classes.item}`) as HTMLElement;
     const file = this.getFileFromItem(item);
 
-
-    // const test = item.querySelector(`.${this.classes.fileNameInput}`);
-
     file.click();
-
-
-    // const dfdf = this.getFileNameInputFromItem(item);
-
-    // dfdf.value = this.getFileName(file);
-
-
-
-
-    // console.log(target, item, file, dfdf);
-
   }
 
   private addItem(): HTMLElement {
@@ -395,7 +377,7 @@ export class MultiFileUpload extends Component {
     }
 
     this.toggleItemLabel(item, false);
-    this.toggleFileButton(item, false);
+    this.toggleFileUploadButton(item, false);
     this.getFileNameElement(item).textContent = this.extractFileName(file.value);
     this.setItemState(item, UploadState.Waiting);
 
@@ -629,7 +611,7 @@ export class MultiFileUpload extends Component {
     toggleElement(this.getItemLabelElement(item), state);
   }
 
-  private toggleFileButton(item: HTMLElement, state: boolean): void {
+  private toggleFileUploadButton(item: HTMLElement, state: boolean): void {
     toggleElement(this.getFileButtonElement(item), state);
   }
 
@@ -674,8 +656,8 @@ export class MultiFileUpload extends Component {
   //   return item.querySelector(`.${this.classes.fileNameInput}`) as HTMLInputElement;
   // }
 
-  private getFileNameInputButtonFromItem(item: HTMLElement): HTMLButtonElement {
-    return item.querySelector(`.${this.classes.fileNameInputBtn}`) as HTMLButtonElement;
+  private getFileUploadButtonFromItem(item: HTMLElement): HTMLButtonElement {
+    return item.querySelector(`.${this.classes.fileUploadButton}`) as HTMLButtonElement;
   }
 
 
@@ -723,7 +705,7 @@ export class MultiFileUpload extends Component {
   }
 
   private getFileButtonElement(item: HTMLElement): HTMLElement {
-    return item.querySelector(`.${this.classes.fileNameInputBtn}`);
+    return item.querySelector(`.${this.classes.fileUploadButton}`);
   }
 
   private extractFileName(fileName: string): string {
