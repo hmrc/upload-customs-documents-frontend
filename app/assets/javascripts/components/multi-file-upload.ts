@@ -647,23 +647,9 @@ export class MultiFileUpload extends Component {
     return item.querySelector(`.${this.classes.file}`) as HTMLInputElement;
   }
 
-
-
-
-
-
-  // private getFileNameInputFromItem(item: HTMLElement): HTMLInputElement {
-  //   return item.querySelector(`.${this.classes.fileNameInput}`) as HTMLInputElement;
-  // }
-
   private getFileUploadButtonFromItem(item: HTMLElement): HTMLButtonElement {
     return item.querySelector(`.${this.classes.fileUploadButton}`) as HTMLButtonElement;
   }
-
-
-
-
-
 
   private getItemFromFile(file: HTMLInputElement): HTMLElement {
     return file.closest(`.${this.classes.item}`) as HTMLElement;
