@@ -25,9 +25,9 @@
       <div>
         <div class="multi-file-upload__file-container">
           <input class="multi-file-upload__file govuk-file-upload" type="file" id="file-{fileIndex}" accept="@acceptedFileExtensions">
-          <button class="multi-file-upload__file-upload-button govuk-button govuk-button--secondary" id="file-upload-button-{fileIndex}">Choose File</button>
+          <button class="multi-file-upload__file-upload-button govuk-button govuk-button--secondary" id="file-upload-button-{fileIndex}">@messages("view.upload-multiple-files.choose-file")</button>
           <span class="multi-file-upload__file-name"></span>
-          <a href="" target="_blank" class="govuk-link multi-file-upload__file-preview" rel="noopener noreferer">Preview</a>
+          <a href="" target="_blank" class="govuk-link multi-file-upload__file-preview" rel="noopener noreferer">@messages("view.upload-multiple-files.preview")</a>
         </div>
         <div class="multi-file-upload__description"></div>
       </div>
