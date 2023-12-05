@@ -23,7 +23,8 @@
 
 .multi-file-upload__file {
   max-width: 100%;
-  display:none;
+  left: -9999px;
+  position: absolute;
 }
 
 .multi-file-upload__file-preview,
