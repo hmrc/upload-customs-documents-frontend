@@ -23,7 +23,6 @@
 
 .multi-file-upload__file {
   max-width: 100%;
-  display:none;
 }
 
 .multi-file-upload__file-preview,
@@ -38,10 +37,6 @@
   }
   
   font-weight: bold;
-}
-
-.multi-file-upload__file-upload-button {
-  margin-bottom:10px;
 }
 
 .multi-file-upload__description {
