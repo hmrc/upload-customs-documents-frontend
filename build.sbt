@@ -13,6 +13,7 @@ lazy val root = (project in file("."))
     semanticdbVersion := scalafixSemanticdb.revision,
     PlayKeys.playDefaultPort := 10110,
     RoutesKeys.routesImport += "uk.gov.hmrc.uploaddocuments.models.JourneyId",
+    RoutesKeys.routesImport += "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl",
     TwirlKeys.templateImports ++= Seq(
       "play.twirl.api.HtmlFormat",
       "uk.gov.hmrc.govukfrontend.views.html.components._",
