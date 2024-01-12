@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,9 +73,11 @@ class JsonEncoder extends EncoderBase[ILoggingEvent] with LoggerUtil {
       eventNode.put("message", message.drop(4))
       try {
         val messageNode: JsonNode = mapper.readTree(message.drop(4))
-        eventNode.set("ucdf", messageNode)
+        eventNode.set[JsonNode]("ucdf", messageNode)
       } catch {
-        case e: Exception => Logger.error(e.getMessage)
+        case e: Exception =>
+          Logger.error(s"${e.getMessage}\nmessage:$message")
+          eventNode.put("message", message)
       }
     } else
       eventNode.put("message", message)

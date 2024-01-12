@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import play.api.mvc.{Action, AnyContent}
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.connectors.FileStream
@@ -27,30 +27,33 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class PreviewController @Inject()(components: BaseControllerComponents,
-                                  val actorSystem: ActorSystem,
-                                  override val fileUploadService: FileUploadService)
-                                 (implicit ec: ExecutionContext) extends BaseController(components) with FileStream with FileUploadsControllerHelper {
+class PreviewController @Inject() (
+  components: BaseControllerComponents,
+  val actorSystem: ActorSystem,
+  override val fileUploadService: FileUploadService
+)(implicit ec: ExecutionContext)
+    extends BaseController(components) with FileStream with FileUploadsControllerHelper {
 
   // GET /preview/:reference/:fileName
-  final def previewFileUploadByReference(reference: String, fileName: String): Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        withFileUploads { files =>
-          streamFileFromUspcan(reference, files)
+  final def previewFileUploadByReference(reference: String, fileName: String): Action[AnyContent] = Action.async {
+    implicit request =>
+      whenInSession { implicit journeyId =>
+        whenAuthenticated {
+          withFileUploads { files =>
+            streamFileFromUspcan(reference, files)
+          }
         }
       }
-    }
   }
 
   private def streamFileFromUspcan(reference: String, files: FileUploads) =
     files.files.find(_.reference == reference) match {
       case Some(file: FileUpload.Accepted) =>
         getFileStream(
-          url          = file.url,
-          fileName     = file.fileName,
+          url = file.url,
+          fileName = file.fileName,
           fileMimeType = file.fileMimeType,
-          fileSize     = file.fileSize,
+          fileSize = file.fileSize,
           contentDispositionForMimeType = (fileName, fileMimeType) =>
             fileMimeType match {
               case _ =>

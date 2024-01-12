@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.services
 
-import akka.actor.Scheduler
+import org.apache.pekko.actor.Scheduler
 import play.api.i18n.Messages
 import uk.gov.hmrc.uploaddocuments.controllers.routes
 import uk.gov.hmrc.uploaddocuments.models._
@@ -25,25 +25,28 @@ import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
-class FileVerificationService @Inject()(fileUploadService: FileUploadService) extends LoggerUtil {
+class FileVerificationService @Inject() (fileUploadService: FileUploadService) extends LoggerUtil {
 
-  def waitForUpscanResponse[T](upscanReference: String,
-                               intervalInMiliseconds: Long,
-                               timeoutNanoTime: Long)
-                              (readyResult: FileUpload => Future[T],
-                               ifTimeout: => Future[T])
-                              (implicit scheduler: Scheduler, ec: ExecutionContext, journeyId: JourneyId): Future[T] =
-
+  def waitForUpscanResponse[T](upscanReference: String, intervalInMiliseconds: Long, timeoutNanoTime: Long)(
+    readyResult: FileUpload => Future[T],
+    ifTimeout: => Future[T]
+  )(implicit scheduler: Scheduler, ec: ExecutionContext, journeyId: JourneyId): Future[T] =
     fileUploadService.withFiles[T](throw new Exception("No JourneyID found for supplied journeyID")) {
       _.files.find(_.reference == upscanReference) match {
         case Some(file) if file.isReady =>
-          Logger.info(s"[waitForUpscanResponse] Response received from Upscan for reference: '$upscanReference' and file is ready")
+          Logger.info(
+            s"[waitForUpscanResponse] Response received from Upscan for reference: '$upscanReference' and file is ready"
+          )
           readyResult(file)
         case Some(_) if System.nanoTime() > timeoutNanoTime =>
-          Logger.info(s"[waitForUpscanResponse] Timed out waiting for a response from Upscan for reference: '$upscanReference'")
+          Logger.info(
+            s"[waitForUpscanResponse] Timed out waiting for a response from Upscan for reference: '$upscanReference'"
+          )
           ifTimeout
         case Some(_) =>
-          Logger.info(s"[waitForUpscanResponse] Waiting $intervalInMiliseconds milliseconds for a response from Upscan for reference: '$upscanReference'")
+          Logger.info(
+            s"[waitForUpscanResponse] Waiting $intervalInMiliseconds milliseconds for a response from Upscan for reference: '$upscanReference'"
+          )
           ScheduleAfter(intervalInMiliseconds) {
             waitForUpscanResponse(upscanReference, intervalInMiliseconds * 2, timeoutNanoTime)(readyResult, ifTimeout)
           }
@@ -53,8 +56,11 @@ class FileVerificationService @Inject()(fileUploadService: FileUploadService) ex
       }
     }
 
-  def getFileVerificationStatus(reference: String)
-                               (implicit journeyContext: FileUploadContext, messages: Messages, journeyId: JourneyId): Future[Option[FileVerificationStatus]] =
+  def getFileVerificationStatus(reference: String)(implicit
+    journeyContext: FileUploadContext,
+    messages: Messages,
+    journeyId: JourneyId
+  ): Future[Option[FileVerificationStatus]] =
     fileUploadService.withFiles[Option[FileVerificationStatus]](Future.successful(None)) { files =>
       Future.successful(files.files.find(_.reference == reference) map { file =>
         FileVerificationStatus(

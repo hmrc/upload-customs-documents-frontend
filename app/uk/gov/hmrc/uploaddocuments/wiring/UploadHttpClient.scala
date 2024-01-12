@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.play.http.ws
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import play.api.Configuration
 import play.api.libs.json.{Json, Writes}
 import play.api.libs.ws.WSClient
@@ -28,7 +28,7 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class UploadHttpClient @Inject()(
+class UploadHttpClient @Inject() (
   config: Configuration,
   httpAuditing: HttpAuditing,
   wsClient: WSClient,

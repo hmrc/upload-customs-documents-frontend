@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.uploaddocuments.connectors
 
-import akka.actor.ActorSystem
-import akka.pattern.after
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.pattern.after
 import play.api.Configuration
 import uk.gov.hmrc.play.http.logging.Mdc
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
@@ -40,21 +40,25 @@ trait Retries extends LoggerUtil {
         .flatMap(result =>
           if (remainingIntervals.nonEmpty && shouldRetry(Success(result))) {
             val delay = remainingIntervals.head
-            Logger.warn(s"Will retry [${intervals.size - remainingIntervals.size + 1}] in $delay due to ${retryReason(result)}")
+            Logger.warn(
+              s"Will retry [${intervals.size - remainingIntervals.size + 1}] in $delay due to ${retryReason(result)}"
+            )
             after(delay, actorSystem.scheduler)(loop(remainingIntervals.tail)(mdcData)(block))
           } else {
             Future.successful(result)
-        })
-        .recoverWith {
-          case e: Throwable =>
-            if (remainingIntervals.nonEmpty && shouldRetry(Failure(e))) {
-              val delay = remainingIntervals.head
-              Logger.warn(s"Will retry [${intervals.size - remainingIntervals.size + 1}] in $delay due to ${e.getClass.getName}: ${e.getMessage}")
-              after(delay, actorSystem.scheduler)(loop(remainingIntervals.tail)(mdcData)(block))
-            } else {
-              Logger.error(s"After [${intervals.size + 1}] retries failing with ${e.getClass.getName}: ${e.getMessage}")
-              Future.failed(e)
-            }
+          }
+        )
+        .recoverWith { case e: Throwable =>
+          if (remainingIntervals.nonEmpty && shouldRetry(Failure(e))) {
+            val delay = remainingIntervals.head
+            Logger.warn(
+              s"Will retry [${intervals.size - remainingIntervals.size + 1}] in $delay due to ${e.getClass.getName}: ${e.getMessage}"
+            )
+            after(delay, actorSystem.scheduler)(loop(remainingIntervals.tail)(mdcData)(block))
+          } else {
+            Logger.error(s"After [${intervals.size + 1}] retries failing with ${e.getClass.getName}: ${e.getMessage}")
+            Future.failed(e)
+          }
         }
     loop(intervals)(Mdc.mdcData)(block)
   }

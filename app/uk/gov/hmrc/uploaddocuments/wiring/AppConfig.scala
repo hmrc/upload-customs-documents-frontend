@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,7 @@ trait AppConfig {
   def lockTimeout: Duration
 }
 
-class AppConfigImpl @Inject()(config: ServicesConfig, configuration: Configuration) extends AppConfig {
+class AppConfigImpl @Inject() (config: ServicesConfig, configuration: Configuration) extends AppConfig {
 
   override val baseExternalCallbackUrl: String      = config.getString("urls.callback.external")
   override val baseInternalCallbackUrl: String      = config.getString("urls.callback.internal")
@@ -83,7 +83,8 @@ class AppConfigImpl @Inject()(config: ServicesConfig, configuration: Configurati
     Retries.getConfIntervals("fileUploadResultPush.retryIntervals", configuration)
 
   override val upscanInitialWaitTime: Duration = Duration.apply(config.getString("upscan.initialCallbackWaitTime"))
-  override val upscanWaitInterval: Duration = Duration.apply(config.getString("upscan.waitInterval"))
-  override val lockReleaseCheckInterval: Duration = Duration.apply(config.getString("mongodb.lock.releaseCheckInterval"))
+  override val upscanWaitInterval: Duration    = Duration.apply(config.getString("upscan.waitInterval"))
+  override val lockReleaseCheckInterval: Duration =
+    Duration.apply(config.getString("mongodb.lock.releaseCheckInterval"))
   override val lockTimeout: Duration = Duration.apply(config.getString("mongodb.lock.timeout"))
 }

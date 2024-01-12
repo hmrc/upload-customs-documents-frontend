@@ -1,7 +1,6 @@
 package uk.gov.hmrc.uploaddocuments.support
 
 import com.codahale.metrics.MetricRegistry
-import com.kenshoo.play.metrics.Metrics
 import org.scalatest.Suite
 import play.api.Application
 
@@ -16,7 +15,7 @@ trait MetricsTestSupport {
   private var metricsRegistry: MetricRegistry = _
 
   def givenCleanMetricRegistry(): Unit = {
-    val registry = app.injector.instanceOf[Metrics].defaultRegistry
+    val registry = app.injector.instanceOf[MetricRegistry]
     for (metric <- CollectionConverters.IteratorHasAsScala[String](registry.getMetrics.keySet().iterator()).asScala)
       registry.remove(metric)
     metricsRegistry = registry
