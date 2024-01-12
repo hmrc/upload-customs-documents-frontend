@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.repository
 
-import akka.actor.Scheduler
+import org.apache.pekko.actor.Scheduler
 import uk.gov.hmrc.mongo.lock.{LockRepository, LockService}
 import uk.gov.hmrc.uploaddocuments.models.JourneyId
 import uk.gov.hmrc.uploaddocuments.services.ScheduleAfter
@@ -36,33 +36,36 @@ trait JourneyLocking extends LoggerUtil {
     ttl = appConfig.lockTimeout
   )
 
-  def takeLock[T](timeOutResult: => Future[T])(f: => Future[T])
-                (implicit ec: ExecutionContext, scheduler: Scheduler, journeyId: JourneyId): Future[T] = {
+  def takeLock[T](
+    timeOutResult: => Future[T]
+  )(f: => Future[T])(implicit ec: ExecutionContext, scheduler: Scheduler, journeyId: JourneyId): Future[T] = {
 
-    val timeOut = System.nanoTime() + appConfig.lockTimeout.toNanos
+    val timeOut       = System.nanoTime() + appConfig.lockTimeout.toNanos
     val checkInterval = appConfig.lockReleaseCheckInterval
 
-    def tryLock(): Future[T] = {
-
-      lockKeeper.withLock(f).flatMap {
-        case Some(result) =>
-          Future.successful(result)
-        case None =>
-          if(System.nanoTime() > timeOut) {
-            Logger.info(s"[tryLock] for journeyId: '$journeyId' was not released - could not process")
-            timeOutResult
-          } else {
-            Logger.warn(s"[tryLock] for journeyId: '$journeyId' was locked. Waiting for ${checkInterval.toMillis} millis before trying again.")
-            ScheduleAfter(checkInterval.toMillis) {
-              tryLock()
+    def tryLock(): Future[T] =
+      lockKeeper
+        .withLock(f)
+        .flatMap {
+          case Some(result) =>
+            Future.successful(result)
+          case None =>
+            if (System.nanoTime() > timeOut) {
+              Logger.info(s"[tryLock] for journeyId: '$journeyId' was not released - could not process")
+              timeOutResult
+            } else {
+              Logger.warn(
+                s"[tryLock] for journeyId: '$journeyId' was locked. Waiting for ${checkInterval.toMillis} millis before trying again."
+              )
+              ScheduleAfter(checkInterval.toMillis) {
+                tryLock()
+              }
             }
-          }
-      }.recover {
-        case e: Exception =>
+        }
+        .recover { case e: Exception =>
           Logger.error(s"[tryLock] for journeyId: '$journeyId' failed with exception ${e.getMessage}")
           throw e
-      }
-    }
+        }
 
     tryLock()
   }

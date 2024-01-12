@@ -8,11 +8,12 @@ lazy val root = (project in file("."))
   .settings(
     name := "upload-customs-documents-frontend",
     organization := "uk.gov.hmrc",
-    scalaVersion := "2.13.11",
+    scalaVersion := "2.13.12",
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
     PlayKeys.playDefaultPort := 10110,
     RoutesKeys.routesImport += "uk.gov.hmrc.uploaddocuments.models.JourneyId",
+    RoutesKeys.routesImport += "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl",
     TwirlKeys.templateImports ++= Seq(
       "play.twirl.api.HtmlFormat",
       "uk.gov.hmrc.govukfrontend.views.html.components._",

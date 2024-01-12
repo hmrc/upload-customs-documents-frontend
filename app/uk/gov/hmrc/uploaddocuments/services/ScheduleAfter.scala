@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,8 @@
 
 package uk.gov.hmrc.uploaddocuments.services
 
-import akka.actor.Scheduler
-import akka.pattern.FutureTimeoutSupport
+import org.apache.pekko.actor.Scheduler
+import org.apache.pekko.pattern.FutureTimeoutSupport
 
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{ExecutionContext, Future}
@@ -25,6 +25,8 @@ import scala.concurrent.{ExecutionContext, Future}
 object ScheduleAfter extends FutureTimeoutSupport {
 
   /** Delay execution of the future by given miliseconds */
-  def apply[T](delayInMiliseconds: Long)(body: => Future[T])(implicit scheduler: Scheduler, ec: ExecutionContext): Future[T] =
+  def apply[T](delayInMiliseconds: Long)(
+    body: => Future[T]
+  )(implicit scheduler: Scheduler, ec: ExecutionContext): Future[T] =
     after(duration = FiniteDuration(delayInMiliseconds, "ms"), using = scheduler)(body)
 }

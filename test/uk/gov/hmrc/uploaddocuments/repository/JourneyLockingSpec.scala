@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.repository
 
-import akka.actor.{ActorSystem, Scheduler}
+import org.apache.pekko.actor.{ActorSystem, Scheduler}
 import org.scalamock.handlers.CallHandler3
 import org.scalamock.scalatest.MockFactory
 import uk.gov.hmrc.mongo.lock.LockRepository
@@ -28,6 +28,8 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.Future
 import scala.concurrent.duration.Duration
 import scala.concurrent.ExecutionContext
+import uk.gov.hmrc.mongo.lock.Lock
+import java.time.Instant
 
 class JourneyLockingSpec extends UnitSpec with MockFactory with LogCapturing {
 
@@ -56,8 +58,8 @@ class JourneyLockingSpec extends UnitSpec with MockFactory with LogCapturing {
       .anyNumberOfTimes()
 
     def mockTakeLock(
-      isTaken: Future[Boolean] = Future.successful(true)
-    ): CallHandler3[String, String, Duration, Future[Boolean]] =
+      isTaken: Future[Option[Lock]] = Future.successful(Some(Lock(journeyId.value, "Foo", Instant.now(), Instant.MAX)))
+    ): CallHandler3[String, String, Duration, Future[Option[Lock]]] =
       (mockLockRepo
         .takeLock(_: String, _: String, _: Duration))
         .expects(journeyId.value, *, mockAppConfig.lockTimeout)
@@ -88,7 +90,7 @@ class JourneyLockingSpec extends UnitSpec with MockFactory with LogCapturing {
         "return the timeout result" in new fixture {
 
           withCaptureOfLoggingFrom(TestJourneyLocking.logger) { logs =>
-            mockTakeLock(Future.successful(false)).repeat(10)
+            mockTakeLock(Future.successful(None)).repeat(10)
             val result = TestJourneyLocking.takeLock(Future.successful("TimedOut"))(Future.successful("Executed"))
 
             await(result) shouldBe "TimedOut"
@@ -107,7 +109,7 @@ class JourneyLockingSpec extends UnitSpec with MockFactory with LogCapturing {
         "return the f result" in new fixture {
 
           withCaptureOfLoggingFrom(TestJourneyLocking.logger) { logs =>
-            mockTakeLock(Future.successful(false)).repeat(4)
+            mockTakeLock(Future.successful(None)).repeat(4)
             mockTakeLock().once()
 
             val result = TestJourneyLocking.takeLock(Future.successful("TimedOut"))(Future.successful("Executed"))

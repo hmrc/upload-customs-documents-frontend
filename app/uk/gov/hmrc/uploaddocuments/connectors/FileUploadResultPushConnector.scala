@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.uploaddocuments.connectors
 
-import akka.actor.ActorSystem
+import org.apache.pekko.actor.ActorSystem
 import com.codahale.metrics.MetricRegistry
-import com.kenshoo.play.metrics.Metrics
 import play.api.libs.json.Json
 import uk.gov.hmrc.http.{HeaderCarrier, HttpPost}
 import uk.gov.hmrc.uploaddocuments.connectors.httpParsers.FileUploadResultPushConnectorReads
@@ -36,11 +35,9 @@ import scala.util.Try
 class FileUploadResultPushConnector @Inject() (
   appConfig: AppConfig,
   http: HttpPost,
-  metrics: Metrics,
+  val kenshooRegistry: MetricRegistry,
   val actorSystem: ActorSystem
 ) extends HttpAPIMonitor with Retries with LoggerUtil {
-
-  override val kenshooRegistry: MetricRegistry = metrics.defaultRegistry
 
   import FileUploadResultPushConnector._
 

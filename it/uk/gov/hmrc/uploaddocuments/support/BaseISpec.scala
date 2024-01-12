@@ -1,6 +1,6 @@
 package uk.gov.hmrc.uploaddocuments.support
 
-import akka.stream.Materializer
+import org.apache.pekko.stream.Materializer
 import play.api.i18n.{Lang, Messages, MessagesApi}
 import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder

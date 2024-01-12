@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,11 @@
 
 package uk.gov.hmrc.uploaddocuments.connectors
 
-import akka.NotUsed
-import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{HttpMethods, HttpRequest, HttpResponse}
-import akka.stream.scaladsl.{Flow, Source}
+import org.apache.pekko.NotUsed
+import org.apache.pekko.actor.ActorSystem
+import org.apache.pekko.http.scaladsl.Http
+import org.apache.pekko.http.scaladsl.model.{HttpMethods, HttpRequest, HttpResponse}
+import org.apache.pekko.stream.scaladsl.{Flow, Source}
 import play.api.mvc.{Result, Results}
 
 import scala.concurrent.Future
@@ -63,7 +63,7 @@ trait FileStream {
               content =
                 httpResponse.entity.withSizeLimit(if (fileSize == 0) defaultFileSizeLimit else fileSize).dataBytes,
               contentLength = httpResponse.entity.contentLengthOption,
-              contentType   = Some(fileMimeType)
+              contentType = Some(fileMimeType)
             )
             .withHeaders(contentDispositionForMimeType(fileName, fileMimeType))
 

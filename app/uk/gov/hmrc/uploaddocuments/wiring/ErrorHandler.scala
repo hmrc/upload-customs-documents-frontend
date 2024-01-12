@@ -1,5 +1,5 @@
 /*
- * Copyright 2023 HM Revenue & Customs
+ * Copyright 2024 HM Revenue & Customs
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import play.api.{Configuration, Environment, Mode}
 import uk.gov.hmrc.auth.core.{InsufficientEnrolments, NoActiveSession}
 import uk.gov.hmrc.http.{JsValidationException, NotFoundException}
 import uk.gov.hmrc.play.audit.http.connector.AuditConnector
-import uk.gov.hmrc.play.bootstrap.config.{AuthRedirects, HttpAuditEvent}
+import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
 import uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.views.html.templates.{ErrorTemplate, GovukLayoutWrapper}
@@ -32,6 +32,7 @@ import uk.gov.hmrc.uploaddocuments.views.html.{ErrorView, PageNotFoundErrorView}
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import uk.gov.hmrc.uploaddocuments.controllers.AuthRedirects
 
 @Singleton
 class ErrorHandler @Inject() (
@@ -64,7 +65,7 @@ class ErrorHandler @Inject() (
     auditServerError(request, exception)
     implicit val r = Request(request, "")
     exception match {
-      case _: NoActiveSession => toGGLogin(if (isDevEnv) s"http://${request.host}${request.uri}" else s"${request.uri}")
+      case _: NoActiveSession        => toGGLogin(if (isDevEnv) s"http://${request.host}${request.uri}" else s"${request.uri}")
       case _: InsufficientEnrolments => Forbidden
       case _ =>
         Ok(
@@ -83,11 +84,11 @@ class ErrorHandler @Inject() (
 
 object EventTypes {
 
-  val RequestReceived: String = "RequestReceived"
+  val RequestReceived: String          = "RequestReceived"
   val TransactionFailureReason: String = "transactionFailureReason"
-  val ServerInternalError: String = "ServerInternalError"
-  val ResourceNotFound: String = "ResourceNotFound"
-  val ServerValidationError: String = "ServerValidationError"
+  val ServerInternalError: String      = "ServerInternalError"
+  val ResourceNotFound: String         = "ResourceNotFound"
+  val ServerValidationError: String    = "ServerValidationError"
 }
 
 trait ErrorAuditing extends HttpAuditEvent {
@@ -97,7 +98,7 @@ trait ErrorAuditing extends HttpAuditEvent {
   def auditConnector: AuditConnector
 
   private val unexpectedError = "Unexpected error"
-  private val notFoundError = "Resource Endpoint Not Found"
+  private val notFoundError   = "Resource Endpoint Not Found"
   private val badRequestError = "Request bad format exception"
 
   def auditServerError(request: RequestHeader, ex: Throwable)(implicit ec: ExecutionContext): Unit = {
@@ -117,8 +118,7 @@ trait ErrorAuditing extends HttpAuditEvent {
     )
   }
 
-  def auditClientError(request: RequestHeader, statusCode: Int, message: String)(
-    implicit
+  def auditClientError(request: RequestHeader, statusCode: Int, message: String)(implicit
     ec: ExecutionContext
   ): Unit = {
     import play.api.http.Status._
