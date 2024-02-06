@@ -160,8 +160,8 @@ view.summary.maximum=You can upload up to {0} files.
 
 form.upload-file.file=Upload a file
 form.upload-file.submit=Upload
-form.file-uploaded.choice.yes=Yes
-form.file-uploaded.choice.no=No
+form.file-uploaded.choice.yes= Yes 
+form.file-uploaded.choice.no= No 
 form.file-uploaded.choice.noConditional=By continuing, you will now submit all the documents you’ve uploaded
 form.file-uploaded.continue=Continue
 form.upload-multiple-files.continue=Continue
