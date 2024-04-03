@@ -15,7 +15,7 @@ export default class ErrorManager {
 
   constructor() {
     this.classes = {
-      inputContainer: 'govuk-form-group',
+      inputContainer: 'multi-file-upload__input-container',
       inputContainerError: 'govuk-form-group--error',
       errorSummaryList: 'govuk-error-summary__list',
       label: 'govuk-label'
@@ -78,6 +78,8 @@ export default class ErrorManager {
     delete this.errors[inputId];
 
     this.updateErrorSummaryVisibility();
+
+    this.updateMetaTitle();
   }
 
   public hasSingleError(inputId: string): boolean {
@@ -117,7 +119,7 @@ export default class ErrorManager {
       errorMessage: message
     });
 
-    document.getElementById(inputId).setAttribute('aria-describedBy', 'multi-file-upload-error');
+    document.getElementById(inputId)?.setAttribute('aria-describedBy', 'multi-file-upload-error');
 
     this.bindErrorEvents(summaryRow, inputId);
     this.errorSummaryList.append(summaryRow);

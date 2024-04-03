@@ -16,6 +16,12 @@
   }
 }
 
+.multi-file-upload__input {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid $govuk-border-colour;
+}
+
 .multi-file-upload__file-container {
   position: relative;
   flex-shrink: 100; /* IE11 fix to avoid input pushing the Remove button off screen on smaller screens */
@@ -55,7 +61,7 @@
   display: flex;
   // justify-content: flex-end;
   // flex-direction: row-reverse;
-  justify-content:space-between;
+  justify-content:right;
 
   @include govuk-media-query($from: tablet) {
     flex-direction: row;
