@@ -84,7 +84,6 @@ appConfig: AppConfig
       ),
       hint = None,
       errorMessage = maybeUploadError.map(UploadFileViewHelper.toFormError(_, maximumFileSizeBytes, allowedFileTypesHint)).map(err => ErrorMessage(content = Text(messages(err.message, err.args: _*)))),
-      formGroupClasses = "",
       classes = "",
       attributes = Map(
         "accept" -> filePickerAcceptFilter,
