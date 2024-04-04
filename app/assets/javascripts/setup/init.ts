@@ -1,4 +1,4 @@
-import GOVUKFrontend from 'webjars/lib/govuk-frontend/govuk/all.js';
+import GOVUKFrontend from 'webjars/lib/govuk-frontend/dist/govuk/all.bundle.js';
 import HMRCFrontend from 'webjars/lib/hmrc-frontend/hmrc/all.js';
 
 export default function
