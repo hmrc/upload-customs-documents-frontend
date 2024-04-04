@@ -66,6 +66,11 @@
   @include govuk-media-query($from: tablet) {
     flex-direction: row;
   }
+
+  dd {
+    min-width: 6rem;
+    margin-inline-start: 0.5rem;
+  }
 }
 
 .multi-file-upload__status {
@@ -108,8 +113,7 @@
 }
 
 .multi-file-upload__uploaded-tag {
-  // using visibility to ensure this element determines the width of the progress bar
-  visibility: hidden;
+  display: none;
 }
 
 .multi-file-upload__waiting-tag {
@@ -153,6 +157,10 @@
   .multi-file-upload__waiting-tag {
     display: inline-block;
   }
+  
+  .multi-file-upload__description {
+      display: inline-block;
+  }
 }
 
 .multi-file-upload__item--uploading,
@@ -167,7 +175,10 @@
 
   .multi-file-upload__progress {
     display: inline-block;
-    
+  }
+
+  .multi-file-upload__description {
+    display: inline-block;
   }
 }
 
@@ -181,7 +192,7 @@
   }
 
   .multi-file-upload__uploaded-tag {
-    visibility: visible;
+    display: inline-block;
   }
 
   .multi-file-upload__description {
