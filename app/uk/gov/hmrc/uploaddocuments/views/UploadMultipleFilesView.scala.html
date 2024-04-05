@@ -131,16 +131,21 @@ appConfig: AppConfig
     @if(features.showAddAnotherDocumentButton){data-multi-file-upload-show-add-another-document-button}
     @if(form.errors.nonEmpty){data-multi-file-upload-initial-error="@form.errors.map(error => messages(error.message,error.args:_*)).head"}
   >
-    <ul class="multi-file-upload__item-list govuk-!-margin-bottom-5"></ul>
-
-    @CSRF.formField
-
-    <button type="button" class="multi-file-upload__add-another govuk-button govuk-button--secondary">@serviceContent.addAnotherDocumentButtonText.getOrElse(messages("view.upload-multiple-files.addAnother"))</button>
 
     @html.p(
       content = Html(messages("view.upload-multiple-files.uploadMoreFilesThanLimit", maximumNumberOfFiles)),
       classes="govuk-body multi-file-upload__upload-more-message hidden"
     )
+
+    <div class="multi-file-upload__input-list">
+
+    </div>
+
+    <dl class="multi-file-upload__item-list govuk-!-margin-bottom-5"></dl>
+
+    @CSRF.formField
+
+    <button type="button" class="multi-file-upload__add-another govuk-button govuk-button--secondary hidden">@serviceContent.addAnotherDocumentButtonText.getOrElse(messages("view.upload-multiple-files.addAnother"))</button>
 
     <p class="govuk-body multi-file-upload__form-status hidden" aria-hidden="true">
       @messages("view.upload-multiple-files.stillTransferring")...
@@ -180,6 +185,7 @@ appConfig: AppConfig
     <div class="multi-file-upload__notifications govuk-visually-hidden" aria-live="polite" role="status"></div>
 
     <script type="text/x-template" id="multi-file-upload-item-tpl"> @multiFileUpload.item(filePickerAcceptFilter) </script>
+    <script type="text/x-template" id="multi-file-upload-input-tpl"> @multiFileUpload.input(filePickerAcceptFilter) </script>
     <script type="text/x-template" id="error-manager-summary-tpl"> @errorManager.summary(messages) </script>
     <script type="text/x-template" id="error-manager-summary-item-tpl"> @errorManager.summaryItem(messages) </script>
     <script type="text/x-template" id="error-manager-message-tpl"> @errorManager.message(messages) </script>

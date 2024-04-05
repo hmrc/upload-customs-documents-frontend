@@ -15,7 +15,7 @@ export default class ErrorManager {
 
   constructor() {
     this.classes = {
-      inputContainer: 'govuk-form-group',
+      inputContainer: 'multi-file-upload__input-container',
       inputContainerError: 'govuk-form-group--error',
       errorSummaryList: 'govuk-error-summary__list',
       label: 'govuk-label'
@@ -46,11 +46,15 @@ export default class ErrorManager {
     this.metaTitleErrorPrefix = this.errorSummary.dataset.errorPrefix;
   }
 
-  public addError(inputId: string, message: string): void {
+  public addError(inputId: string, message: string, fileName: string): void {
     this.removeError(inputId);
 
     const errorMessage = this.addErrorToField(inputId, message);
-    const errorSummaryRow = this.addErrorToSummary(inputId, message);
+    let refinedMessage = message;
+    if(fileName && fileName.length>0){
+      refinedMessage = message.replace(' file ',` file "${fileName}" `)
+    }
+    const errorSummaryRow = this.addErrorToSummary(inputId, refinedMessage);
 
     this.errors[inputId] = {
       errorMessage: errorMessage,
@@ -61,6 +65,37 @@ export default class ErrorManager {
     this.updateMetaTitle();
   }
 
+  public addSummaryOnlyError(inputId: string, message: string, fileName: string): void {
+    this.removeError(inputId);
+
+    let refinedMessage = message;
+    if(fileName && fileName.length>0){
+      refinedMessage = message.replace(' file ',` file "${fileName}" `)
+    }
+    const errorSummaryRow = this.addErrorToSummary(inputId, refinedMessage);
+    const link = errorSummaryRow.querySelector('a');
+    const span = document.createElement('span');
+    span.textContent = link.textContent;
+    span.className = 'govuk-error-message';
+    link.parentElement.append(span);
+    link.remove();
+
+    this.errors[inputId] = {
+      errorMessage: undefined,
+      errorSummaryRow: errorSummaryRow
+    };
+
+    this.updateErrorSummaryVisibility();
+    this.updateMetaTitle();
+  }
+
+  public removeAllErrors(): void {
+    Object.entries(this.errors).forEach((value)=>{
+      const inputId = value[0];
+      this.removeError(inputId);
+    });
+  }
+
   public removeError(inputId: string): void {
     if (!Object.prototype.hasOwnProperty.call(this.errors, inputId)) {
       return;
@@ -68,16 +103,25 @@ export default class ErrorManager {
 
     const error = this.errors[inputId];
     const input = document.getElementById(inputId);
-    const inputContainer = this.getContainer(input);
+    if(input){
+      const inputContainer = this.getContainer(input);
+      inputContainer?.classList.remove(this.classes.inputContainerError);
+    } else if(inputId=='initial'){
+      const elems = document.getElementsByClassName('govuk-form-group--error')
+      for(let i = 0;i<elems.length;i++){
+        elems.item(i)?.classList.remove('govuk-form-group--error');
+      }
+      document.getElementById('choice-error')?.remove();
+    }
 
-    error.errorMessage.remove();
-    error.errorSummaryRow.remove();
-
-    inputContainer.classList.remove(this.classes.inputContainerError);
+    error.errorMessage?.remove();
+    error.errorSummaryRow?.remove();
 
     delete this.errors[inputId];
 
     this.updateErrorSummaryVisibility();
+
+    this.updateMetaTitle();
   }
 
   public hasSingleError(inputId: string): boolean {
@@ -117,7 +161,7 @@ export default class ErrorManager {
       errorMessage: message
     });
 
-    document.getElementById(inputId).setAttribute('aria-describedBy', 'multi-file-upload-error');
+    document.getElementById(inputId)?.setAttribute('aria-describedBy', 'multi-file-upload-error');
 
     this.bindErrorEvents(summaryRow, inputId);
     this.errorSummaryList.append(summaryRow);
@@ -130,9 +174,9 @@ export default class ErrorManager {
       e.preventDefault();
 
       if (inputId == 'initial') {
-        document.getElementById('choice').focus();
+        document.getElementById('choice')?.focus();
       } else {
-        document.getElementById(inputId).focus();
+        document.getElementById(inputId)?.focus();
       }
 
     });

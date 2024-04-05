@@ -16,6 +16,12 @@
   }
 }
 
+.multi-file-upload__input {
+  padding-top: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid $govuk-border-colour;
+}
+
 .multi-file-upload__file-container {
   position: relative;
   flex-shrink: 100; /* IE11 fix to avoid input pushing the Remove button off screen on smaller screens */
@@ -55,10 +61,15 @@
   display: flex;
   // justify-content: flex-end;
   // flex-direction: row-reverse;
-  justify-content:space-between;
+  justify-content:right;
 
   @include govuk-media-query($from: tablet) {
     flex-direction: row;
+  }
+
+  dd {
+    min-width: 6rem;
+    margin-inline-start: 0.5rem;
   }
 }
 
@@ -102,8 +113,7 @@
 }
 
 .multi-file-upload__uploaded-tag {
-  // using visibility to ensure this element determines the width of the progress bar
-  visibility: hidden;
+  display: none;
 }
 
 .multi-file-upload__waiting-tag {
@@ -147,6 +157,10 @@
   .multi-file-upload__waiting-tag {
     display: inline-block;
   }
+  
+  .multi-file-upload__description {
+      display: inline-block;
+  }
 }
 
 .multi-file-upload__item--uploading,
@@ -161,7 +175,10 @@
 
   .multi-file-upload__progress {
     display: inline-block;
-    
+  }
+
+  .multi-file-upload__description {
+    display: inline-block;
   }
 }
 
@@ -175,7 +192,7 @@
   }
 
   .multi-file-upload__uploaded-tag {
-    visibility: visible;
+    display: inline-block;
   }
 
   .multi-file-upload__description {
