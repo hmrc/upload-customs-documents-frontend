@@ -78,7 +78,7 @@ export class MultiFileUpload extends Component {
       remove: 'multi-file-upload__remove-item',
       addAnother: 'multi-file-upload__add-another',
       formStatus: 'multi-file-upload__form-status',
-      submit: 'multi-file-upload__submit',
+      submit: 'upload-documents-submit',
       fileNumber: 'multi-file-upload__number',
       progressBar: 'multi-file-upload__progress-bar',
       uploadMore: 'multi-file-upload__upload-more-message',
@@ -103,7 +103,7 @@ export class MultiFileUpload extends Component {
     this.addAnotherBtn = this.container.querySelector(`.${this.classes.addAnother}`);
     this.uploadMoreMessage = this.container.querySelector(`.${this.classes.uploadMore}`);
     this.formStatus = this.container.querySelector(`.${this.classes.formStatus}`);
-    this.submitBtn = this.container.querySelector(`.${this.classes.submit}`);
+    this.submitBtn = this.container.querySelector(`#${this.classes.submit}`);
     this.notifications = this.container.querySelector(`.${this.classes.notifications}`);
     this.dropZone = this.container.closest('.govuk-template__body');
   }
@@ -114,6 +114,7 @@ export class MultiFileUpload extends Component {
   }
 
   private bindEvents(): void {
+    this.container.addEventListener('submit', this.handleSubmit.bind(this));
     this.addAnotherBtn.addEventListener('click', this.handleAddInput.bind(this));
     this.dropZone.addEventListener('drop', this.handleFileDrop.bind(this));
     this.dropZone.addEventListener('dragover', this.handleFileDragOver.bind(this));
@@ -211,8 +212,9 @@ export class MultiFileUpload extends Component {
       return;
     }
 
-    if (this.container.querySelectorAll(`.${this.classes.uploaded}`).length < this.config.minFiles) {
-      const firstFileInput = this.itemList.querySelector(`.${this.classes.file}`);
+    const uploadedFiles = this.container.querySelectorAll(`.${this.classes.uploaded}`);
+    if (uploadedFiles.length < this.config.minFiles) {
+      const firstFileInput = this.inputList.querySelector(`.${this.classes.file}`);
       this.errorManager.addError(firstFileInput.id, this.messages.noFilesUploadedError,undefined);
       this.errorManager.focusSummary();
       e.preventDefault();
@@ -229,10 +231,8 @@ export class MultiFileUpload extends Component {
   private addItem(): HTMLElement | undefined {
      if(this.getItems().length < this.config.maxFiles){
       const fileNumber = this.getItems().length + 1;
-      const fileIndex = ++this.lastFileIndex;
       const itemParams = {
-        fileNumber: fileNumber.toString(),
-        fileIndex: fileIndex.toString()
+        fileNumber: fileNumber.toString()
       }
       const item = parseHtml(this.itemTpl, itemParams) as HTMLElement;
 
