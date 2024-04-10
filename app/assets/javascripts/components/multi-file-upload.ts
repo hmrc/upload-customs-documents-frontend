@@ -213,7 +213,8 @@ export class MultiFileUpload extends Component {
     }
 
     const uploadedFiles = this.container.querySelectorAll(`.${this.classes.uploaded}`);
-    if (uploadedFiles.length < this.config.minFiles) {
+    const radioInputNo = document.getElementById('choice-2') as HTMLInputElement;
+    if (radioInputNo.checked && uploadedFiles.length < this.config.minFiles) {
       const firstFileInput = this.inputList.querySelector(`.${this.classes.file}`);
       this.errorManager.addError(firstFileInput.id, this.messages.noFilesUploadedError,undefined);
       this.errorManager.focusSummary();
@@ -282,19 +283,22 @@ export class MultiFileUpload extends Component {
     if(this.getInputs().length===0 && this.getItems().length < this.config.maxFiles){
       const fileNumber = this.getItems().length + 1;
       const fileIndex = ++this.lastFileIndex;
-      const itemParams = {
+      const inputParams = {
         fileNumber: fileNumber.toString(),
-        fileIndex: fileIndex.toString()
+        fileIndex: fileIndex.toString(),
+        fileDescription: ''
       }
-      const input = parseHtml(this.inputTpl, itemParams) as HTMLElement;
-
+      const isFirstFileOfItsKind = fileNumber === 1 || !this.hasAlreadyFileWithDescription(this.messages.newFileDescription);
+      if (isFirstFileOfItsKind && this.messages.chooseFirstFileLabel) {
+        inputParams.fileDescription = this.messages.chooseFirstFileLabel;
+      } else if (!isFirstFileOfItsKind && this.messages.chooseNextFileLabel) {
+        inputParams.fileDescription = this.messages.chooseNextFileLabel;
+      }
+      const input = parseHtml(this.inputTpl, inputParams) as HTMLElement;
       this.bindInputEvents(input);
       this.inputList.append(input);
-      this.updateInputLabel(input, fileNumber);
-
       const file  = this.getFileInputFromItem(input);
       file.focus();
-
       return input;
     } else {
       return this.getInputs()[0];
@@ -305,40 +309,38 @@ export class MultiFileUpload extends Component {
     if(this.getInputs().length===0 && this.getItems().length < this.config.maxFiles){
       const fileNumber = this.getItems().length + 1;
       const fileIndex = ++this.lastFileIndex;
-      const itemParams = {
+      const inputParams = {
         fileNumber: fileNumber.toString(),
-        fileIndex: fileIndex.toString()
+        fileIndex: fileIndex.toString(),
+        fileDescription: ''
       }
-      const input = parseHtml(this.inputTpl, itemParams) as HTMLElement;
+      const input = parseHtml(this.inputTpl, inputParams) as HTMLElement;
       const fileInput = this.getFileInputFromItem(input);
       const label = this.getInputLabelElement(input);
       fileInput.parentElement.removeChild(fileInput);
       label.parentElement.removeChild(label);
       input.appendChild(oldLabel);
       oldLabel.after(oldFileInput);
-
+      const isFirstFileOfItsKind = fileNumber === 1 || !this.hasAlreadyFileWithDescription(this.messages.newFileDescription);
+      if (isFirstFileOfItsKind && this.messages.chooseFirstFileLabel) {
+        oldLabel.textContent = this.messages.chooseFirstFileLabel;
+      } else if (!isFirstFileOfItsKind && this.messages.chooseNextFileLabel) {
+        oldLabel.textContent = this.messages.chooseNextFileLabel;
+      }
       this.bindInputEvents(input);
       this.inputList.append(input);
-
       return input;
     } else {
       return this.getInputs()[0];
     }
   }
 
-  private isFirstFileWithDescription(item: HTMLElement, description: String): Boolean {
-    if (!description) return false;
-    const i = this.getItems().indexOf(item);
-    const prefix = this.getItems().slice(0, i);
-    const result = prefix.find(item => this.getDescriptionElement(item).textContent === description);
-    return result === undefined;
-  }
-
-  private updateInputLabel(input: HTMLElement, fileNumber: Number): void {
-    const label = this.getInputLabelElement(input);
-    const isFirstFileOfItsKind = fileNumber === 1 ||
-       this.isFirstFileWithDescription(input, this.messages.newFileDescription);
-    if (label) {
+  private updateInputLabel(fileInput: HTMLInputElement) {
+    const label = this.getInputLabelElement(fileInput.parentElement);
+    const description = this.messages.newFileDescription;
+    if (!label || !description) return false;
+    else { 
+      const isFirstFileOfItsKind = !this.hasAlreadyFileWithDescription(description);
       if (isFirstFileOfItsKind && this.messages.chooseFirstFileLabel) {
         label.textContent = this.messages.chooseFirstFileLabel;
       } else if (!isFirstFileOfItsKind && this.messages.chooseNextFileLabel) {
@@ -347,16 +349,15 @@ export class MultiFileUpload extends Component {
     }
   }
 
-  private updateItemLabel(item: HTMLElement, fileNumber: Number): void {
-    const label = this.getItemLabelElement(item);
-    const isFirstFileOfItsKind = fileNumber === 1 ||
-       this.isFirstFileWithDescription(item, this.getDescriptionElement(item).textContent);
-    if (label) {
-      if (isFirstFileOfItsKind && this.messages.chooseFirstFileLabel) {
-        label.textContent = this.messages.chooseFirstFileLabel;
-      } else if (!isFirstFileOfItsKind && this.messages.chooseNextFileLabel) {
-        label.textContent = this.messages.chooseNextFileLabel;
-      }
+
+  private hasAlreadyFileWithDescription(description: String): Boolean {
+    if (!description) return false;
+    else { 
+      const result = this.getItems().find((item) => {
+        const descriptionElem = this.getDescriptionElement(item);
+        return descriptionElem.textContent === description;
+      });
+      return result != undefined;
     }
   }
 
@@ -379,6 +380,7 @@ export class MultiFileUpload extends Component {
     else {
       this.removeItem(item);
     }
+    
   }
 
   private requestRemoveFile(fileInput: HTMLInputElement) {
@@ -399,9 +401,7 @@ export class MultiFileUpload extends Component {
     const message = parseTemplate(this.messages.documentDeleted, {
       fileName: this.getFileName(fileInput)
     });
-
     this.addNotification(message);
-
     this.removeItem(item);
   }
 
@@ -416,6 +416,7 @@ export class MultiFileUpload extends Component {
     if (this.getInputs().length === 0) { this.addUploadInput(); }
 
     delete this.uploadData[file.id];
+    this.updateInputLabel(this.getFileInputFromItem(this.getInputs()[0]));
   }
 
   private provisionUpload(fileInput: HTMLInputElement): void {
@@ -702,7 +703,7 @@ export class MultiFileUpload extends Component {
         span.textContent = fileNumber.toString();
       });
 
-      this.updateItemLabel(item, fileNumber);
+      //this.updateItemLabel(item, fileNumber);
 
       fileNumber--;
     });
