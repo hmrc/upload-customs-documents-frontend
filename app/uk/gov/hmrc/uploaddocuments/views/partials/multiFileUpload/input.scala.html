@@ -18,6 +18,6 @@
 
 @(acceptedFileExtensions: String)(implicit messages: Messages, serviceContent: CustomizedServiceContent)
 <div class="multi-file-upload__input multi-file-upload__input-container">
-  <label class="govuk-label multi-file-upload__input-label" for="file-{fileIndex}"></label>
+  <label class="govuk-label multi-file-upload__input-label" for="file-{fileIndex}">{fileDescription}</label>
   <input class="multi-file-upload__file govuk-file-upload" type="file" id="file-{fileIndex}" accept="@acceptedFileExtensions">
 </div>
