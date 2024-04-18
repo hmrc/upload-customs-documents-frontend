@@ -24,9 +24,11 @@
       <dt>
         <div class="multi-file-upload__file-container">
           
-          <span class="multi-file-upload__file-name"></span>
-          <a href="" target="_blank" class="govuk-link multi-file-upload__file-preview" rel="noopener noreferer">@messages("view.upload-multiple-files.preview")</a>
-          <span class="govuk-visually-hidden">@messages("site.opensInNewWindowOrTab")</span>
+          <span class="multi-file-upload__file-name"><span class="multi-file-upload__file-name-placeholder"></span></span>
+          <a href="" target="_blank" class="govuk-link multi-file-upload__file-preview" rel="noopener noreferer">
+            <span class="multi-file-upload__file-name-placeholder">@messages("view.upload-multiple-files.preview")</span>
+            <span class="govuk-visually-hidden">@messages("site.opensInNewWindowOrTab")</span>
+          </a>
         </div>
         <div class="multi-file-upload__description"></div>
       </dt>
@@ -43,7 +45,7 @@
       <dd>
         <a href="#" class="multi-file-upload__remove-item govuk-link">
           @messages("view.upload-multiple-files.remove")
-          <span class="govuk-visually-hidden">@messages("view.upload-multiple-files.document") <span class="multi-file-upload__file-name"></span></span>
+          <span class="govuk-visually-hidden">@messages("view.upload-multiple-files.document") <span class="multi-file-upload__file-name-placeholder"></span></span>
         </a>
         <span class="multi-file-upload__removing">@messages("view.upload-multiple-files.removing")</span>
       </dd>
