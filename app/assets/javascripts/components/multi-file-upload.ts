@@ -690,7 +690,6 @@ export class MultiFileUpload extends Component {
     this.errorManager.addSummaryOnlyError(fileInput.id, errorMessage, this.getFileName(fileInput));
 
     item.remove();
-    this.updateInputLabel(this.getFileInputFromItem(this.getInputs()[0]));
     this.updateFileNumbers();
     this.updateButtonVisibility();
     this.updateFormStatusVisibility();
