@@ -208,7 +208,7 @@ export class MultiFileUpload extends Component {
 
     const uploadedFiles = this.container.querySelectorAll(`.${this.classes.uploaded}`);
     const radioInputNo = document.getElementById('choice-2') as HTMLInputElement;
-    if (radioInputNo.checked && uploadedFiles.length < this.config.minFiles) {
+    if ((!radioInputNo || radioInputNo.checked) && uploadedFiles.length < this.config.minFiles) {
       if (this.errorManager.hasErrors() && this.errorManager.hasSingleError("initial")) {
         this.errorManager.removeAllErrors();
       }
@@ -295,7 +295,6 @@ export class MultiFileUpload extends Component {
       this.bindInputEvents(input);
       this.inputList.append(input);
       const file  = this.getFileInputFromItem(input);
-      file.focus();
       return input;
     } else {
       return this.getInputs()[0];
