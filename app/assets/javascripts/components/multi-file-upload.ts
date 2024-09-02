@@ -302,7 +302,7 @@ export class MultiFileUpload extends Component {
   }
 
   private addUploadInputWithFileAndLabel(oldFileInput: HTMLInputElement, oldLabel: HTMLElement): HTMLElement {
-    if(this.getInputs().length===0 && this.getItems().length < this.config.maxFiles){
+    if(this.getInputs().length===0 && this.getItems().length <= this.config.maxFiles){
       const fileNumber = this.getItems().length + 1;
       const fileIndex = ++this.lastFileIndex;
       const inputParams = {
@@ -674,8 +674,8 @@ export class MultiFileUpload extends Component {
 
     this.addUploadInputWithFileAndLabel(fileInput, label);
 
+    this.errorManager.removeAllErrors();
     this.errorManager.addError(fileInput.id, errorMessage, this.getFileName(fileInput));
-
     item.remove();
     this.updateInputLabel(this.getFileInputFromItem(this.getInputs()[0]));
     this.updateFileNumbers();
@@ -686,8 +686,8 @@ export class MultiFileUpload extends Component {
   private handleFileStatusDuplicate(fileInput: HTMLInputElement, errorMessage: string) {
     const item = this.getItemFromFile(fileInput);
 
+    this.errorManager.removeAllErrors();
     this.errorManager.addSummaryOnlyError(fileInput.id, errorMessage, this.getFileName(fileInput));
-
     item.remove();
     this.updateFileNumbers();
     this.updateButtonVisibility();
