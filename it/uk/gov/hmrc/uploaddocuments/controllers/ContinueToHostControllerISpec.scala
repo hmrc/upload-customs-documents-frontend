@@ -2,6 +2,7 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
 
 class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApiStubs {
 
@@ -24,7 +25,7 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url")
-        val result = await(request("/continue-to-host").get())
+        val result   = await(request("/continue-to-host").get())
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -45,7 +46,7 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url")
-        val result = await(request("/continue-to-host").get())
+        val result   = await(request("/continue-to-host").get())
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -66,7 +67,7 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url-if-empty")
-        val result = await(request("/continue-to-host").get())
+        val result   = await(request("/continue-to-host").get())
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -86,7 +87,7 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url")
-        val result = await(request("/continue-to-host").get())
+        val result   = await(request("/continue-to-host").get())
 
         result.status shouldBe 200
         result.body shouldBe expected
@@ -108,7 +109,7 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
         val expected = givenSomePage(200, "/continue-url-if-full")
-        val result = await(request("/continue-to-host").get())
+        val result   = await(request("/continue-to-host").get())
 
         result.status shouldBe 200
         result.body shouldBe expected

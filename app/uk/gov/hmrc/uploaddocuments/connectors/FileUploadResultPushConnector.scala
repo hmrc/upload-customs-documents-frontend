@@ -30,6 +30,8 @@ import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
+import play.api.libs.json.Writes
+import java.net.URI
 
 @Singleton
 class FileUploadResultPushConnector @Inject() (
@@ -49,11 +51,11 @@ class FileUploadResultPushConnector @Inject() (
           val payload = Payload(request, appConfig.baseExternalCallbackUrl)
           Logger.debug(
             s"[push] JourneyId: '${jid.value}' - sending notification to host service. Url: '$endpointUrl', Body: \n${Json
-              .prettyPrint(Json.toJson(payload)(Payload.writeNoDownloadUrl))}"
+                .prettyPrint(Json.toJson(payload)(Payload.writeNoDownloadUrl))}"
           )
           http
-            .POST[Payload, Response](endpointUrl, payload)(
-              implicitly,
+            .POST[Payload, Response](URI.create(endpointUrl).toURL(), payload)(
+              implicitly[Writes[Payload]],
               responseReads,
               request.hostService.populate(hc).withExtraHeaders("FileUploadJourney" -> jid.value),
               ec

@@ -110,7 +110,7 @@ object UpscanNotification {
         (__ \ "size")
           .writeNullable[Int]
           .contramap((n: Int) => if (n == 0) None else Some(n)))(
-        unlift(UploadDetails.unapply)
+        unlift((o: UploadDetails) => Some(Tuple.fromProductTyped(o)))
       )
     )
 

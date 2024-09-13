@@ -2,6 +2,7 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 
 import uk.gov.hmrc.uploaddocuments.controllers.ControllerISpecBase
 import uk.gov.hmrc.uploaddocuments.models._
+import play.api.libs.ws.writeableOf_String
 
 class WipeOutControllerISpec extends ControllerISpecBase {
 

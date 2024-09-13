@@ -25,6 +25,7 @@ import uk.gov.hmrc.uploaddocuments.support.{AppISpec, LogCapturing}
 import play.api.mvc.Results
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
+import org.mongodb.scala.SingleObservableFuture
 
 class JourneyContextServiceISpec extends AppISpec with LogCapturing with BeforeAndAfterEach {
 

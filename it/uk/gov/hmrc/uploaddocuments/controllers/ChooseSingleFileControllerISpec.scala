@@ -2,6 +2,7 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
 
 import java.time.ZonedDateTime
 
@@ -29,24 +30,35 @@ class ChooseSingleFileControllerISpec extends ControllerISpecBase with UpscanIni
           result.body should include(htmlEscapedPageTitle("view.upload-file.first.title"))
           result.body should include(htmlEscapedMessage("view.upload-file.first.heading"))
 
-          getFileUploads() shouldBe Some(FileUploads(files =
-            Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d", Some(UploadRequest(
-              href = "https://bucketName.s3.eu-west-2.amazonaws.com",
-              fields = Map(
-                "Content-Type" -> "application/xml",
-                "acl" -> "private",
-                "key" -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                "policy" -> "xxxxxxxx==",
-                "x-amz-algorithm" -> "AWS4-HMAC-SHA256",
-                "x-amz-credential" -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
-                "x-amz-date" -> "yyyyMMddThhmmssZ",
-                "x-amz-meta-callback-url" -> callbackUrl,
-                "x-amz-signature" -> "xxxx",
-                "success_action_redirect" -> "https://myservice.com/nextPage",
-                "error_action_redirect" -> "https://myservice.com/errorPage"
+          getFileUploads() shouldBe Some(
+            FileUploads(files =
+              Seq(
+                FileUpload.Initiated(
+                  Nonce.Any,
+                  Timestamp.Any,
+                  "11370e18-6e24-453e-b45a-76d3e32ea33d",
+                  Some(
+                    UploadRequest(
+                      href = "https://bucketName.s3.eu-west-2.amazonaws.com",
+                      fields = Map(
+                        "Content-Type"            -> "application/xml",
+                        "acl"                     -> "private",
+                        "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                        "policy"                  -> "xxxxxxxx==",
+                        "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
+                        "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
+                        "x-amz-date"              -> "yyyyMMddThhmmssZ",
+                        "x-amz-meta-callback-url" -> callbackUrl,
+                        "x-amz-signature"         -> "xxxx",
+                        "success_action_redirect" -> "https://myservice.com/nextPage",
+                        "error_action_redirect"   -> "https://myservice.com/errorPage"
+                      )
+                    )
+                  )
+                )
               )
-            ))))
-          ))
+            )
+          )
         }
 
         "show the upload next file page and add initiate request" in {
@@ -81,37 +93,46 @@ class ChooseSingleFileControllerISpec extends ControllerISpecBase with UpscanIni
           result.body should include(htmlEscapedPageTitle("view.upload-file.next.title"))
           result.body should include(htmlEscapedMessage("view.upload-file.next.heading"))
 
-          getFileUploads() shouldBe Some(FileUploads(files =
-            Seq(
-              FileUpload.Accepted(
-                Nonce.Any,
-                Timestamp.Any,
-                "f029444f-415c-4dec-9cf2-36774ec63ab8",
-                "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
-                ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-                "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-                "test.pdf",
-                "application/pdf",
-                4567890
-              ),
-              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d", Some(UploadRequest(
-                href = "https://bucketName.s3.eu-west-2.amazonaws.com",
-                fields = Map(
-                  "Content-Type" -> "application/xml",
-                  "acl" -> "private",
-                  "key" -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                  "policy" -> "xxxxxxxx==",
-                  "x-amz-algorithm" -> "AWS4-HMAC-SHA256",
-                  "x-amz-credential" -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
-                  "x-amz-date" -> "yyyyMMddThhmmssZ",
-                  "x-amz-meta-callback-url" -> callbackUrl,
-                  "x-amz-signature" -> "xxxx",
-                  "success_action_redirect" -> "https://myservice.com/nextPage",
-                  "error_action_redirect" -> "https://myservice.com/errorPage"
+          getFileUploads() shouldBe Some(
+            FileUploads(files =
+              Seq(
+                FileUpload.Accepted(
+                  Nonce.Any,
+                  Timestamp.Any,
+                  "f029444f-415c-4dec-9cf2-36774ec63ab8",
+                  "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
+                  ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+                  "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+                  "test.pdf",
+                  "application/pdf",
+                  4567890
+                ),
+                FileUpload.Initiated(
+                  Nonce.Any,
+                  Timestamp.Any,
+                  "11370e18-6e24-453e-b45a-76d3e32ea33d",
+                  Some(
+                    UploadRequest(
+                      href = "https://bucketName.s3.eu-west-2.amazonaws.com",
+                      fields = Map(
+                        "Content-Type"            -> "application/xml",
+                        "acl"                     -> "private",
+                        "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                        "policy"                  -> "xxxxxxxx==",
+                        "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
+                        "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
+                        "x-amz-date"              -> "yyyyMMddThhmmssZ",
+                        "x-amz-meta-callback-url" -> callbackUrl,
+                        "x-amz-signature"         -> "xxxx",
+                        "success_action_redirect" -> "https://myservice.com/nextPage",
+                        "error_action_redirect"   -> "https://myservice.com/errorPage"
+                      )
+                    )
+                  )
                 )
-              )))
+              )
             )
-          ))
+          )
         }
       }
 
