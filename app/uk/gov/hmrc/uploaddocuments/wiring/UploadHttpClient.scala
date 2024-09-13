@@ -20,10 +20,12 @@ import org.apache.pekko.actor.ActorSystem
 import play.api.Configuration
 import play.api.libs.json.{Json, Writes}
 import play.api.libs.ws.WSClient
-import uk.gov.hmrc.http.HttpResponse
+import uk.gov.hmrc.http.client.{HttpClientV2Impl, RequestBuilderImpl}
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
 import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 
+import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -45,4 +47,26 @@ class UploadHttpClient @Inject() (
 
   private def deduplicate(headers: Seq[(String, String)]): Seq[(String, String)] =
     headers.groupBy(_._1).map { case (k, vs) => (k, vs.last) }.values.toSeq
+}
+
+@Singleton
+class UploadHttpClientV2 @Inject() (
+  config: Configuration,
+  httpAuditing: HttpAuditing,
+  wsClient: WSClient,
+  actorSystem: ActorSystem
+) extends HttpClientV2Impl(wsClient, actorSystem, config, Seq(httpAuditing.AuditingHook)) {
+
+  private def deduplicate(headers: Map[String, Seq[String]]): Seq[(String, String)] =
+    headers.view.iterator.map { case (k, vs) => (k, vs.last) }.toSeq
+
+  override protected def mkRequestBuilder(
+    url: URL,
+    method: String
+  )(implicit
+    hc: HeaderCarrier
+  ): RequestBuilderImpl =
+    super
+      .mkRequestBuilder(url, method)(hc)
+      .transform(request => request.withHttpHeaders(deduplicate(request.headers): _*))
 }

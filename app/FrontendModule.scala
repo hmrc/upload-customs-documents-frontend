@@ -20,11 +20,14 @@ import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http._
 import uk.gov.hmrc.play.http.ws.UploadHttpClient
 import uk.gov.hmrc.uploaddocuments.connectors.FrontendAuthConnector
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.play.http.ws.UploadHttpClientV2
 
 class FrontendModule(val environment: Environment, val configuration: Configuration) extends AbstractModule {
   override def configure(): Unit = {
     bind(classOf[HttpGet]).to(classOf[UploadHttpClient])
     bind(classOf[HttpPost]).to(classOf[UploadHttpClient])
+    bind(classOf[HttpClientV2]).to(classOf[UploadHttpClientV2])
     bind(classOf[AuthConnector]).to(classOf[FrontendAuthConnector])
   }
 }

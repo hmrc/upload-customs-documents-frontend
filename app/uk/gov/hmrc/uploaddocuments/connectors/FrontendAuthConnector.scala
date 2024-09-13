@@ -17,13 +17,13 @@
 package uk.gov.hmrc.uploaddocuments.connectors
 
 import uk.gov.hmrc.auth.core.PlayAuthConnector
-import uk.gov.hmrc.http.HttpPost
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.{Inject, Singleton}
 
 @Singleton
-class FrontendAuthConnector @Inject()(appConfig: AppConfig, val http: HttpPost) extends PlayAuthConnector {
+class FrontendAuthConnector @Inject() (appConfig: AppConfig, val httpClientV2: HttpClientV2) extends PlayAuthConnector {
 
   override val serviceUrl: String = appConfig.authBaseUrl
 }

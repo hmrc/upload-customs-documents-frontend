@@ -23,19 +23,26 @@ import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 
 import scala.concurrent.{ExecutionContext, Future}
 
-trait MockFileUploadService extends MockFactory {
+trait MockFileUploadService {
+  this: MockFactory =>
 
-  val mockFileUploadService = mock[FileUploadService]
+  lazy val mockFileUploadService = mock[FileUploadService]
 
-  def mockGetFiles(journeyId: JourneyId)(response: => Future[Option[FileUploads]]): CallHandler1[JourneyId, Future[Option[FileUploads]]] =
+  def mockGetFiles(journeyId: JourneyId)(
+    response: => Future[Option[FileUploads]]
+  ): CallHandler1[JourneyId, Future[Option[FileUploads]]] =
     (mockFileUploadService.getFiles(_: JourneyId)).expects(journeyId).returning(response)
 
-  def mockPutFiles(journeyId: JourneyId, request: FileUploads)(response: => Future[FileUploads]): CallHandler2[FileUploads, JourneyId, Future[FileUploads]] =
+  def mockPutFiles(journeyId: JourneyId, request: FileUploads)(
+    response: => Future[FileUploads]
+  ): CallHandler2[FileUploads, JourneyId, Future[FileUploads]] =
     (mockFileUploadService.putFiles(_: FileUploads)(_: JourneyId)).expects(request, journeyId).returning(response)
 
-  def mockWithFiles[T](journeyId: JourneyId)(files: => Future[Option[FileUploads]])
-                      (implicit ec: ExecutionContext): CallHandler3[Future[T], FileUploads => Future[T], JourneyId, Future[T]] = {
-    (mockFileUploadService.withFiles[T](_: Future[T])(_: FileUploads => Future[T])(_: JourneyId))
+  def mockWithFiles[T](journeyId: JourneyId)(
+    files: => Future[Option[FileUploads]]
+  )(implicit ec: ExecutionContext): CallHandler3[Future[T], FileUploads => Future[T], JourneyId, Future[T]] =
+    (mockFileUploadService
+      .withFiles[T](_: Future[T])(_: FileUploads => Future[T])(_: JourneyId))
       .expects(*, *, journeyId)
       .onCall { mock =>
         files.flatMap {
@@ -45,6 +52,5 @@ trait MockFileUploadService extends MockFactory {
             mock.productElement(0).asInstanceOf[() => Future[T]]()
         }
       }
-  }
 
 }

@@ -29,8 +29,9 @@ import java.util.concurrent.TimeUnit
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext
+import org.scalamock.scalatest.MockFactory
 
-class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService with TestData {
+class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService with MockFactory with TestData {
 
   override implicit val defaultTimeout: FiniteDuration = 20.seconds
 
