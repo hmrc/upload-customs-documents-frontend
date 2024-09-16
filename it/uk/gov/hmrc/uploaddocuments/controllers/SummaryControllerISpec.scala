@@ -3,6 +3,8 @@ package uk.gov.hmrc.uploaddocuments.controllers
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.{ExternalApiStubs, UpscanInitiateStubs}
 import uk.gov.hmrc.uploaddocuments.support.TestData
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
+import play.api.libs.ws.writeableOf_urlEncodedSimpleForm
 
 import java.time.ZonedDateTime
 
@@ -13,7 +15,7 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
     "GET /summary" should {
       "show uploaded singular file view" in {
 
-        val context = FileUploadContext(fileUploadSessionConfig)
+        val context     = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files = Seq(TestData.acceptedFileUpload))
 
         setContext(context)
@@ -72,7 +74,7 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
       "show file upload summary view" in {
 
-        val context = FileUploadContext(fileUploadSessionConfig)
+        val context     = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = nFileUploads(FILES_LIMIT)
 
         setContext(context)
@@ -92,7 +94,7 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
       "show upload a file view for export when yes and number of files below the limit" in {
 
-        val context = FileUploadContext(fileUploadSessionConfig)
+        val context     = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files = for (i <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
 
         setContext(context)
@@ -112,31 +114,38 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
         getFileUploads() shouldBe Some(
           FileUploads(files =
             fileUploads.files ++
-              Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d", Some(
-                UploadRequest(
-                  href = "https://bucketName.s3.eu-west-2.amazonaws.com",
-                  fields = Map(
-                    "Content-Type"            -> "application/xml",
-                    "acl"                     -> "private",
-                    "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                    "policy"                  -> "xxxxxxxx==",
-                    "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
-                    "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
-                    "x-amz-date"              -> "yyyyMMddThhmmssZ",
-                    "x-amz-meta-callback-url" -> callbackUrl,
-                    "x-amz-signature"         -> "xxxx",
-                    "success_action_redirect" -> "https://myservice.com/nextPage",
-                    "error_action_redirect"   -> "https://myservice.com/errorPage"
+              Seq(
+                FileUpload.Initiated(
+                  Nonce.Any,
+                  Timestamp.Any,
+                  "11370e18-6e24-453e-b45a-76d3e32ea33d",
+                  Some(
+                    UploadRequest(
+                      href = "https://bucketName.s3.eu-west-2.amazonaws.com",
+                      fields = Map(
+                        "Content-Type"            -> "application/xml",
+                        "acl"                     -> "private",
+                        "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                        "policy"                  -> "xxxxxxxx==",
+                        "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
+                        "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
+                        "x-amz-date"              -> "yyyyMMddThhmmssZ",
+                        "x-amz-meta-callback-url" -> callbackUrl,
+                        "x-amz-signature"         -> "xxxx",
+                        "success_action_redirect" -> "https://myservice.com/nextPage",
+                        "error_action_redirect"   -> "https://myservice.com/errorPage"
+                      )
+                    )
                   )
                 )
-              )))
+              )
           )
         )
       }
 
       "show upload a file view when yes and number of files below the limit" in {
 
-        val context = FileUploadContext(fileUploadSessionConfig)
+        val context     = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files = for (i <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
 
         setContext(context)
@@ -153,35 +162,41 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
         result.body should include(htmlEscapedPageTitle("view.upload-file.next.title"))
         result.body should include(htmlEscapedMessage("view.upload-file.next.heading"))
 
-
         getFileUploads() shouldBe Some(
           FileUploads(files =
             fileUploads.files ++
-              Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d", Some(
-                UploadRequest(
-                  href = "https://bucketName.s3.eu-west-2.amazonaws.com",
-                  fields = Map(
-                    "Content-Type"            -> "application/xml",
-                    "acl"                     -> "private",
-                    "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                    "policy"                  -> "xxxxxxxx==",
-                    "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
-                    "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
-                    "x-amz-date"              -> "yyyyMMddThhmmssZ",
-                    "x-amz-meta-callback-url" -> callbackUrl,
-                    "x-amz-signature"         -> "xxxx",
-                    "success_action_redirect" -> "https://myservice.com/nextPage",
-                    "error_action_redirect"   -> "https://myservice.com/errorPage"
+              Seq(
+                FileUpload.Initiated(
+                  Nonce.Any,
+                  Timestamp.Any,
+                  "11370e18-6e24-453e-b45a-76d3e32ea33d",
+                  Some(
+                    UploadRequest(
+                      href = "https://bucketName.s3.eu-west-2.amazonaws.com",
+                      fields = Map(
+                        "Content-Type"            -> "application/xml",
+                        "acl"                     -> "private",
+                        "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+                        "policy"                  -> "xxxxxxxx==",
+                        "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
+                        "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
+                        "x-amz-date"              -> "yyyyMMddThhmmssZ",
+                        "x-amz-meta-callback-url" -> callbackUrl,
+                        "x-amz-signature"         -> "xxxx",
+                        "success_action_redirect" -> "https://myservice.com/nextPage",
+                        "error_action_redirect"   -> "https://myservice.com/errorPage"
+                      )
+                    )
                   )
                 )
-              )))
+              )
           )
         )
       }
 
       "redirect to the continue_url when yes and files number limit has been reached" in {
 
-        val context = FileUploadContext(fileUploadSessionConfig)
+        val context     = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = nFileUploads(FILES_LIMIT)
 
         setContext(context)
@@ -198,7 +213,9 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
       "redirect to the continue_when_yes_url customised URL when yes" in {
 
-        val context = FileUploadContext(fileUploadSessionConfig.copy(continueAfterYesAnswerUrl = Some(s"$wireMockBaseUrlAsString/foo-url")))
+        val context = FileUploadContext(
+          fileUploadSessionConfig.copy(continueAfterYesAnswerUrl = Some(s"$wireMockBaseUrlAsString/foo-url"))
+        )
         val fileUploads = nFileUploads(3)
 
         setContext(context)
@@ -215,7 +232,7 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
 
       "redirect to the continue_url when no and files number below the limit" in {
 
-        val context = FileUploadContext(fileUploadSessionConfig)
+        val context     = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = FileUploads(files = for (i <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
 
         setContext(context)
@@ -231,7 +248,7 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
       }
 
       "redirect to the continue_url when no and files number above the limit" in {
-        val context = FileUploadContext(fileUploadSessionConfig)
+        val context     = FileUploadContext(fileUploadSessionConfig)
         val fileUploads = nFileUploads(FILES_LIMIT)
 
         setContext(context)

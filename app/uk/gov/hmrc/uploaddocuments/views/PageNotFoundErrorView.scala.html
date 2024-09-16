@@ -21,7 +21,7 @@
         html: uk.gov.hmrc.uploaddocuments.views.components.html
 )
 
-@()(implicit request: Request[_], messages: Messages, content: CustomizedServiceContent = CustomizedServiceContent())
+@()(implicit request: RequestHeader, messages: Messages, content: CustomizedServiceContent = CustomizedServiceContent())
 
 @govukLayout(
   pageTitle("global.error.404.title")

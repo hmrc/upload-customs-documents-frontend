@@ -45,7 +45,7 @@ contactFrontendConfig: ContactFrontendConfig
 )
 
 @(pageTitle: Option[String] = None, timeout: Boolean = true, js: Option[Html] = None, backLink: Option[String] =
-None, refresh: Int = 0)(contentBlock: Html)(implicit request: Request[_], messages: Messages, features: Features = Features(), serviceContent: CustomizedServiceContent = CustomizedServiceContent())
+None, refresh: Int = 0)(contentBlock: Html)(implicit request: RequestHeader, messages: Messages, features: Features = Features(), serviceContent: CustomizedServiceContent = CustomizedServiceContent())
 
 @head = {
 @hmrcTrackingConsentSnippet()

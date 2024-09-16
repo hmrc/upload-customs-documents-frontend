@@ -44,7 +44,7 @@ class ErrorHandler @Inject() (
   html: uk.gov.hmrc.uploaddocuments.views.components.html,
   pageNotFoundErrorView: PageNotFoundErrorView,
   errorView: ErrorView
-)(implicit val config: Configuration, ec: ExecutionContext, appConfig: uk.gov.hmrc.uploaddocuments.wiring.AppConfig)
+)(implicit val config: Configuration, val ec: ExecutionContext, appConfig: uk.gov.hmrc.uploaddocuments.wiring.AppConfig)
     extends FrontendErrorHandler with AuthRedirects with ErrorAuditing {
 
   private val isDevEnv =
@@ -64,22 +64,23 @@ class ErrorHandler @Inject() (
   override def resolveError(request: RequestHeader, exception: Throwable) = {
     auditServerError(request, exception)
     implicit val r = Request(request, "")
-    exception match {
+    Future.successful(exception match {
       case _: NoActiveSession        => toGGLogin(if (isDevEnv) s"http://${request.host}${request.uri}" else s"${request.uri}")
       case _: InsufficientEnrolments => Forbidden
       case _ =>
         Ok(
           errorView()
         )
-    }
+    })
   }
 
   override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit
-    request: Request[_]
+    request: RequestHeader
   ) =
-    new ErrorTemplate(govUkWrapper, html)(pageTitle, heading, message)
+    Future.successful(new ErrorTemplate(govUkWrapper, html)(pageTitle, heading, message))
 
-  override def notFoundTemplate(implicit request: Request[_]) = pageNotFoundErrorView()
+  override def notFoundTemplate(implicit request: RequestHeader) =
+    Future.successful(pageNotFoundErrorView())
 }
 
 object EventTypes {

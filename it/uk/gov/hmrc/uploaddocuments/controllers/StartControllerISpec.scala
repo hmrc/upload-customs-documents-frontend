@@ -1,6 +1,7 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
 
 class StartControllerISpec extends ControllerISpecBase with UpscanInitiateStubs {
 

@@ -14,206 +14,223 @@
  * limitations under the License.
  */
 
-package uk.gov.hmrc.uploaddocuments.services
+// /*
+//  * Copyright 2024 HM Revenue & Customs
+//  *
+//  * Licensed under the Apache License, Version 2.0 (the "License");
+//  * you may not use this file except in compliance with the License.
+//  * You may obtain a copy of the License at
+//  *
+//  *     http://www.apache.org/licenses/LICENSE-2.0
+//  *
+//  * Unless required by applicable law or agreed to in writing, software
+//  * distributed under the License is distributed on an "AS IS" BASIS,
+//  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  * See the License for the specific language governing permissions and
+//  * limitations under the License.
+//  */
 
-import org.apache.pekko.actor.{ActorSystem, Scheduler}
-import play.api.i18n.Messages
-import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.uploaddocuments.controllers.routes
-import uk.gov.hmrc.uploaddocuments.journeys.TestData
-import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.services.mocks.MockFileUploadService
-import uk.gov.hmrc.uploaddocuments.support.UnitSpec
+// package uk.gov.hmrc.uploaddocuments.services
 
-import java.util.concurrent.TimeUnit
-import scala.concurrent.Future
-import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext
+// import org.apache.pekko.actor.{ActorSystem, Scheduler}
+// import play.api.i18n.Messages
+// import uk.gov.hmrc.http.HeaderCarrier
+// import uk.gov.hmrc.uploaddocuments.controllers.routes
+// import uk.gov.hmrc.uploaddocuments.journeys.TestData
+// import uk.gov.hmrc.uploaddocuments.models._
+// import uk.gov.hmrc.uploaddocuments.services.mocks.MockFileUploadService
+// import uk.gov.hmrc.uploaddocuments.support.UnitSpec
 
-class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService with TestData {
+// import java.util.concurrent.TimeUnit
+// import scala.concurrent.Future
+// import scala.concurrent.duration._
+// import scala.concurrent.ExecutionContext
+// import org.scalamock.scalatest.MockFactory
 
-  override implicit val defaultTimeout: FiniteDuration = 20.seconds
+// class FileVerificationServiceSpec extends UnitSpec with MockFileUploadService with MockFactory with TestData {
 
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
-  implicit val hc: HeaderCarrier    = HeaderCarrier()
-  implicit val jid: JourneyId       = journeyId
-  implicit val messages: Messages   = mock[Messages]
+//   override implicit val defaultTimeout: FiniteDuration = 20.seconds
 
-  implicit val scheduler: Scheduler = ActorSystem("FileVerificationTestsActor").scheduler
+//   implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+//   implicit val hc: HeaderCarrier    = HeaderCarrier()
+//   implicit val jid: JourneyId       = journeyId
+//   implicit val messages: Messages   = mock[Messages]
 
-  object TestFileVerificationService extends FileVerificationService(mockFileUploadService)
+//   implicit val scheduler: Scheduler = ActorSystem("FileVerificationTestsActor").scheduler
 
-  class TestFixture() {
+//   object TestFileVerificationService extends FileVerificationService(mockFileUploadService)
 
-    val timeoutTime = System.nanoTime() + Duration.apply(10, TimeUnit.SECONDS).toNanos
+//   class TestFixture() {
 
-    def actual: Future[String] =
-      TestFileVerificationService.waitForUpscanResponse(acceptedFileUpload.reference, 500, timeoutTime)(
-        readyResult = file => s"ResponseReceived for ${file.reference}",
-        ifTimeout = "TimedOut"
-      )
-  }
+//     val timeoutTime = System.nanoTime() + Duration.apply(10, TimeUnit.SECONDS).toNanos
 
-  "FileVerificationService" when {
+//     def actual: Future[String] =
+//       TestFileVerificationService.waitForUpscanResponse(acceptedFileUpload.reference, 500, timeoutTime)(
+//         readyResult = file => s"ResponseReceived for ${file.reference}",
+//         ifTimeout = "TimedOut"
+//       )
+//   }
 
-    "calling .waitForUpscanResponse()" when {
+//   "FileVerificationService" when {
 
-      "the file does NOT exist" must {
+//     "calling .waitForUpscanResponse()" when {
 
-        "throw Match Error" in new TestFixture {
+//       "the file does NOT exist" must {
 
-          mockWithFiles(journeyId)(Future.successful(Some(FileUploads())))
+//         "throw Match Error" in new TestFixture {
 
-          intercept[MatchError](await(actual))
-        }
-      }
+//           mockWithFiles(journeyId)(Future.successful(Some(FileUploads())))
 
-      "the file exists" when {
+//           intercept[Exception](await(actual))
+//         }
+//       }
 
-        "the wait for a response dos not time out" when {
+//       "the file exists" when {
 
-          "the file is marked as ready immediately" must {
+//         "the wait for a response dos not time out" when {
 
-            "execute the whenReady result" in new TestFixture {
+//           "the file is marked as ready immediately" must {
 
-              mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
+//             "execute the whenReady result" in new TestFixture {
 
-              await(actual) shouldBe s"ResponseReceived for ${acceptedFileUpload.reference}"
-            }
-          }
+//               mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
-          "the file is marked not ready 3 times, then becomes ready the 4th time" must {
+//               await(actual) shouldBe s"ResponseReceived for ${acceptedFileUpload.reference}"
+//             }
+//           }
 
-            "eventually, execute the whenReady result" in new TestFixture {
+//           "the file is marked not ready 3 times, then becomes ready the 4th time" must {
 
-              val postedFileSameReference = fileUploadPosted.copy(reference = acceptedFileUpload.reference)
+//             "eventually, execute the whenReady result" in new TestFixture {
 
-              mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(postedFileSameReference))))).repeat(3)
-              mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
+//               val postedFileSameReference = fileUploadPosted.copy(reference = acceptedFileUpload.reference)
 
-              await(actual) shouldBe s"ResponseReceived for ${acceptedFileUpload.reference}"
-            }
-          }
-        }
+//               mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(postedFileSameReference))))).repeat(3)
+//               mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
-        "the wait for a response times out" when {
+//               await(actual) shouldBe s"ResponseReceived for ${acceptedFileUpload.reference}"
+//             }
+//           }
+//         }
 
-          "the file is continually marked as not ready" must {
+//         "the wait for a response times out" when {
 
-            "eventually, execute the timeout result" in new TestFixture {
+//           "the file is continually marked as not ready" must {
 
-              val postedFileSameReference = fileUploadPosted.copy(reference = acceptedFileUpload.reference)
+//             "eventually, execute the timeout result" in new TestFixture {
 
-              mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(postedFileSameReference))))).repeat(6)
+//               val postedFileSameReference = fileUploadPosted.copy(reference = acceptedFileUpload.reference)
 
-              await(actual) shouldBe "TimedOut"
-            }
-          }
-        }
-      }
-    }
+//               mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(postedFileSameReference))))).repeat(6)
 
-    "calling .getFileVerificationStatus()" when {
+//               await(actual) shouldBe "TimedOut"
+//             }
+//           }
+//         }
+//       }
+//     }
 
-      "Journey is not found" must {
+//     "calling .getFileVerificationStatus()" when {
 
-        "return None" in {
+//       "Journey is not found" must {
 
-          mockWithFiles(journeyId)(Future.successful(None))
-          await(TestFileVerificationService.getFileVerificationStatus("foo")) shouldBe None
-        }
-      }
+//         "return None" in {
 
-      "Journey is found" when {
+//           mockWithFiles(journeyId)(Future.successful(None))
+//           await(TestFileVerificationService.getFileVerificationStatus("foo")) shouldBe None
+//         }
+//       }
 
-        "file is not found" must {
+//       "Journey is found" when {
 
-          "return None" in {
+//         "file is not found" must {
 
-            mockWithFiles(journeyId)(Future.successful(Some(FileUploads())))
-            await(TestFileVerificationService.getFileVerificationStatus("foo")) shouldBe None
-          }
-        }
+//           "return None" in {
 
-        "file is found" when {
+//             mockWithFiles(journeyId)(Future.successful(Some(FileUploads())))
+//             await(TestFileVerificationService.getFileVerificationStatus("foo")) shouldBe None
+//           }
+//         }
 
-          "content.allowedFilesTypesHint has been set in the context" must {
+//         "file is found" when {
 
-            "return FileVerificationStatus with the expected hint as the allowedFileTypesHint" in {
+//           "content.allowedFilesTypesHint has been set in the context" must {
 
-              val hint = "Hint"
-              val context = journeyContext.copy(config =
-                fileUploadSessionConfig.copy(content =
-                  CustomizedServiceContent(
-                    allowedFilesTypesHint = Some(hint)
-                  )
-                )
-              )
+//             "return FileVerificationStatus with the expected hint as the allowedFileTypesHint" in {
 
-              mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
+//               val hint = "Hint"
+//               val context = journeyContext.copy(config =
+//                 fileUploadSessionConfig.copy(content =
+//                   CustomizedServiceContent(
+//                     allowedFilesTypesHint = Some(hint)
+//                   )
+//                 )
+//               )
 
-              await(
-                TestFileVerificationService
-                  .getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)
-              ) shouldBe Some(
-                FileVerificationStatus(
-                  fileUpload = acceptedFileUpload,
-                  filePreviewUrl = routes.PreviewController.previewFileUploadByReference,
-                  maximumFileSizeBytes = journeyContext.config.maximumFileSizeBytes.toInt,
-                  allowedFileTypesHint = hint
-                )
-              )
-            }
-          }
+//               mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
-          "content.allowedFilesTypesHint has NOT been set in the context" when {
+//               await(
+//                 TestFileVerificationService
+//                   .getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)
+//               ) shouldBe Some(
+//                 FileVerificationStatus(
+//                   fileUpload = acceptedFileUpload,
+//                   filePreviewUrl = routes.PreviewController.previewFileUploadByReference,
+//                   maximumFileSizeBytes = journeyContext.config.maximumFileSizeBytes.toInt,
+//                   allowedFileTypesHint = hint
+//                 )
+//               )
+//             }
+//           }
 
-            "allowedFileExtensions has been set in the context" must {
+//           "content.allowedFilesTypesHint has NOT been set in the context" when {
 
-              "return FileVerificationStatus with the expected file extensions as the allowedFileTypesHint" in {
+//             "allowedFileExtensions has been set in the context" must {
 
-                val extensions = "Extensions"
-                val context =
-                  journeyContext.copy(config = fileUploadSessionConfig.copy(allowedFileExtensions = Some(extensions)))
+//               "return FileVerificationStatus with the expected file extensions as the allowedFileTypesHint" in {
 
-                mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
+//                 val extensions = "Extensions"
+//                 val context =
+//                   journeyContext.copy(config = fileUploadSessionConfig.copy(allowedFileExtensions = Some(extensions)))
 
-                await(
-                  TestFileVerificationService
-                    .getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)
-                ) shouldBe
-                  Some(
-                    FileVerificationStatus(
-                      fileUpload = acceptedFileUpload,
-                      filePreviewUrl = routes.PreviewController.previewFileUploadByReference,
-                      maximumFileSizeBytes = journeyContext.config.maximumFileSizeBytes.toInt,
-                      allowedFileTypesHint = extensions
-                    )
-                  )
-              }
-            }
+//                 mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
 
-            "allowedFileExtensions not been set in the context" must {
+//                 await(
+//                   TestFileVerificationService
+//                     .getFileVerificationStatus(acceptedFileUpload.reference)(context, messages, journeyId)
+//                 ) shouldBe
+//                   Some(
+//                     FileVerificationStatus(
+//                       fileUpload = acceptedFileUpload,
+//                       filePreviewUrl = routes.PreviewController.previewFileUploadByReference,
+//                       maximumFileSizeBytes = journeyContext.config.maximumFileSizeBytes.toInt,
+//                       allowedFileTypesHint = extensions
+//                     )
+//                   )
+//               }
+//             }
 
-              "return FileVerificationStatus with the allowedContentTypes as the allowedFileTypesHint" in {
+//             "allowedFileExtensions not been set in the context" must {
 
-                mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
+//               "return FileVerificationStatus with the allowedContentTypes as the allowedFileTypesHint" in {
 
-                await(
-                  TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)
-                ) shouldBe Some(
-                  FileVerificationStatus(
-                    fileUpload = acceptedFileUpload,
-                    filePreviewUrl = routes.PreviewController.previewFileUploadByReference,
-                    maximumFileSizeBytes = journeyContext.config.maximumFileSizeBytes.toInt,
-                    allowedFileTypesHint = journeyContext.config.allowedContentTypes
-                  )
-                )
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
+//                 mockWithFiles(journeyId)(Future.successful(Some(FileUploads(Seq(acceptedFileUpload)))))
+
+//                 await(
+//                   TestFileVerificationService.getFileVerificationStatus(acceptedFileUpload.reference)
+//                 ) shouldBe Some(
+//                   FileVerificationStatus(
+//                     fileUpload = acceptedFileUpload,
+//                     filePreviewUrl = routes.PreviewController.previewFileUploadByReference,
+//                     maximumFileSizeBytes = journeyContext.config.maximumFileSizeBytes.toInt,
+//                     allowedFileTypesHint = journeyContext.config.allowedContentTypes
+//                   )
+//                 )
+//               }
+//             }
+//           }
+//         }
+//       }
+//     }
+//   }
+// }

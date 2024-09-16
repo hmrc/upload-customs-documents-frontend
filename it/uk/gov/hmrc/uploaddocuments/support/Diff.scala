@@ -19,7 +19,7 @@ package uk.gov.hmrc.uploaddocuments.support
 object Diff {
 
   def apply[A](left: A, right: A): String =
-    new munit.internal.difflib.Diff(prettyPrint(left), prettyPrint(right)).createDiffOnlyReport()
+    new munit.diff.Diff(prettyPrint(left), prettyPrint(right)).createDiffOnlyReport()
 
   /** Pretty prints a Scala value similar to its source represention.
     *

@@ -30,6 +30,7 @@ import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext
+import org.mongodb.scala.SingleObservableFuture
 
 class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapturing with BeforeAndAfterEach {
 

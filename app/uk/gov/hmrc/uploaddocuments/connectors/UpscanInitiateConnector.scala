@@ -26,6 +26,7 @@ import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 import java.net.URL
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import java.net.URI
 
 /** Connects to the upscan-initiate service API.
   */
@@ -52,7 +53,7 @@ class UpscanInitiateConnector @Inject() (
         s"[initiate] Making call to Upscan Initiate. Url '$url', body: \n${Json.prettyPrint(Json.toJson(requestWithConsumingService))}"
       )
       http
-        .POST[UpscanInitiateRequest, UpscanInitiateResponse](url, requestWithConsumingService)
+        .POST[UpscanInitiateRequest, UpscanInitiateResponse](URI.create(url).toURL(), requestWithConsumingService)
         .recoverWith { case e: Throwable =>
           Future.failed(UpscanInitiateError(e))
         }

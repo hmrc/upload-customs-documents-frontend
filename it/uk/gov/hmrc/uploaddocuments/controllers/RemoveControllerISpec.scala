@@ -3,6 +3,8 @@ package uk.gov.hmrc.uploaddocuments.controllers
 import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush._
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
+import play.api.libs.ws.writeableOf_String
 
 import java.time.ZonedDateTime
 

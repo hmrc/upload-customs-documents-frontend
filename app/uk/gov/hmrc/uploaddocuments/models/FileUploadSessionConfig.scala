@@ -18,7 +18,6 @@ package uk.gov.hmrc.uploaddocuments.models
 
 import play.api.libs.functional.syntax._
 import play.api.libs.json.{Format, JsPath, JsValue}
-import uk.gov.hmrc.uploaddocuments.models.FileUploadSessionConfig._
 
 import UrlValidator._
 
@@ -109,7 +108,8 @@ object FileUploadSessionConfig {
         and (JsPath \ "cargo").writeNullable[JsValue]
         and (JsPath \ "newFileDescription").writeNullable[String]
         and (JsPath \ "features").write[Features]
-        and (JsPath \ "content").write[CustomizedServiceContent])(unlift(FileUploadSessionConfig.unapply))
+        and (JsPath \ "content")
+          .write[CustomizedServiceContent])(unlift((o: FileUploadSessionConfig) => Some(Tuple.fromProductTyped(o))))
     )
 
 }

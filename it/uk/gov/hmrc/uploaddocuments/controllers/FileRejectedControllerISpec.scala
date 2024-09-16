@@ -4,6 +4,8 @@ import play.api.http.Status
 import play.api.libs.json.Json
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
+import play.api.libs.ws.writeableOf_JsValue
 
 import java.time.ZonedDateTime
 

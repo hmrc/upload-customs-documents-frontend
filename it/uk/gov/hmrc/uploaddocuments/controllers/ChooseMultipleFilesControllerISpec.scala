@@ -3,6 +3,8 @@ package uk.gov.hmrc.uploaddocuments.controllers
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.{ExternalApiStubs, UpscanInitiateStubs}
 import uk.gov.hmrc.uploaddocuments.support.JsEnabled
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
+import play.api.libs.ws.writeableOf_urlEncodedSimpleForm
 
 class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with UpscanInitiateStubs with ExternalApiStubs {
 
@@ -57,7 +59,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
             appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
           givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
-          //Follows a redirect which then renders the Choose Single File page
+          // Follows a redirect which then renders the Choose Single File page
           val result = await(request("/choose-files").get())
 
           result.status shouldBe 200
@@ -169,7 +171,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
             appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
           givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
-          //Follows a redirect which then renders the Choose Single File page
+          // Follows a redirect which then renders the Choose Single File page
           val result = await(request("/choose-files").get())
 
           result.status shouldBe 200
@@ -188,7 +190,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
             appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
           givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
-          //Follows a redirect which then renders the Choose Single File page
+          // Follows a redirect which then renders the Choose Single File page
           val result = await(request("/choose-files").get())
 
           result.status shouldBe 200

@@ -6,6 +6,7 @@ import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush._
 import uk.gov.hmrc.uploaddocuments.controllers.ControllerISpecBase
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
+import play.api.libs.ws.writeableOf_JsValue
 
 import java.time.ZonedDateTime
 
@@ -22,7 +23,8 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
           files = Seq(
             FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
             FileUpload.Posted(nonce, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-          ))
+          )
+        )
 
         setContext(context)
         setFileUploads(fileUploads)
@@ -53,31 +55,33 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
           Payload(
             Request(
               FileUploadContext(fileUploadSessionConfig),
-              FileUploads(files = Seq(
-                FileUpload.Accepted(
-                  nonce,
-                  Timestamp.Any,
-                  "2b72fe99-8adf-4edb-865e-622ae710f77c",
-                  "https://foo.bar/XYZ123/foo.pdf",
-                  ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-                  "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-                  "foo.pdf",
-                  "application/pdf",
-                  1
-                ),
-                FileUpload.Accepted(
-                  Nonce.Any,
-                  Timestamp.Any,
-                  "1c72fe99-8adf-4edb-865e-622ae710f88b",
-                  "https://foo.bar/XYZ123/bar.pdf",
-                  ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-                  "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775101",
-                  "bar.pdf",
-                  "application/pdf",
-                  1,
-                  Some(Json.obj("bar" -> 1))
+              FileUploads(files =
+                Seq(
+                  FileUpload.Accepted(
+                    nonce,
+                    Timestamp.Any,
+                    "2b72fe99-8adf-4edb-865e-622ae710f77c",
+                    "https://foo.bar/XYZ123/foo.pdf",
+                    ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+                    "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+                    "foo.pdf",
+                    "application/pdf",
+                    1
+                  ),
+                  FileUpload.Accepted(
+                    Nonce.Any,
+                    Timestamp.Any,
+                    "1c72fe99-8adf-4edb-865e-622ae710f88b",
+                    "https://foo.bar/XYZ123/bar.pdf",
+                    ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+                    "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775101",
+                    "bar.pdf",
+                    "application/pdf",
+                    1,
+                    Some(Json.obj("bar" -> 1))
+                  )
                 )
-              ))
+              )
             ),
             "http://base.external.callback"
           ),
@@ -101,7 +105,8 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
               1,
               Some(Json.obj("bar" -> 1))
             )
-          ))
+          )
+        )
 
         setContext(context)
         setFileUploads(fileUploads)
@@ -131,32 +136,35 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
 
         getContext() shouldBe Some(context)
         getFileUploads() shouldBe Some(
-          FileUploads(files = Seq(
-            FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
-            FileUpload.Accepted(
-              nonce,
-              Timestamp.Any,
-              "2b72fe99-8adf-4edb-865e-622ae710f77c",
-              "https://foo.bar/XYZ123/foo.pdf",
-              ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-              "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-              "foo.pdf",
-              "application/pdf",
-              1
-            ),
-            FileUpload.Accepted(
-              Nonce.Any,
-              Timestamp.Any,
-              "1c72fe99-8adf-4edb-865e-622ae710f88b",
-              "https://foo.bar/XYZ123/bar.pdf",
-              ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-              "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775101",
-              "bar.pdf",
-              "application/pdf",
-              1,
-              Some(Json.obj("bar" -> 1))
+          FileUploads(files =
+            Seq(
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
+              FileUpload.Accepted(
+                nonce,
+                Timestamp.Any,
+                "2b72fe99-8adf-4edb-865e-622ae710f77c",
+                "https://foo.bar/XYZ123/foo.pdf",
+                ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+                "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+                "foo.pdf",
+                "application/pdf",
+                1
+              ),
+              FileUpload.Accepted(
+                Nonce.Any,
+                Timestamp.Any,
+                "1c72fe99-8adf-4edb-865e-622ae710f88b",
+                "https://foo.bar/XYZ123/bar.pdf",
+                ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+                "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775101",
+                "bar.pdf",
+                "application/pdf",
+                1,
+                Some(Json.obj("bar" -> 1))
+              )
             )
-          )))
+          )
+        )
 
         eventually {
           verifyResultPushHasHappened("/result-post-url", 1)
@@ -184,7 +192,8 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
               1,
               Some(Json.obj("bar" -> 1))
             )
-          ))
+          )
+        )
 
         setContext(context)
         setFileUploads(fileUploads)
@@ -209,30 +218,33 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
 
         getContext() shouldBe Some(context)
         getFileUploads() shouldBe Some(
-          FileUploads(files = Seq(
-            FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
-            FileUpload.Failed(
-              nonce,
-              Timestamp.Any,
-              "2b72fe99-8adf-4edb-865e-622ae710f77c",
-              UpscanNotification.FailureDetails(
-                failureReason = UpscanNotification.QUARANTINE,
-                message       = "e.g. This file has a virus"
+          FileUploads(files =
+            Seq(
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
+              FileUpload.Failed(
+                nonce,
+                Timestamp.Any,
+                "2b72fe99-8adf-4edb-865e-622ae710f77c",
+                UpscanNotification.FailureDetails(
+                  failureReason = UpscanNotification.QUARANTINE,
+                  message = "e.g. This file has a virus"
+                )
+              ),
+              FileUpload.Accepted(
+                Nonce.Any,
+                Timestamp.Any,
+                "1c72fe99-8adf-4edb-865e-622ae710f88b",
+                "https://foo.bar/XYZ123/bar.pdf",
+                ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+                "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775101",
+                "bar.pdf",
+                "application/pdf",
+                1,
+                Some(Json.obj("bar" -> 1))
               )
-            ),
-            FileUpload.Accepted(
-              Nonce.Any,
-              Timestamp.Any,
-              "1c72fe99-8adf-4edb-865e-622ae710f88b",
-              "https://foo.bar/XYZ123/bar.pdf",
-              ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-              "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775101",
-              "bar.pdf",
-              "application/pdf",
-              1,
-              Some(Json.obj("bar" -> 1))
             )
-          )))
+          )
+        )
 
         eventually {
           verifyResultPushHasNotHappened("/result-post-url")
@@ -258,7 +270,8 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
               "application/pdf",
               1
             )
-          ))
+          )
+        )
 
         setContext(context)
         setFileUploads(fileUploads)
@@ -288,20 +301,23 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
 
         getContext() shouldBe Some(context)
         getFileUploads() shouldBe Some(
-          FileUploads(files = Seq(
-            FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
-            FileUpload.Accepted(
-              nonce,
-              Timestamp.Any,
-              "2b72fe99-8adf-4edb-865e-622ae710f77c",
-              "https://foo.bar/XYZ123/foo.pdf",
-              ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-              "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-              "foo.pdf",
-              "application/pdf",
-              1
+          FileUploads(files =
+            Seq(
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
+              FileUpload.Accepted(
+                nonce,
+                Timestamp.Any,
+                "2b72fe99-8adf-4edb-865e-622ae710f77c",
+                "https://foo.bar/XYZ123/foo.pdf",
+                ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+                "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+                "foo.pdf",
+                "application/pdf",
+                1
+              )
             )
-          )))
+          )
+        )
 
         eventually {
           verifyResultPushHasNotHappened("/continue")
@@ -317,7 +333,8 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
           files = Seq(
             FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
             FileUpload.Posted(nonce, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-          ))
+          )
+        )
 
         setContext(context)
         setFileUploads(fileUploads)
@@ -347,10 +364,13 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
 
         getContext() shouldBe Some(context)
         getFileUploads() shouldBe Some(
-          FileUploads(files = Seq(
-            FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
-            FileUpload.Posted(nonce, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-          )))
+          FileUploads(files =
+            Seq(
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
+              FileUpload.Posted(nonce, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
+            )
+          )
+        )
 
         eventually {
           verifyResultPushHasNotHappened("/continue")

@@ -18,7 +18,6 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents}
-import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
@@ -31,7 +30,6 @@ import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 @Singleton
 class WipeOutController @Inject() (
   components: BaseControllerComponents,
-  journeyCacheRepository: JourneyCacheRepository,
   val fileUploadService: FileUploadService,
   override val journeyContextService: JourneyContextService
 )(implicit ec: ExecutionContext)

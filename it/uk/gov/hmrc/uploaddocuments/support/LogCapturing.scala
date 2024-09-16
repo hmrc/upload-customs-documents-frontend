@@ -24,7 +24,7 @@ import play.api.LoggerLike
 
 import scala.jdk.CollectionConverters._
 
-trait LogCapturing { _: UnitSpec =>
+trait LogCapturing { self: UnitSpec =>
 
   def withCaptureOfLoggingFrom(logger: LogbackLogger)(body: (=> List[ILoggingEvent]) => Unit): Unit = {
     val appender = new ListAppender[ILoggingEvent]()

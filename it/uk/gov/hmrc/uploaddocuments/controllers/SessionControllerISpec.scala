@@ -3,6 +3,7 @@ package uk.gov.hmrc.uploaddocuments.controllers
 import com.github.tomakehurst.wiremock.client.WireMock.{aResponse, get, stubFor, _}
 import play.api.Application
 import uk.gov.hmrc.uploaddocuments.support.ServerISpec
+import play.api.libs.ws.DefaultBodyReadables.readableAsString
 
 class SessionControllerISpec extends SessionControllerISpecSetup() {
 

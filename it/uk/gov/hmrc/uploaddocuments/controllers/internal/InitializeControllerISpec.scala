@@ -4,6 +4,8 @@ import play.api.http.HeaderNames
 import play.api.libs.json.{JsString, Json}
 import uk.gov.hmrc.uploaddocuments.controllers.ControllerISpecBase
 import uk.gov.hmrc.uploaddocuments.models._
+import play.api.libs.ws.writeableOf_JsValue
+import play.api.libs.ws.writeableOf_String
 
 import java.time.ZonedDateTime
 import uk.gov.hmrc.uploaddocuments.controllers.{routes => mainRoutes}
