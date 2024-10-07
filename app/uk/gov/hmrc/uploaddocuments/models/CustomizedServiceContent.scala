@@ -42,7 +42,8 @@ final case class CustomizedServiceContent(
   chooseNextFileLabel: Option[String] = None,
   addAnotherDocumentButtonText: Option[String] = None,
   private val yesNoQuestionText: Option[String] = None,
-  yesNoQuestionRequiredError: Option[String] = None
+  yesNoQuestionRequiredError: Option[String] = None,
+  fileUploadRequiredError: Option[String] = None
 ) {
 
   lazy val safeDescriptionHtml: Option[String] = descriptionHtml.map(HtmlCleaner.cleanBlock)

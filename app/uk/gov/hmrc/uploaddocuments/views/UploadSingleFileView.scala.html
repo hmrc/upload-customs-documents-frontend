@@ -87,7 +87,7 @@ appConfig: AppConfig
       classes = "",
       attributes = Map(
         "accept" -> filePickerAcceptFilter,
-        "data-msg-required" -> messages("error.file-upload.required"),
+        "data-msg-required" -> serviceContent.fileUploadRequiredError.getOrElse(messages("error.file-upload.required")),
         "data-msg-filesize" -> messages("error.file-upload.invalid-size-large",UploadFileViewHelper.humanReadableFileSize(maximumFileSizeBytes)),
         "data-msg-accept" -> messages("error.upload-file.other", allowedFileTypesHint)
       ))
