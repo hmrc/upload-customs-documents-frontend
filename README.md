@@ -187,6 +187,7 @@ Minimal payload example:
 |`addAnotherDocumentButtonText`|string|The text of the `Add Another Document` button, if enabled|
 |`yesNoQuestionText`|string|optional|The text of the Yes/No question displayed before the `Continue` button if `showYesNoQuestionBeforeContinue` enabled. If the text starts with `h2.` then the question will be displayed as H2 header.|
 |`yesNoQuestionRequiredError`|string|optional|The text of the error displayed when user didn't provide an answer to the Yes/No question|
+|`fileUploadRequiredError`|string|optional|The text of the error displayed when user didn't select any file and click Continue button|
 
 <a name="api-initialize-payload-config-features"></a>
 #### Upload session features schema:
