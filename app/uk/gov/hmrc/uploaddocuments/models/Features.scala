@@ -19,10 +19,11 @@ package uk.gov.hmrc.uploaddocuments.models
 import play.api.libs.json.{Format, Json}
 
 case class Features(
-  showUploadMultiple: Boolean              = true,
-  showLanguageSelection: Boolean           = true,
-  showAddAnotherDocumentButton: Boolean    = false,
-  showYesNoQuestionBeforeContinue: Boolean = false
+  showUploadMultiple: Boolean = true,
+  showLanguageSelection: Boolean = true,
+  showAddAnotherDocumentButton: Boolean = false,
+  showYesNoQuestionBeforeContinue: Boolean = false,
+  enableMultipleFilesPicker: Boolean = false
 )
 
 object Features {

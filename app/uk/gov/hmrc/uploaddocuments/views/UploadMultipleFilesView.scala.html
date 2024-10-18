@@ -129,6 +129,7 @@ appConfig: AppConfig
     data-multi-file-upload-choose-next-file-label="@serviceContent.chooseNextFileLabel.getOrElse(messages("view.upload-multiple-files.chooseNextFileLabel"))"
     @newFileDescription.map{value => data-multi-file-upload-new-file-description="@value"}.getOrElse("")
     @if(features.showAddAnotherDocumentButton){data-multi-file-upload-show-add-another-document-button}
+    @if(features.enableMultipleFilesPicker){data-multi-file-upload-enable-multiple-files-picker}
     @if(form.errors.nonEmpty){data-multi-file-upload-initial-error="@form.errors.map(error => messages(error.message,error.args:_*)).head"}
   >
 
