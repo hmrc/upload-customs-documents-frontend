@@ -41,7 +41,8 @@ export class MultiFileUpload extends Component {
       sendUrlTpl: decodeURIComponent(form.dataset.multiFileUploadSendUrlTpl),
       statusUrlTpl: decodeURIComponent(form.dataset.multiFileUploadStatusUrlTpl),
       removeUrlTpl: decodeURIComponent(form.dataset.multiFileUploadRemoveUrlTpl),
-      showAddAnotherDocumentButton: form.dataset.multiFileUploadShowAddAnotherDocumentButton !== undefined
+      showAddAnotherDocumentButton: form.dataset.multiFileUploadShowAddAnotherDocumentButton !== undefined,
+      enableMultipleFilesPicker: form.dataset.multiFileUploadEnableMultipleFilesPicker !== undefined
     };
 
     this.messages = {
@@ -183,7 +184,9 @@ export class MultiFileUpload extends Component {
 
       this.setItemState(item, UploadState.Waiting);
       this.getFileNamePlaceholderElements(item).forEach((elem) => {elem.textContent = fileName});
-      this.getDescriptionElement(item).textContent = this.messages.newFileDescription;
+      if(this.messages.newFileDescription){
+        this.getDescriptionElement(item).textContent = this.messages.newFileDescription;
+      }
 
       this.draggedFiles[fileInput.id] = file;
 
@@ -236,7 +239,9 @@ export class MultiFileUpload extends Component {
 
       this.bindItemEvents(item);
       this.itemList.prepend(item);
-      this.getDescriptionElement(item).textContent = this.messages.newFileDescription;
+      if(this.messages.newFileDescription){
+        this.getDescriptionElement(item).textContent = this.messages.newFileDescription;
+      }
       this.updateButtonVisibility();
 
       return item;
@@ -267,7 +272,9 @@ export class MultiFileUpload extends Component {
 
       this.bindItemEvents(item);
       this.itemList.prepend(item);
-      this.getDescriptionElement(item).textContent = this.messages.newFileDescription;
+      if(this.messages.newFileDescription){
+        this.getDescriptionElement(item).textContent = this.messages.newFileDescription;
+      }
       this.updateButtonVisibility();
 
       return item;
@@ -468,9 +475,33 @@ export class MultiFileUpload extends Component {
 
     this.errorManager.removeAllErrors();
 
-    if (!fileInput.files.length) {
+    if (!fileInput.files.length || fileInput.files.length==0) {
       return;
+    } else {
+      console.debug(fileInput.files.length);
     }
+
+    if(this.config.enableMultipleFilesPicker && fileInput.files.length>1){
+      this.errorManager.removeAllErrors();
+      [...fileInput.files].forEach((file, i) => {
+        this.createWaitingItem(file);
+      });
+      const input = this.getInputFromFile(fileInput);
+      if(input){
+        const label = this.getInputLabelElement(input);
+        input.parentElement.removeChild(input);
+        fileInput.parentElement.removeChild(fileInput);
+        label.parentElement.removeChild(label);
+        toggleElement(label, false);
+        label.after(fileInput);
+      }
+      this.uploadNext();
+    } else {
+      this.processFileFromInput(fileInput);
+    }
+  }
+
+  private processFileFromInput(fileInput: HTMLInputElement): void {  
 
     const file: File = fileInput.files[0];
 
@@ -539,10 +570,10 @@ export class MultiFileUpload extends Component {
       formData.append(key, value as string);
     }
 
-    if(fileInput.files.length>0){
-      formData.append('file', fileInput.files[0]);
-    } else if(this.draggedFiles[fileInput.id]) {
+    if(this.draggedFiles && this.draggedFiles[fileInput.id]) {
       formData.append('file', this.draggedFiles[fileInput.id]);
+    } else if(fileInput.files.length>0){
+      formData.append('file', fileInput.files[0]);
     } else {
       console.error(`Missing file data for input ${fileInput.id}`)
     }

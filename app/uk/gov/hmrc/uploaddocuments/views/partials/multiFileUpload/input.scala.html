@@ -15,9 +15,10 @@
  *@
 
 @import uk.gov.hmrc.uploaddocuments.models.CustomizedServiceContent
+@import uk.gov.hmrc.uploaddocuments.models.Features
 
-@(acceptedFileExtensions: String)(implicit messages: Messages, serviceContent: CustomizedServiceContent)
+@(acceptedFileExtensions: String)(implicit messages: Messages, serviceContent: CustomizedServiceContent, features: Features)
 <div class="multi-file-upload__input multi-file-upload__input-container">
   <label class="govuk-label multi-file-upload__input-label" for="file-{fileIndex}">{fileDescription}</label>
-  <input class="multi-file-upload__file govuk-file-upload" type="file" id="file-{fileIndex}" accept="@acceptedFileExtensions">
+  <input class="multi-file-upload__file govuk-file-upload" type="file" id="file-{fileIndex}" accept="@acceptedFileExtensions" @if(features.enableMultipleFilesPicker){multiple}>
 </div>
