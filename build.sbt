@@ -8,7 +8,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "upload-customs-documents-frontend",
     organization := "uk.gov.hmrc",
-    scalaVersion := "3.3.3",
+    scalaVersion := "3.3.6",
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
     PlayKeys.playDefaultPort := 10110,
