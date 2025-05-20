@@ -29,7 +29,7 @@
 )(implicit messages: Messages)
 
     @govukCheckboxes(Checkboxes(
-        classes = s"${if(inline){"govuk-checkboxes--inline"}}",
+        classes = s"${if(inline) then "govuk-checkboxes--inline" else ""}",
         idPrefix = Some(idPrefix),
         name = name,
         fieldset = legend.map(messageKey => Fieldset(
