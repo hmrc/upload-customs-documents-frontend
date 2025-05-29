@@ -19,7 +19,8 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.Action
 import play.mvc.Http.HeaderNames
-import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, routes => mainRoutes}
+import uk.gov.hmrc.uploaddocuments.controllers.BaseController
+import uk.gov.hmrc.uploaddocuments.controllers.BaseControllerComponents
 import uk.gov.hmrc.uploaddocuments.models._
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 
@@ -41,7 +42,7 @@ class InitializeController @Inject() (
     withJsonBody[FileUploadInitializationRequest] { payload =>
       whenInSession { implicit journeyId =>
         Logger.debug(s"[initialize] Call to initiate journey for journeyId: '$journeyId', body: \n${Json
-          .prettyPrint(Json.toJson(payload)(FileUploadInitializationRequest.writeNoDownloadUrl))}")
+            .prettyPrint(Json.toJson(payload)(FileUploadInitializationRequest.writeNoDownloadUrl))}")
         whenAuthenticatedInBackchannel {
           for {
             maybeExistingContext <- journeyContextService.getJourneyContext()
@@ -55,7 +56,9 @@ class InitializeController @Inject() (
                    )
                  )
             _ <- fileUploadService.putFiles(FileUploads(payload))
-          } yield Created.withHeaders(HeaderNames.LOCATION -> mainRoutes.StartController.start.url)
+          } yield Created.withHeaders(
+            HeaderNames.LOCATION -> uk.gov.hmrc.uploaddocuments.controllers.routes.StartController.start.url
+          )
         }
       }
     }

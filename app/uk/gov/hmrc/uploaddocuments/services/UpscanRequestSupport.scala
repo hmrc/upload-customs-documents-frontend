@@ -27,9 +27,9 @@ trait UpscanRequestSupport {
 
   final def upscanRequest(nonce: Nonce, maximumFileSizeBytes: Long)(implicit journeyId: JourneyId, rh: RequestHeader) =
     UpscanInitiateRequest(
-      callbackUrl     = callbackFromUpscan(nonce),
+      callbackUrl = callbackFromUpscan(nonce),
       successRedirect = Some(successRedirect()),
-      errorRedirect   = Some(errorRedirect()),
+      errorRedirect = Some(errorRedirect()),
       minimumFileSize = Some(1),
       maximumFileSize = Some(maximumFileSizeBytes.toInt)
     )
@@ -39,9 +39,21 @@ trait UpscanRequestSupport {
     maximumFileSizeBytes: Long
   )(implicit journeyId: JourneyId, rh: RequestHeader) =
     UpscanInitiateRequest(
-      callbackUrl     = callbackFromUpscan(nonce),
+      callbackUrl = callbackFromUpscan(nonce),
       successRedirect = Some(successRedirectWhenUploadingMultipleFiles()),
-      errorRedirect   = Some(errorRedirect()),
+      errorRedirect = Some(errorRedirect()),
+      minimumFileSize = Some(1),
+      maximumFileSize = Some(maximumFileSizeBytes.toInt)
+    )
+
+  final def upscanRequestWhenUploadingFileContent(
+    nonce: Nonce,
+    maximumFileSizeBytes: Long
+  )(implicit journeyId: JourneyId, rh: RequestHeader) =
+    UpscanInitiateRequest(
+      callbackUrl = callbackFromUpscanWhenFileContentUpload(nonce),
+      successRedirect = None,
+      errorRedirect = None,
       minimumFileSize = Some(1),
       maximumFileSize = Some(maximumFileSizeBytes.toInt)
     )
@@ -49,6 +61,10 @@ trait UpscanRequestSupport {
   final def callbackFromUpscan(nonce: Nonce)(implicit journeyId: JourneyId) =
     appConfig.baseInternalCallbackUrl +
       internal.routes.CallbackFromUpscanController.callbackFromUpscan(journeyId, nonce.toString).url
+
+  final def callbackFromUpscanWhenFileContentUpload(nonce: Nonce)(implicit journeyId: JourneyId) =
+    appConfig.baseInternalCallbackUrl +
+      internal.routes.UploadFileController.callbackFromUpscan(journeyId, nonce.toString).url
 
   final def successRedirect()(implicit journeyId: JourneyId, rh: RequestHeader): String =
     appConfig.baseExternalCallbackUrl + (rh.cookies.get(COOKIE_JSENABLED) match {

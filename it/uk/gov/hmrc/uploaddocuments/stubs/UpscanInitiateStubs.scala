@@ -27,7 +27,11 @@ trait UpscanInitiateStubs {
       )
     )
 
-  def givenUpscanInitiateSucceeds(callbackUrl: String, userAgent: String): StubMapping =
+  def givenUpscanInitiateSucceeds(
+    callbackUrl: String,
+    userAgent: String,
+    uploadUrl: String = "https://bucketName.s3.eu-west-2.amazonaws.com"
+  ): StubMapping =
     stubFor(
       post(urlEqualTo(s"/upscan/v2/initiate"))
         .withHeader("User-Agent", containing("upload-customs-documents-frontend"))
@@ -45,7 +49,7 @@ trait UpscanInitiateStubs {
             .withBody(s"""{
                          |    "reference": "11370e18-6e24-453e-b45a-76d3e32ea33d",
                          |    "uploadRequest": {
-                         |        "href": "https://bucketName.s3.eu-west-2.amazonaws.com",
+                         |        "href": "$uploadUrl",
                          |        "fields": {
                          |            "Content-Type": "application/xml",
                          |            "acl": "private",
@@ -62,6 +66,23 @@ trait UpscanInitiateStubs {
                          |    }
                          |}""".stripMargin)
         )
+    )
+
+  def givenUpscanInitiateFails(
+    callbackUrl: String,
+    userAgent: String
+  ): StubMapping =
+    stubFor(
+      post(urlEqualTo(s"/upscan/v2/initiate"))
+        .withHeader("User-Agent", containing("upload-customs-documents-frontend"))
+        .withHeader(HeaderNames.CONTENT_TYPE, containing("application/json"))
+        .withRequestBody(
+          matchingJsonPath("callbackUrl", containing(callbackUrl))
+        )
+        .withRequestBody(
+          matchingJsonPath("consumingService", containing(userAgent))
+        )
+        .willReturn(aResponse().withStatus(400))
     )
 
 }

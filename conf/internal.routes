@@ -12,3 +12,9 @@ POST       /wipe-out                                                        @uk.
 + nocsrf
 POST       /callback-from-upscan/journey/:journeyId/:nonce                  @uk.gov.hmrc.uploaddocuments.controllers.internal.CallbackFromUpscanController.callbackFromUpscan(journeyId: JourneyId, nonce: String)
 
++ nocsrf
+POST       /upload                                                          @uk.gov.hmrc.uploaddocuments.controllers.internal.UploadFileController.uploadFile
+
++ nocsrf
+POST       /upload/callback-from-upscan/journey/:journeyId/:nonce           @uk.gov.hmrc.uploaddocuments.controllers.internal.UploadFileController.callbackFromUpscan(journeyId: JourneyId, nonce: String)
+
