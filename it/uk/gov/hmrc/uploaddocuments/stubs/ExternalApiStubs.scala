@@ -68,4 +68,18 @@ trait ExternalApiStubs {
   def verifyResultPushHasNotHappened(path: String): Unit =
     verify(0, postRequestedFor(urlEqualTo(path)))
 
+  def stubForFileUpload(status: Int, fileName: String): String = {
+    val url = s"$wireMockBaseUrlAsString/bucket/$fileName"
+
+    stubFor(
+      post(urlPathEqualTo(s"/bucket/$fileName"))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+        )
+    )
+
+    url
+  }
+
 }

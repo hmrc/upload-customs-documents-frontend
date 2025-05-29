@@ -145,6 +145,27 @@ class FileUploadService @Inject() (
       }
     }
 
+  def markFileWithUpscanResponse(notification: UpscanNotification, requestNonce: Nonce)(implicit
+    context: FileUploadContext,
+    journeyId: JourneyId,
+    hc: HeaderCarrier
+  ): Future[Option[FileUploads]] =
+    takeLock[Option[FileUploads]](Future.successful(None)) {
+      withFiles[Option[FileUploads]](Future.successful(None)) { fileUploads =>
+        for {
+          updateFiles <- putFiles(updateFileUploadsWithUpscanResponse(notification, requestNonce, fileUploads))
+          _ = if (fileUploads.files == updateFiles.files) {
+                Logger.warn(
+                  "[markFileWithUpscanResponse] No files were updated following the callback from Upscan"
+                )
+                Logger.debug(
+                  s"[markFileWithUpscanResponse] No files were updated following the callback from Upscan. journeyId: '$journeyId', upscanRef: '${notification.reference}'"
+                )
+              }
+        } yield Some(updateFiles)
+      }
+    }
+
   private def updateFileUploadsWithUpscanResponse(
     notification: UpscanNotification,
     requestNonce: Nonce,

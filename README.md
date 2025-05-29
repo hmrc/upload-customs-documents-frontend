@@ -14,6 +14,7 @@ File upload session is attached to the initial Session-ID and defined by the lat
     - [Session content customization](#upload-session-content-customization-schema)
     - [Session features customization](#upload-session-features-schema)
     - [I18n of the content](#internationalization)
+    - [Uploading file content directly](#uploading-a-file-content-directly)
 - [Sequence diagrams](#sequence-diagrams)
 - [API](#api)
     - [/initialize](#post-initialize)
@@ -83,6 +84,31 @@ Locally you should use `http://localhost:10110` instead of `https://upload-custo
 The service comes with built-in English and Welsh messages, and an optional language switch link.
 
 All messages supplied in the initialization request must come in the proper variant as they will be displayed as-is.
+
+### Uploading a file content directly
+
+It is possible to upload a file content directly without UI using `POST /internal/upload` endpoint. This enpoint takes the following input:
+```json
+{
+  "uploadId" : "a",
+  "name" : "test.txt",
+  "contentType" : "text/plain",
+  "content" : [ 72, 101, 108, 108, 111, 33 ]
+}
+```
+and eventually returns `201 Created` with payload:
+```json
+{
+    "fileMimeType": "text/plain",
+    "upscanReference": "11370e18-6e24-453e-b45a-76d3e32ea33d",
+    "downloadUrl": "https://foo.bar/XYZ123/test.txt",
+    "fileName": "test.txt",
+    "checksum": "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+    "fileSize": 6,
+    "uploadTimestamp": "2018-04-24T09:30:00Z"
+}
+```
+or `400`
 
 ## Sequence diagrams
 

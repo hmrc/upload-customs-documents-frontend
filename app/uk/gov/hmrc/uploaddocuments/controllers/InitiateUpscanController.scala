@@ -25,10 +25,12 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class InitiateUpscanController @Inject()(upscanInitiateService: InitiateUpscanService,
-                                         components: BaseControllerComponents,
-                                         override val journeyContextService: JourneyContextService)
-                                        (implicit ec: ExecutionContext) extends BaseController(components) with JourneyContextControllerHelper {
+class InitiateUpscanController @Inject() (
+  upscanInitiateService: InitiateUpscanService,
+  components: BaseControllerComponents,
+  override val journeyContextService: JourneyContextService
+)(implicit ec: ExecutionContext)
+    extends BaseController(components) with JourneyContextControllerHelper {
 
   // POST /initiate-upscan/:uploadId
   final def initiateNextFileUpload(uploadId: String): Action[AnyContent] = Action.async { implicit request =>
@@ -37,11 +39,13 @@ class InitiateUpscanController @Inject()(upscanInitiateService: InitiateUpscanSe
         withJourneyContext { implicit journeyContext =>
           upscanInitiateService.initiateNextMultiFileUpload(uploadId).map {
             case Some(upscanResponse) =>
-              Ok(Json.obj(fields =
-                "upscanReference" -> upscanResponse.reference,
-                "uploadId"        -> uploadId,
-                "uploadRequest"   -> UploadRequest.formats.writes(upscanResponse.uploadRequest)
-              ))
+              Ok(
+                Json.obj(
+                  fields = "upscanReference" -> upscanResponse.reference,
+                  "uploadId"      -> uploadId,
+                  "uploadRequest" -> UploadRequest.formats.writes(upscanResponse.uploadRequest)
+                )
+              )
             case None => BadRequest
           }
         }
