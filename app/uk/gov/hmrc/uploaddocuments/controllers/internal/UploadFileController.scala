@@ -65,7 +65,7 @@ class UploadFileController @Inject() (
               .flatMap(json => Json.fromJson[FileToUpload](json).asOpt)
               .match {
                 case Some(fileToUpload) =>
-                  Logger.info(
+                  println(
                     s"[uploadFile] Call to upload file: '$journeyId', body: \n${Json.prettyPrint(Json.toJson(fileToUpload))}"
                   )
                   Logger.debug(s"[uploadFile] Initializing Upscan")
@@ -89,7 +89,7 @@ class UploadFileController @Inject() (
                                 )
                               )
                           )
-                        Logger.debug(
+                        println(
                           s"[uploadFile] Uploading a file to ${upscanResponse.uploadRequest.href}"
                         )
                         wsClient
@@ -110,7 +110,7 @@ class UploadFileController @Inject() (
                                     Created(Json.toJson(uploadedFile))
 
                                   case None =>
-                                    Logger.error(
+                                    println(
                                       s"Failure, no verified file found with upscan reference ${upscanResponse.reference}."
                                     )
                                     BadRequest(
@@ -118,7 +118,7 @@ class UploadFileController @Inject() (
                                     )
                                 }
                             else
-                              Logger.error(
+                              println(
                                 s"Uploading the file to ${upscanResponse.uploadRequest.href} has failed with ${response.status}:\n${response.body}"
                               )
                               Future.successful(
@@ -129,15 +129,15 @@ class UploadFileController @Inject() (
                           )
                           .recover(e => BadRequest(s"Failure to upload a file because of $e"))
                       case None =>
-                        Logger.error("Failure, no Upscan response received.")
+                        println("Failure, no Upscan response received.")
                         Future.successful(BadRequest(s"Failure, no Upscan response received."))
                     }
                     .recover { e =>
-                      Logger.error(s"Failure to initialize Upscan because of $e")
+                      println(s"Failure to initialize Upscan because of $e")
                       BadRequest(s"Failure to initialize Upscan because of $e")
                     }
                 case None =>
-                  Logger.error(s"Failure, wrong payload:\n${request.body}")
+                  println(s"Failure, wrong payload:\n${request.body}")
                   Future.successful(BadRequest(s"Failure, wrong payload:\n${request.body}"))
               }
           }()
@@ -179,7 +179,7 @@ class UploadFileController @Inject() (
               Future.successful(UploadedFile.apply(upload))
 
             case Some(error: ErroredFileUpload) =>
-              Logger.debug(
+              Logger.warn(
                 s"[waitForFileVerification] Found rejected file $upscanReference: \n$error"
               )
               Future.successful(None)
