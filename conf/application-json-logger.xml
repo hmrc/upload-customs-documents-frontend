@@ -8,8 +8,9 @@
     <logger name="uk.gov" level="WARN"/>
     <logger name="uk.gov.hmrc.http" level="ERROR"/>
     <logger name="uk.gov.hmrc.play" level="INFO"/>
-    <logger name="uk.gov.hmrc.uploaddocuments.FileUploadService" level="INFO"/>
     <logger name="uk.gov.hmrc.uploaddocuments" level="WARN"/>
+    <logger name="uk.gov.hmrc.uploaddocuments.controllers" level="INFO"/>
+    <logger name="uk.gov.hmrc.uploaddocuments.controllers.internal.UploadFileController" level="DEBUG"/>
 
     <root level="ERROR">
         <appender-ref ref="STDOUT"/>

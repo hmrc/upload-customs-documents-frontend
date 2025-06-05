@@ -41,6 +41,7 @@ import uk.gov.hmrc.uploaddocuments.models.FileUpload
 import uk.gov.hmrc.uploaddocuments.models.UploadedFile
 import uk.gov.hmrc.uploaddocuments.models.FileUpload.*
 import uk.gov.hmrc.uploaddocuments.models.ErroredFileUpload
+import play.api.Logger
 
 @Singleton
 class UploadFileController @Inject() (
@@ -51,6 +52,8 @@ class UploadFileController @Inject() (
   wsClient: WSClient
 )(implicit ec: ExecutionContext)
     extends BaseController(components) with JourneyContextControllerHelper {
+
+  val log: Logger = play.api.Logger(this.getClass())
 
   // POST /internal/upload
   final val uploadFile: Action[AnyContent] = Action
@@ -65,15 +68,15 @@ class UploadFileController @Inject() (
               .flatMap(json => Json.fromJson[FileToUpload](json).asOpt)
               .match {
                 case Some(fileToUpload) =>
-                  println(
+                  log.info(
                     s"[uploadFile] Call to upload file: '$journeyId', body: \n${Json.prettyPrint(Json.toJson(fileToUpload))}"
                   )
-                  Logger.debug(s"[uploadFile] Initializing Upscan")
+                  log.debug(s"[uploadFile] Initializing Upscan")
                   upscanInitiateService
                     .initiateFileContentUpload(fileToUpload.uploadId)
                     .flatMap {
                       case Some(upscanResponse) =>
-                        Logger.debug(
+                        log.debug(
                           s"[uploadFile] Upscan response: \n${Json.prettyPrint(Json.toJson(upscanResponse))}"
                         )
                         val source =
@@ -89,7 +92,7 @@ class UploadFileController @Inject() (
                                 )
                               )
                           )
-                        println(
+                        log.info(
                           s"[uploadFile] Uploading a file to ${upscanResponse.uploadRequest.href}"
                         )
                         wsClient
@@ -98,19 +101,19 @@ class UploadFileController @Inject() (
                           .flatMap(response =>
                             if response.status >= 200 && response.status < 300
                             then
-                              Logger.debug(
+                              log.debug(
                                 s"[uploadFile] Uploading succeeded with status ${response.status}"
                               )
                               waitForFileVerification(upscanResponse.reference, 15)
                                 .map {
                                   case Some(uploadedFile) =>
-                                    Logger.debug(
+                                    log.debug(
                                       s"[uploadFile] Success, returning \n${Json.toJson(uploadedFile)}"
                                     )
                                     Created(Json.toJson(uploadedFile))
 
                                   case None =>
-                                    println(
+                                    log.error(
                                       s"Failure, no verified file found with upscan reference ${upscanResponse.reference}."
                                     )
                                     BadRequest(
@@ -118,7 +121,7 @@ class UploadFileController @Inject() (
                                     )
                                 }
                             else
-                              println(
+                              log.error(
                                 s"Uploading the file to ${upscanResponse.uploadRequest.href} has failed with ${response.status}:\n${response.body}"
                               )
                               Future.successful(
@@ -129,15 +132,15 @@ class UploadFileController @Inject() (
                           )
                           .recover(e => BadRequest(s"Failure to upload a file because of $e"))
                       case None =>
-                        println("Failure, no Upscan response received.")
+                        log.error("Failure, no Upscan response received.")
                         Future.successful(BadRequest(s"Failure, no Upscan response received."))
                     }
                     .recover { e =>
-                      println(s"Failure to initialize Upscan because of $e")
+                      log.error(s"Failure to initialize Upscan because of $e")
                       BadRequest(s"Failure to initialize Upscan because of $e")
                     }
                 case None =>
-                  println(s"Failure, wrong payload:\n${request.body}")
+                  log.error(s"Failure, wrong payload:\n${request.body}")
                   Future.successful(BadRequest(s"Failure, wrong payload:\n${request.body}"))
               }
           }()
@@ -153,7 +156,7 @@ class UploadFileController @Inject() (
         withJourneyContextWithErrorHandler {
           Future.successful(NoContent)
         } { implicit journeyContext =>
-          Logger.debug(
+          log.debug(
             s"[callbackFromUpscan] Callback from upscan: '$journeyId', body: \n${Json.prettyPrint(Json.toJson(payload))}"
           )
           fileUploadService.markFileWithUpscanResponse(payload, Nonce(nonce)).map(_ => NoContent)
@@ -173,19 +176,19 @@ class UploadFileController @Inject() (
         case Some(uploads) =>
           uploads.files.find(_.reference == upscanReference).match {
             case Some(upload: Accepted) =>
-              Logger.debug(
+              log.debug(
                 s"[waitForFileVerification] Found accepted file $upscanReference: \n$upload"
               )
               Future.successful(UploadedFile.apply(upload))
 
             case Some(error: ErroredFileUpload) =>
-              Logger.warn(
+              log.warn(
                 s"[waitForFileVerification] Found rejected file $upscanReference: \n$error"
               )
               Future.successful(None)
 
             case _ =>
-              Logger.debug(
+              log.debug(
                 s"[waitForFileVerification] File $upscanReference not verified yet, remaining attempts ${count - 1}"
               )
               waitForFileVerification(upscanReference, count - 1)
