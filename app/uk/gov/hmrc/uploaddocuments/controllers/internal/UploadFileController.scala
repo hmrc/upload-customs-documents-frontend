@@ -82,7 +82,7 @@ class UploadFileController @Inject() (
                         val source =
                           Source.apply[play.api.mvc.MultipartFormData.Part[Source[ByteString, Any]]](
                             upscanResponse.uploadRequest.fields.toList
-                              .map((k, v) => MultipartFormData.DataPart(k, v))
+                              .map((k, v) => MultipartFormData.DataPart(k, v.replace("${filename}", fileToUpload.name)))
                               ::: List(
                                 MultipartFormData.FilePart(
                                   "file",
@@ -93,7 +93,7 @@ class UploadFileController @Inject() (
                               )
                           )
                         log.info(
-                          s"[uploadFile] Uploading a file to ${upscanResponse.uploadRequest.href}"
+                          s"[uploadFile] Uploading a ${fileToUpload.name} file to ${upscanResponse.uploadRequest.href}"
                         )
                         wsClient
                           .url(upscanResponse.uploadRequest.href)
@@ -114,23 +114,26 @@ class UploadFileController @Inject() (
 
                                   case None =>
                                     log.error(
-                                      s"Failure, no verified file found with upscan reference ${upscanResponse.reference}."
+                                      s"Failure, no verified ${fileToUpload.name} file found for upscan reference ${upscanResponse.reference}."
                                     )
                                     BadRequest(
-                                      s"Failure, no verified file found with upscan reference ${upscanResponse.reference}."
+                                      s"Failure, no verified ${fileToUpload.name} file found for upscan reference ${upscanResponse.reference}."
                                     )
                                 }
                             else
                               log.error(
-                                s"Uploading the file to ${upscanResponse.uploadRequest.href} has failed with ${response.status}:\n${response.body}"
+                                s"Uploading a ${fileToUpload.name} file to ${upscanResponse.uploadRequest.href} has failed with ${response.status}:\n${response.body}"
                               )
                               Future.successful(
                                 BadRequest(
-                                  s"Uploading the file to ${upscanResponse.uploadRequest.href} has failed with ${response.status}"
+                                  s"Uploading a ${fileToUpload.name} file to ${upscanResponse.uploadRequest.href} has failed with ${response.status}"
                                 )
                               )
                           )
-                          .recover(e => BadRequest(s"Failure to upload a file because of $e"))
+                          .recover { e =>
+                            log.error(s"Failure to upload a ${fileToUpload.name} file because of $e")
+                            BadRequest(s"Failure to upload a ${fileToUpload.name} file because of $e")
+                          }
                       case None =>
                         log.error("Failure, no Upscan response received.")
                         Future.successful(BadRequest(s"Failure, no Upscan response received."))
