@@ -64,6 +64,8 @@
 
     <logger name="uk.gov.hmrc.uploaddocuments.FileUploadService" level="INFO"/>
 
+    <logger name="uk.gov.hmrc.uploaddocuments.controllers.internal.UploadFileController" level="DEBUG"/>
+
     <logger name="uk.gov.hmrc.uploaddocuments.services" level="DEBUG"/>
 
     <logger name="uk.gov.hmrc.uploaddocuments.repository" level="DEBUG"/>

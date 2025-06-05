@@ -65,7 +65,7 @@ class UploadFileController @Inject() (
               .flatMap(json => Json.fromJson[FileToUpload](json).asOpt)
               .match {
                 case Some(fileToUpload) =>
-                  Logger.debug(
+                  Logger.info(
                     s"[uploadFile] Call to upload file: '$journeyId', body: \n${Json.prettyPrint(Json.toJson(fileToUpload))}"
                   )
                   Logger.debug(s"[uploadFile] Initializing Upscan")
@@ -110,9 +110,17 @@ class UploadFileController @Inject() (
                                     Created(Json.toJson(uploadedFile))
 
                                   case None =>
-                                    BadRequest(s"Failure, no verified file found.")
+                                    Logger.error(
+                                      s"Failure, no verified file found with upscan reference ${upscanResponse.reference}."
+                                    )
+                                    BadRequest(
+                                      s"Failure, no verified file found with upscan reference ${upscanResponse.reference}."
+                                    )
                                 }
                             else
+                              Logger.error(
+                                s"Uploading the file to ${upscanResponse.uploadRequest.href} has failed with ${response.status}:\n${response.body}"
+                              )
                               Future.successful(
                                 BadRequest(
                                   s"Uploading the file to ${upscanResponse.uploadRequest.href} has failed with ${response.status}"
@@ -121,10 +129,15 @@ class UploadFileController @Inject() (
                           )
                           .recover(e => BadRequest(s"Failure to upload a file because of $e"))
                       case None =>
+                        Logger.error("Failure, no Upscan response received.")
                         Future.successful(BadRequest(s"Failure, no Upscan response received."))
                     }
-                    .recover(e => BadRequest(s"Failure to initialize Upscan because of $e"))
+                    .recover { e =>
+                      Logger.error(s"Failure to initialize Upscan because of $e")
+                      BadRequest(s"Failure to initialize Upscan because of $e")
+                    }
                 case None =>
+                  Logger.error(s"Failure, wrong payload:\n${request.body}")
                   Future.successful(BadRequest(s"Failure, wrong payload:\n${request.body}"))
               }
           }()
