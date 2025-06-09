@@ -71,21 +71,4 @@ class InitiateUpscanService @Inject() (
       } yield Some((upscanResponse, updatedFiles, files.tofileUploadErrors.headOption))
     }
   }
-
-  def initiateFileContentUpload(uploadId: String)(implicit
-    journeyContext: FileUploadContext,
-    journeyId: JourneyId,
-    rh: RequestHeader,
-    hc: HeaderCarrier
-  ): Future[Option[UpscanInitiateResponse]] = {
-    val nonce           = randomNonce
-    val initiateRequest = upscanRequestWhenUploadingFileContent(nonce, 10000000)
-
-    fileUploadService.withFiles[Option[UpscanInitiateResponse]](Future.successful(None)) { files =>
-      for {
-        upscanResponse <- upscanInitiateConnector.initiate(journeyContext.hostService.userAgent, initiateRequest)
-        _              <- fileUploadService.putFiles(files + FileUpload(nonce, Some(uploadId))(upscanResponse))
-      } yield Some(upscanResponse)
-    }
-  }
 }

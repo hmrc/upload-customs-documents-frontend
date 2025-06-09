@@ -3,12 +3,13 @@ import sbt._
 object AppDependencies {
 
   val compile = Seq(
-    "uk.gov.hmrc"                  %% "bootstrap-frontend-play-30" % "9.12.0",
-    "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"         % "2.6.0",
-    "uk.gov.hmrc"                  %% "play-frontend-hmrc-play-30" % "12.1.0",
-    "com.sun.mail"                  % "javax.mail"                 % "1.6.2",
-    "org.jsoup"                     % "jsoup"                      % "1.20.1",
-    "com.fasterxml.jackson.module" %% "jackson-module-scala"       % "2.17.1"
+    "uk.gov.hmrc"                  %% "bootstrap-frontend-play-30"  % "9.12.0",
+    "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"          % "2.6.0",
+    "uk.gov.hmrc"                  %% "play-frontend-hmrc-play-30"  % "12.1.0",
+    "com.sun.mail"                  % "javax.mail"                  % "1.6.2",
+    "org.jsoup"                     % "jsoup"                       % "1.20.1",
+    "com.fasterxml.jackson.module" %% "jackson-module-scala"        % "2.17.1",
+    "uk.gov.hmrc.objectstore"      %% "object-store-client-play-30" % "2.2.0"
   )
 
   val test = Seq(

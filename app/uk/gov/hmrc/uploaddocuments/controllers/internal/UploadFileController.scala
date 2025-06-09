@@ -16,40 +16,28 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers.internal
 
-import play.api.mvc.{Action, AnyContent}
-import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents}
-
-import javax.inject.{Inject, Singleton}
-import scala.concurrent.ExecutionContext
-import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import uk.gov.hmrc.uploaddocuments.controllers.JourneyContextControllerHelper
-import scala.concurrent.Future
-import uk.gov.hmrc.uploaddocuments.services.JourneyContextService
-import uk.gov.hmrc.uploaddocuments.services.FileUploadService
-import uk.gov.hmrc.uploaddocuments.services.InitiateUpscanService
-import uk.gov.hmrc.uploaddocuments.models.FileToUpload
-import play.api.libs.json.Json
-import play.api.mvc.MultipartFormData
-import org.apache.pekko.stream.scaladsl.Source
-import org.apache.pekko.util.ByteString
-import play.api.libs.ws.WSClient
-import uk.gov.hmrc.uploaddocuments.models.JourneyId
-import play.api.libs.json.JsValue
-import uk.gov.hmrc.uploaddocuments.models.UpscanNotification
-import uk.gov.hmrc.uploaddocuments.models.Nonce
-import uk.gov.hmrc.uploaddocuments.models.FileUpload
-import uk.gov.hmrc.uploaddocuments.models.UploadedFile
-import uk.gov.hmrc.uploaddocuments.models.FileUpload.*
-import uk.gov.hmrc.uploaddocuments.models.ErroredFileUpload
 import play.api.Logger
+import play.api.libs.json.Json
+import play.api.mvc.{Action, AnyContent}
+import uk.gov.hmrc.objectstore.client.play.Implicits.*
+import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
+import uk.gov.hmrc.objectstore.client.{Path, RetentionPeriod}
+import uk.gov.hmrc.play.http.HeaderCarrierConverter
+import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, JourneyContextControllerHelper}
+import uk.gov.hmrc.uploaddocuments.models.{FileToUpload, UploadedFile}
+import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
+
+import java.time.ZonedDateTime
+import java.util.UUID
+import javax.inject.{Inject, Singleton}
+import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
 class UploadFileController @Inject() (
   components: BaseControllerComponents,
   val fileUploadService: FileUploadService,
   override val journeyContextService: JourneyContextService,
-  upscanInitiateService: InitiateUpscanService,
-  wsClient: WSClient
+  objectStoreClient: PlayObjectStoreClient
 )(implicit ec: ExecutionContext)
     extends BaseController(components) with JourneyContextControllerHelper {
 
@@ -71,76 +59,47 @@ class UploadFileController @Inject() (
                   log.info(
                     s"[uploadFile] Call to upload file: '$journeyId', body: \n${Json.prettyPrint(Json.toJson(fileToUpload))}"
                   )
-                  log.debug(s"[uploadFile] Initializing Upscan")
-                  upscanInitiateService
-                    .initiateFileContentUpload(fileToUpload.uploadId)
-                    .flatMap {
-                      case Some(upscanResponse) =>
-                        log.debug(
-                          s"[uploadFile] Upscan response: \n${Json.prettyPrint(Json.toJson(upscanResponse))}"
-                        )
-                        val source =
-                          Source.apply[play.api.mvc.MultipartFormData.Part[Source[ByteString, Any]]](
-                            upscanResponse.uploadRequest.fields.toList
-                              .map((k, v) => MultipartFormData.DataPart(k, v.replace("${filename}", fileToUpload.name)))
-                              ::: List(
-                                MultipartFormData.FilePart(
-                                  "file",
-                                  fileToUpload.name,
-                                  Some(fileToUpload.contentType),
-                                  Source.single(ByteString.fromArray(fileToUpload.content))
-                                )
-                              )
-                          )
-                        log.info(
-                          s"[uploadFile] Uploading a ${fileToUpload.name} file to ${upscanResponse.uploadRequest.href}"
-                        )
-                        wsClient
-                          .url(upscanResponse.uploadRequest.href)
-                          .post(source)
-                          .flatMap(response =>
-                            if response.status >= 200 && response.status < 300
-                            then
-                              log.debug(
-                                s"[uploadFile] Uploading succeeded with status ${response.status}"
-                              )
-                              waitForFileVerification(upscanResponse.reference, 15)
-                                .map {
-                                  case Some(uploadedFile) =>
-                                    log.debug(
-                                      s"[uploadFile] Success, returning \n${Json.toJson(uploadedFile)}"
-                                    )
-                                    Created(Json.toJson(uploadedFile))
-
-                                  case None =>
-                                    log.error(
-                                      s"Failure, no verified ${fileToUpload.name} file found for upscan reference ${upscanResponse.reference}."
-                                    )
-                                    BadRequest(
-                                      s"Failure, no verified ${fileToUpload.name} file found for upscan reference ${upscanResponse.reference}."
-                                    )
-                                }
-                            else
-                              log.error(
-                                s"Uploading a ${fileToUpload.name} file to ${upscanResponse.uploadRequest.href} has failed with ${response.status}:\n${response.body}"
-                              )
+                  val objectStorePath = Path
+                    .Directory(journeyContext.hostService.userAgent)
+                    .file(UUID.randomUUID().toString + "_" + fileToUpload.name)
+                  log.debug(s"[uploadFile] Uploading to object-store at ${objectStorePath.asUri}")
+                  objectStoreClient
+                    .putObject(
+                      path = objectStorePath,
+                      content = fileToUpload.content,
+                      contentType = Some(fileToUpload.contentType),
+                      contentMd5 = None
+                    )
+                    .transformWith {
+                      case scala.util.Failure(exception) =>
+                        log.error(s"Failure to store object because of $exception")
+                        exception.printStackTrace()
+                        Future.successful(BadRequest(s"Failure to store object because of $exception"))
+                      case scala.util.Success(objectWithMD5) =>
+                        objectStoreClient
+                          .presignedDownloadUrl(path = objectStorePath)
+                          .transformWith {
+                            case scala.util.Failure(exception) =>
+                              log.error(s"Failure to get pre-signed URL to $objectStorePath because of $exception")
+                              exception.printStackTrace()
                               Future.successful(
-                                BadRequest(
-                                  s"Uploading a ${fileToUpload.name} file to ${upscanResponse.uploadRequest.href} has failed with ${response.status}"
-                                )
+                                BadRequest(s"Failure to get pre-signed URL to $objectStorePath because of $exception")
                               )
-                          )
-                          .recover { e =>
-                            log.error(s"Failure to upload a ${fileToUpload.name} file because of $e")
-                            BadRequest(s"Failure to upload a ${fileToUpload.name} file because of $e")
+                            case scala.util.Success(presignedDownloadUrl) =>
+                              val uploadedFile =
+                                UploadedFile(
+                                  upscanReference = objectStorePath.asUri,
+                                  downloadUrl = presignedDownloadUrl.downloadUrl.toExternalForm(),
+                                  uploadTimestamp = ZonedDateTime.now(),
+                                  checksum = presignedDownloadUrl.contentMd5.value,
+                                  fileName = fileToUpload.name,
+                                  fileMimeType = fileToUpload.contentType,
+                                  fileSize = presignedDownloadUrl.contentLength.toInt
+                                )
+                              Future.successful(
+                                Created(Json.toJson(uploadedFile))
+                              )
                           }
-                      case None =>
-                        log.error("Failure, no Upscan response received.")
-                        Future.successful(BadRequest(s"Failure, no Upscan response received."))
-                    }
-                    .recover { e =>
-                      log.error(s"Failure to initialize Upscan because of $e")
-                      BadRequest(s"Failure to initialize Upscan because of $e")
                     }
                 case None =>
                   log.error(s"Failure, wrong payload:\n${request.body}")
@@ -151,53 +110,4 @@ class UploadFileController @Inject() (
       }
     }
 
-  // POST /upload/callback-from-upscan/journey/:journeyId/:nonce
-  final def callbackFromUpscan(journeyId: JourneyId, nonce: String): Action[JsValue] =
-    Action.async(parse.tolerantJson) { implicit request =>
-      withJsonBody[UpscanNotification] { payload =>
-        implicit val journey: JourneyId = journeyId
-        withJourneyContextWithErrorHandler {
-          Future.successful(NoContent)
-        } { implicit journeyContext =>
-          log.debug(
-            s"[callbackFromUpscan] Callback from upscan: '$journeyId', body: \n${Json.prettyPrint(Json.toJson(payload))}"
-          )
-          fileUploadService.markFileWithUpscanResponse(payload, Nonce(nonce)).map(_ => NoContent)
-        }()
-      }
-    }
-
-  private def waitForFileVerification(upscanReference: String, count: Int)(using
-    JourneyId,
-    ExecutionContext
-  ): Future[Option[UploadedFile]] =
-    if count == 0
-    then Future.failed(new Exception(s"Timeout while waiting for verification of upload $upscanReference"))
-    else {
-      Thread.sleep(1000)
-      fileUploadService.getFiles().flatMap {
-        case Some(uploads) =>
-          uploads.files.find(_.reference == upscanReference).match {
-            case Some(upload: Accepted) =>
-              log.debug(
-                s"[waitForFileVerification] Found accepted file $upscanReference: \n$upload"
-              )
-              Future.successful(UploadedFile.apply(upload))
-
-            case Some(error: ErroredFileUpload) =>
-              log.warn(
-                s"[waitForFileVerification] Found rejected file $upscanReference: \n$error"
-              )
-              Future.successful(None)
-
-            case _ =>
-              log.debug(
-                s"[waitForFileVerification] File $upscanReference not verified yet, remaining attempts ${count - 1}"
-              )
-              waitForFileVerification(upscanReference, count - 1)
-          }
-
-        case None => waitForFileVerification(upscanReference, count - 1)
-      }
-    }
 }
