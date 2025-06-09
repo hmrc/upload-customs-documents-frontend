@@ -13,12 +13,28 @@ import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.models.{FileUploadSessionConfig, Nonce}
+import uk.gov.hmrc.objectstore.client.play.test.stub.StubPlayObjectStoreClient
+import uk.gov.hmrc.objectstore.client.RetentionPeriod
+import uk.gov.hmrc.objectstore.client.config.ObjectStoreClientConfig
+import java.util.UUID
+import scala.concurrent.ExecutionContext
+import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
+import scala.concurrent.ExecutionContext.Implicits.global
 
 abstract class BaseISpec
     extends UnitSpec with WireMockSupport with AuthStubs with DataStreamStubs with MetricsTestSupport {
 
   import scala.concurrent.duration._
   override implicit val defaultTimeout: FiniteDuration = 5.seconds
+
+  lazy val objectStoreClientStub = {
+    val baseUrl = s"http://$wireMockHost:$wireMockPort"
+    val owner   = s"owner-${UUID.randomUUID().toString}"
+    val token   = s"token-${UUID.randomUUID().toString}"
+    val config  = ObjectStoreClientConfig(baseUrl, owner, token, RetentionPeriod.OneWeek)
+
+    new StubPlayObjectStoreClient(config)
+  }
 
   protected def appBuilder: GuiceApplicationBuilder =
     new GuiceApplicationBuilder()
@@ -33,6 +49,7 @@ abstract class BaseISpec
         "features.workingHours.start"          -> 0,
         "features.workingHours.end"            -> 24
       )
+      .bindings(bind(classOf[PlayObjectStoreClient]).to(objectStoreClientStub))
       .overrides(
         bind[AppConfig]
           .toInstance(
