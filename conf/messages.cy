@@ -140,7 +140,7 @@ error.file-upload.invalid-type=Mae’n rhaid i’r ffeil dan sylw fod ar ffurf {
 error.file-upload.quarantine=Mae feirws yn y ffeil dan sylw – uwchlwythwch un wahanol
 error.file-upload.unknown=Nid oedd modd uwchlwytho’r ffeil dan sylw
 error.file-upload.remove.try-again=Nid oedd modd tynnu’r ffeil dan sylw – rhowch gynnig arall arni
-error.file-upload.duplicate=Mae’r ffeil dan sylw eisoes wedi’i uwchlwytho
+error.file-upload.duplicate=Mae’r ffeil dan sylw eisoes wedi’i huwchlwytho
 error.file-upload.try-again=Nid oedd modd uwchlwytho’r ffeil dan sylw  - rhowch gynnig arall arni
 error.choice.required=Dewiswch ‘Iawn’ os hoffech uwchlwytho dogfen arall
 
