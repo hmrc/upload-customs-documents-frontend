@@ -654,12 +654,8 @@ export class MultiFileUpload extends Component {
 
       case 'FAILED':
       case 'REJECTED':
-        this.handleFileStatusFailed(fileInput, error);
-        this.uploadNext();
-        break;
-
       case 'DUPLICATE':
-        this.handleFileStatusDuplicate(fileInput, error);
+        this.handleFileStatusFailed(fileInput, error);
         this.uploadNext();
         break;
 
