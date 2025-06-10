@@ -222,6 +222,10 @@
   margin-bottom: 0;
 }
 
+.multi-file-upload__item.govuk-form-group--error {
+  padding-left: 15px!important;
+}
+
 .multi-file-upload__overall-status {
   display: flex;
   align-items: center;

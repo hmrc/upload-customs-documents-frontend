@@ -204,7 +204,15 @@ export class MultiFileUpload extends Component {
     this.updateFormStatusVisibility(this.isBusy());
 
     if (this.isInProgress()) {
-      this.addNotification(this.messages.stillTransferring);
+      const waitingFiles = this.container.querySelectorAll(`.${this.classes.waiting}`);
+      const uploadingFiles = this.container.querySelectorAll(`.${this.classes.uploading}`);
+      uploadingFiles.forEach(element => {
+        this.handleFileStatusStillTransferred(element, this.messages.stillTransferring)
+      })
+      waitingFiles.forEach(element => {
+        this.handleFileStatusStillTransferred(element, this.messages.stillTransferring)
+      })
+      this.errorManager.focusSummary();
       e.preventDefault();
       return;
     }
@@ -566,8 +574,10 @@ export class MultiFileUpload extends Component {
   private prepareFormData(fileInput: HTMLInputElement, data): FormData {
     const formData = new FormData();
 
-    for (const [key, value] of Object.entries(data.fields)) {
-      formData.append(key, value as string);
+    if(data) {
+      for (const [key, value] of Object.entries(data.fields)) {
+        formData.append(key, value as string);
+      }
     }
 
     if(this.draggedFiles && this.draggedFiles[fileInput.id]) {
@@ -645,6 +655,8 @@ export class MultiFileUpload extends Component {
     const fileInput = this.getFileByReference(fileRef);
     const data = this.uploadData[fileInput.id];
     const error = response['errorMessage'] || this.messages.genericError;
+    
+    this.errorManager.removeError(fileInput.id);
 
     switch (response['fileStatus']) {
       case 'ACCEPTED':
@@ -721,6 +733,13 @@ export class MultiFileUpload extends Component {
     this.updateFormStatusVisibility();
   }
 
+  private handleFileStatusStillTransferred(element: Element, errorMessage: string) {
+    const fileInput = this.getFileInputFromItem(element as HTMLElement)
+    this.errorManager.addError(fileInput.id, errorMessage, this.getFileName(fileInput));
+    this.updateFormStatusVisibility();
+    this.updateButtonVisibility();
+  }
+
   private updateFileNumbers(): void {
     let fileNumber = this.getItems.length;
 
@@ -742,10 +761,7 @@ export class MultiFileUpload extends Component {
   }
 
   private updateFormStatusVisibility(forceState = undefined) {
-    if (forceState !== undefined) {
-      toggleElement(this.formStatus, forceState);
-    }
-    else if (!this.isBusy()) {
+    if (!this.isBusy()) {
       toggleElement(this.formStatus, false);
     }
   }
