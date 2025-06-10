@@ -567,7 +567,10 @@ export class MultiFileUpload extends Component {
     const formData = new FormData();
 
     for (const [key, value] of Object.entries(data.fields)) {
-      formData.append(key, value as string);
+      if(key === 'x-amz-meta-original-filename')
+        formData.append(key, this.getFileName(file));
+      else 
+        formData.append(key, value as string);
     }
 
     if(this.draggedFiles && this.draggedFiles[fileInput.id]) {
