@@ -31,6 +31,7 @@ import java.time.ZonedDateTime
 import java.util.UUID
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
+import java.security.MessageDigest
 
 @Singleton
 class UploadFileController @Inject() (
@@ -91,7 +92,7 @@ class UploadFileController @Inject() (
                                   upscanReference = objectStorePath.asUri,
                                   downloadUrl = presignedDownloadUrl.downloadUrl.toExternalForm(),
                                   uploadTimestamp = ZonedDateTime.now(),
-                                  checksum = presignedDownloadUrl.contentMd5.value,
+                                  checksum = computeSHA256Checksum(fileToUpload.content),
                                   fileName = fileToUpload.name,
                                   fileMimeType = fileToUpload.contentType,
                                   fileSize = presignedDownloadUrl.contentLength.toInt
@@ -109,5 +110,12 @@ class UploadFileController @Inject() (
         }
       }
     }
+
+  def computeSHA256Checksum(bytes: Array[Byte]): String =
+    MessageDigest
+      .getInstance("SHA-256")
+      .digest(bytes)
+      .map("%02x".format(_))
+      .mkString
 
 }
