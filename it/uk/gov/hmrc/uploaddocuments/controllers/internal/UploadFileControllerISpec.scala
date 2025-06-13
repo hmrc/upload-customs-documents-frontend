@@ -72,90 +72,11 @@ class UploadFileControllerISpec
         (responseBody \ "downloadUrl").asOpt[String] shouldBe Some("http://foo.bar/test-123.txt")
         (responseBody \ "fileName").asOpt[String] shouldBe Some("b")
         (responseBody \ "fileSize").asOpt[Int] shouldBe Some(363)
-        (responseBody \ "checksum").asOpt[String] shouldBe Some("fooMD5")
+        (responseBody \ "checksum").asOpt[String] shouldBe Some(
+          "334d016f755cd6dc58c53a86e183882f8ec14f52fb05345887c8a5edd42c87b7"
+        )
 
       }
-
-      //   "return 400 when file upload fails" in {
-      //     setContext()
-      //     setFileUploads()
-
-      //     givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-      //     val callbackUrl =
-      //       appConfig.baseInternalCallbackUrl + s"/internal/upload/callback-from-upscan/journey/$getJourneyId"
-
-      //     val upscanUrl = stubForFileUpload(400, "test.txt")
-
-      //     givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent, upscanUrl)
-
-      //     val uploadCall = backchannelRequest("/upload")
-      //       .post(Json.toJson(FileToUpload("a", "b", "c", "Hello!".getBytes(StandardCharsets.UTF_8))))
-
-      //     val result = await(uploadCall)
-      //     result.status shouldBe 400
-      //   }
-
-      //   "return 400 when upscan initialization fails" in {
-      //     setContext()
-      //     setFileUploads()
-
-      //     givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-      //     val callbackUrl =
-      //       appConfig.baseInternalCallbackUrl + s"/internal/upload/callback-from-upscan/journey/$getJourneyId"
-
-      //     givenUpscanInitiateFails(callbackUrl, hostUserAgent)
-
-      //     val uploadCall = backchannelRequest("/upload")
-      //       .post(Json.toJson(FileToUpload("a", "b", "c", "Hello!".getBytes(StandardCharsets.UTF_8))))
-
-      //     val result = await(uploadCall)
-      //     result.status shouldBe 400
-      //   }
-
-      //   "return 404 when file verification rejected" in {
-      //     setContext()
-      //     setFileUploads()
-
-      //     givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-      //     val callbackUrl =
-      //       appConfig.baseInternalCallbackUrl + s"/internal/upload/callback-from-upscan/journey/$getJourneyId"
-
-      //     val upscanUrl = stubForFileUpload(201, "test.txt")
-
-      //     givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent, upscanUrl)
-
-      //     val uploadCall = backchannelRequest("/upload")
-      //       .post(Json.toJson(FileToUpload("a", "b", "c", "Hello!".getBytes(StandardCharsets.UTF_8))))
-
-      //     Thread.sleep(2000)
-
-      //     val nonce = getFileUploads()
-      //       .flatMap(_.files.headOption)
-      //       .map(_.nonce)
-      //       .getOrElse(fail("Cannot find posted file"))
-
-      //     await(
-      //       backchannelRequestWithoutSessionId(
-      //         s"/upload/callback-from-upscan/journey/$getJourneyId/$nonce"
-      //       ).withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
-      //         .post(
-      //           Json.obj(
-      //             "reference"  -> JsString("11370e18-6e24-453e-b45a-76d3e32ea33d"),
-      //             "fileStatus" -> JsString("FAILED"),
-      //             "failureDetails" -> Json.obj(
-      //               "failureReason" -> JsString("QUARANTINE"),
-      //               "message"       -> JsString("e.g. This file has a virus")
-      //             )
-      //           )
-      //         )
-      //     )
-
-      //     val result = await(uploadCall)
-      //     result.status shouldBe 400
-      //   }
 
     }
   }
