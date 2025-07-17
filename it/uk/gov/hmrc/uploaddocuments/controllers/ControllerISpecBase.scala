@@ -45,7 +45,11 @@ trait ControllerISpecBase extends ServerISpec {
       wsClient
         .url(s"$baseUrl$path")
         .withCookies(
-          DefaultWSCookie(sessionCookie.name, sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value)
+          DefaultWSCookie(
+            name = sessionCookie.name,
+            value = sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value,
+            secure = true
+          )
         )
     }
 
@@ -69,9 +73,10 @@ trait ControllerISpecBase extends ServerISpec {
       wsClient
         .url(s"$baseUrl$path")
         .withCookies(
-          cookies.map(c => DefaultWSCookie(c._1, c._2)) :+ DefaultWSCookie(
-            sessionCookie.name,
-            sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value
+          cookies.map(c => DefaultWSCookie(name = c._1, value = c._2, secure = true)) :+ DefaultWSCookie(
+            name = sessionCookie.name,
+            value = sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value,
+            secure = true
           ): _*
         )
     }

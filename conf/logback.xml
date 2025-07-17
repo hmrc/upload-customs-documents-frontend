@@ -1,30 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration debug="false">
-   <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
 
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>logs/upload-customs-documents-frontend.log</file>
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>[%highlight(%.-4level)] %message %replace(exception=[%xException]){'^exception=\[\]$',''} %date{ISO8601} %n</pattern>
+            <pattern>[%highlight(%.-4level)] %message
+                %replace(exception=[%xException]){'^exception=\[\]$',''} %date{ISO8601} %n</pattern>
         </encoder>
     </appender>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>[%highlight(%.-4level)] %message %replace(exception=[%xException]){'^exception=\[\]$',''} %date{ISO8601} %n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="STDOUT_IGNORE_NETTY" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
-            <pattern>[%highlight(%.-4level)] %message %replace(exception=[%xException]){'^exception=\[\]$',''} %date{ISO8601} %n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="ACCESS_LOG_FILE" class="ch.qos.logback.core.FileAppender">
-        <file>logs/access.log</file>
-        <encoder>
-            <pattern>%message%n</pattern>
+            <pattern>[%highlight(%.-4level)] %message
+                %replace(exception=[%xException]){'^exception=\[\]$',''} %date{ISO8601} %n</pattern>
         </encoder>
     </appender>
 
@@ -35,59 +24,51 @@
         </encoder>
     </appender>
 
+    <logger name="application" level="DEBUG" />
 
-    <logger name="accesslog" level="INFO" additivity="false">
-        <appender-ref ref="ACCESS_LOG_FILE" />
-    </logger>
+    <logger name="uk.gov" level="INFO" />
 
-    <logger name="com.ning.http.client.providers.netty" additivity="false">
-        <appender-ref ref="STDOUT_IGNORE_NETTY" />
-    </logger>
+    <logger name="uk.gov.hmrc.play.bootstrap" level="ERROR" />
 
-    <logger name="application" level="DEBUG"/>
+    <logger name="uk.gov.hmrc.http" level="ERROR" />
 
-    <logger name="uk.gov" level="INFO"/>
+    <logger name="play" level="WARN" />
 
-    <logger name="uk.gov.hmrc.play.bootstrap" level="ERROR"/>
+    <logger name="play.api.internal" level="ERROR" />
 
-    <logger name="uk.gov.hmrc.http" level="ERROR"/>
+    <logger name="play.core" level="ERROR" />
 
-    <logger name="play" level="WARN"/>
+    <logger name="uk.gov.hmrc.audit" level="ERROR" />
 
-    <logger name="play.api.internal" level="ERROR"/>
+    <logger name="uk.gov.hmrc.uploaddocuments" level="DEBUG" />
 
-    <logger name="play.core" level="ERROR"/>
+    <logger name="uk.gov.hmrc.uploaddocuments.FileUploadService" level="INFO" />
 
-    <logger name="uk.gov.hmrc.audit" level="ERROR"/>
+    <logger name="uk.gov.hmrc.uploaddocuments.controllers.internal.UploadFileController"
+        level="DEBUG" />
 
-    <logger name="uk.gov.hmrc.uploaddocuments" level="DEBUG"/>
+    <logger name="uk.gov.hmrc.uploaddocuments.services" level="DEBUG" />
 
-    <logger name="uk.gov.hmrc.uploaddocuments.FileUploadService" level="INFO"/>
+    <logger name="uk.gov.hmrc.uploaddocuments.repository" level="DEBUG" />
 
-    <logger name="uk.gov.hmrc.uploaddocuments.controllers.internal.UploadFileController" level="DEBUG"/>
+    <logger name="akka" level="ERROR" />
 
-    <logger name="uk.gov.hmrc.uploaddocuments.services" level="DEBUG"/>
+    <logger name="reactivemongo" level="ERROR" />
 
-    <logger name="uk.gov.hmrc.uploaddocuments.repository" level="DEBUG"/>
+    <logger name="uk.gov.hmrc.mongo.play" level="ERROR" />
 
-    <logger name="akka" level="ERROR"/>
+    <logger name="org.asynchttpclient" level="ERROR" />
 
-    <logger name="reactivemongo" level="ERROR"/>
+    <logger name="org.eclipse.jetty" level="ERROR" />
 
-    <logger name="uk.gov.hmrc.mongo.play" level="ERROR"/>
-
-    <logger name="org.asynchttpclient" level="ERROR"/>
-
-    <logger name="org.eclipse.jetty" level="ERROR"/>
-
-    <logger name="com.google.inject" level="ERROR"/>
+    <logger name="com.google.inject" level="ERROR" />
 
     <logger name="connector" level="ERROR">
-        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="STDOUT" />
     </logger>
 
     <root level="ERROR">
-        <appender-ref ref="FILE"/>
-        <appender-ref ref="STDOUT"/>
+        <appender-ref ref="FILE" />
+        <appender-ref ref="STDOUT" />
     </root>
 </configuration>
