@@ -133,7 +133,7 @@ class FileVerificationControllerISpec extends ControllerISpecBase {
         val result3 =
           await(request("/file-verification/f029444f-415c-4dec-9cf2-36774ec63ab8/status").get())
         result3.status shouldBe 200
-        result3.body shouldBe """{"reference":"f029444f-415c-4dec-9cf2-36774ec63ab8","fileMimeType":"application/pdf","fileName":"test.pdf","fileStatus":"ACCEPTED","fileSize":4567890,"previewUrl":"/upload-customs-documents/preview/f029444f-415c-4dec-9cf2-36774ec63ab8/test.pdf"}"""
+        result3.body shouldBe """{"reference":"f029444f-415c-4dec-9cf2-36774ec63ab8","fileStatus":"ACCEPTED","fileMimeType":"application/pdf","fileName":"test.pdf","fileSize":4567890,"previewUrl":"/upload-customs-documents/preview/f029444f-415c-4dec-9cf2-36774ec63ab8/test.pdf"}"""
 
         val result4 =
           await(request("/file-verification/4b1e15a4-4152-4328-9448-4924d9aee6e2/status").get())
