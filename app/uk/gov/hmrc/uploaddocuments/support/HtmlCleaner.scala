@@ -25,6 +25,7 @@ object HtmlCleaner {
     .addTags(
       "div",
       "p",
+      "h2",
       "span",
       "abbr",
       "br",
