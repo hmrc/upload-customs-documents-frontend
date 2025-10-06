@@ -44,12 +44,17 @@ class InitiateUpscanService @Inject() (
     val nonce           = randomNonce
     val initiateRequest = upscanRequestWhenUploadingMultipleFiles(nonce, journeyContext.config.maximumFileSizeBytes)
 
-    fileUploadService.withFiles[Option[UpscanInitiateResponse]](Future.successful(None)) { files =>
-      for {
-        upscanResponse <- upscanInitiateConnector.initiate(journeyContext.hostService.userAgent, initiateRequest)
-        _              <- fileUploadService.putFiles(files + FileUpload(nonce, Some(uploadId))(upscanResponse))
-      } yield Some(upscanResponse)
-    }
+    fileUploadService
+      .withFiles[Option[UpscanInitiateResponse]](Future.successful(None)) { files =>
+        for {
+          upscanResponse <- upscanInitiateConnector.initiate(journeyContext.hostService.userAgent, initiateRequest)
+          _              <- fileUploadService.putFiles(files + FileUpload(nonce, Some(uploadId))(upscanResponse))
+        } yield Some(upscanResponse)
+      }
+      .recoverWith { case e: Throwable =>
+        Logger.error(s"[initiateNextMultiFileUpload] Failed to initiate upscan: ${e.getMessage}")
+        Future.successful(None)
+      }
   }
 
   def initiateNextSingleFileUpload()(implicit
