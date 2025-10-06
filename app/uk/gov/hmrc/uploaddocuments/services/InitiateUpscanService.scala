@@ -69,11 +69,15 @@ class InitiateUpscanService @Inject() (
     fileUploadService.withFiles[Option[(UpscanInitiateResponse, FileUploads, Option[FileUploadError])]](
       Future.successful(None)
     ) { files =>
-      for {
+      (for {
         upscanResponse <- upscanInitiateConnector.initiate(journeyContext.hostService.userAgent, initiateRequest)
         updatedFiles = files.onlyAccepted + FileUpload(nonce, None)(upscanResponse)
         _ <- fileUploadService.putFiles(updatedFiles)
-      } yield Some((upscanResponse, updatedFiles, files.tofileUploadErrors.headOption))
+      } yield Some((upscanResponse, updatedFiles, files.tofileUploadErrors.headOption))).recoverWith {
+        case e: Throwable =>
+          Logger.error(s"[initiateNextSingleFileUpload] Failed to initiate upscan: ${e.getMessage}")
+          Future.successful(None)
+      }
     }
   }
 }
