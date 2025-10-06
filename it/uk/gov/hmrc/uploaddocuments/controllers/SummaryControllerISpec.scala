@@ -262,6 +262,20 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
         result.status shouldBe 200
         result.body shouldBe expected
       }
+
+      "render page again when bad input" in {
+        val context     = FileUploadContext(fileUploadSessionConfig)
+        val fileUploads = nFileUploads(FILES_LIMIT)
+
+        setContext(context)
+        setFileUploads(fileUploads)
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result = await(request("/summary").post(Map("choice" -> "foo")))
+
+        result.status shouldBe 400
+      }
     }
   }
 }
