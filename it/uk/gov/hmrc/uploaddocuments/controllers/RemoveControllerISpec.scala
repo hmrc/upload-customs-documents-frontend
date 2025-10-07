@@ -7,8 +7,9 @@ import play.api.libs.ws.DefaultBodyReadables.readableAsString
 import play.api.libs.ws.writeableOf_String
 
 import java.time.ZonedDateTime
+import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
 
-class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
+class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs with UpscanInitiateStubs {
 
   val fileUploadNotDeleted: FileUpload.Accepted = FileUpload.Accepted(
     Nonce.Any,
@@ -21,6 +22,7 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
     "image/png",
     4567890
   )
+
   val fileUploadToBeDeleted: FileUpload.Accepted = FileUpload.Accepted(
     Nonce.Any,
     Timestamp.Any,
@@ -37,7 +39,33 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
 
     "GET /uploaded/:reference/remove" should {
 
-      "remove file from upload list by reference" in {
+      "remove file from upload list by reference if only one file uploaded" in {
+
+        givenResultPushEndpoint(
+          "/result-post-url",
+          Payload(
+            Request(FileUploadContext(fileUploadSessionConfig), FileUploads(files = Seq.empty)),
+            "http://base.external.callback"
+          ),
+          204
+        )
+
+        setContext()
+        setFileUploads(FileUploads(files = Seq(fileUploadToBeDeleted)))
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+        givenDummyStartUrl()
+
+        val result = await(request(s"/uploaded/${fileUploadToBeDeleted.reference}/remove").get())
+
+        result.status shouldBe 200
+        result.body should include("Dummy Start Page")
+
+        getFileUploads() shouldBe Some(FileUploads(files = Seq.empty))
+
+      }
+
+      "remove file from upload list by reference if more files uploaded" in {
 
         givenResultPushEndpoint(
           "/result-post-url",
@@ -62,6 +90,27 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
         getFileUploads() shouldBe Some(FileUploads(files = Seq(fileUploadNotDeleted)))
 
         eventually(verifyResultPushHasHappened("/result-post-url", 1))
+      }
+
+      "respond 500 if file does not exist" in {
+
+        givenResultPushEndpoint(
+          "/result-post-url",
+          Payload(
+            Request(FileUploadContext(fileUploadSessionConfig), FileUploads(files = Seq(fileUploadNotDeleted))),
+            "http://base.external.callback"
+          ),
+          204
+        )
+
+        setContext()
+        setFileUploads(FileUploads(files = Seq(fileUploadToBeDeleted, fileUploadNotDeleted)))
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result = await(request(s"/uploaded/28c4096b-1e34-4329-8a4c-a72176b64e0f/remove").get())
+
+        result.status shouldBe 500
       }
     }
 
@@ -90,6 +139,27 @@ class RemoveControllerISpec extends ControllerISpecBase with ExternalApiStubs {
         getFileUploads() shouldBe Some(FileUploads(files = Seq(fileUploadNotDeleted)))
 
         eventually(verifyResultPushHasHappened("/result-post-url", 1))
+      }
+
+      "return 204 even if file does not exist" in {
+
+        givenResultPushEndpoint(
+          "/result-post-url",
+          Payload(
+            Request(FileUploadContext(fileUploadSessionConfig), FileUploads(files = Seq(fileUploadNotDeleted))),
+            "http://base.external.callback"
+          ),
+          204
+        )
+
+        setContext()
+        setFileUploads(FileUploads(files = Seq(fileUploadToBeDeleted, fileUploadNotDeleted)))
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result = await(request(s"/uploaded/564eb197-1da8-45a2-a63b-9a9c06a218fe/remove").post(""))
+
+        result.status shouldBe 204
       }
     }
   }
