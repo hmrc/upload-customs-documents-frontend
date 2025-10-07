@@ -58,12 +58,6 @@ trait ControllerISpecBase extends ServerISpec {
       wsClient
         .url(s"$backchannelBaseUrl$path")
         .withHttpHeaders(HeaderNames.xSessionId -> hc.sessionId.map(_.value).getOrElse(""))
-      // .withCookies(
-      //   DefaultWSCookie(
-      //     sessionCookie.name,
-      //     sessionCookieCrypto.crypto.encrypt(PlainText(sessionCookie.value)).value
-      //   )
-      // )
     }
 
   final def requestWithCookies(path: String, cookies: (String, String)*)(implicit

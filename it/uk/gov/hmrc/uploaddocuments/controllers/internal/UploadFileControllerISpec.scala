@@ -10,6 +10,8 @@ import java.nio.charset.StandardCharsets
 import java.time.ZonedDateTime
 import play.api.libs.json.JsValue
 import play.api.libs.ws.readableAsJson
+import uk.gov.hmrc.http.HeaderCarrier
+import uk.gov.hmrc.http.SessionId
 
 class UploadFileControllerISpec
     extends ControllerISpecBase with UpscanInitiateStubs with ExternalApiStubs with ObjectStoreStubs {
@@ -56,6 +58,21 @@ class UploadFileControllerISpec
         result.status shouldBe 400
       }
 
+      "return 400 if session does not exist" in {
+        setContext()
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+        val result = await(
+          backchannelRequest("/upload")(using
+            HeaderCarrier(sessionId = Some(SessionId("eddb6ee7-c087-4945-a27f-bc9e50ab817b")))
+          )
+            .post(
+              Json.toJson(FileToUpload("a", "b", "c", "Hello!".getBytes(StandardCharsets.UTF_8)))
+            )
+        )
+        result.status shouldBe 400
+      }
+
       "return 201 with uploaded file" in {
         setContext()
         setFileUploads()
@@ -75,6 +92,21 @@ class UploadFileControllerISpec
         (responseBody \ "checksum").asOpt[String] shouldBe Some(
           "334d016f755cd6dc58c53a86e183882f8ec14f52fb05345887c8a5edd42c87b7"
         )
+
+      }
+
+      "return 400 if cannot store object" in {
+        setContext()
+        setFileUploads()
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+        givenObjectStorePresignedUrlFails(489)
+
+        val uploadCall = backchannelRequest("/upload")
+          .post(Json.toJson(FileToUpload("a", "b", "c", "Hello!".getBytes(StandardCharsets.UTF_8))))
+
+        val result = await(uploadCall)
+        result.status shouldBe 400
 
       }
 

@@ -40,6 +40,39 @@ class FilePostedControllerISpec extends ControllerISpecBase {
           )
         )
       }
+
+      "return 400 Bad Request if params are invalid" in {
+
+        setContext()
+        setFileUploads(
+          FileUploads(files =
+            Seq(
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
+              FileUpload.Posted(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
+            )
+          )
+        )
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result =
+          await(
+            requestWithoutSessionId(
+              s"/journey/$getJourneyId/file-posted?foo=11370e18-6e24-453e-b45a-76d3e32ea33d&bar=foo"
+            ).get()
+          )
+
+        result.status shouldBe 400
+
+        getFileUploads() shouldBe Some(
+          FileUploads(files =
+            Seq(
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
+              FileUpload.Posted(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
+            )
+          )
+        )
+      }
     }
   }
 }
