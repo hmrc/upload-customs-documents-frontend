@@ -33,10 +33,6 @@ object FileUploadError extends SealedTraitFormats[FileUploadError] {
     case failed: Failed     => FileVerificationFailed(failed.details)
     case rejected: Rejected => FileTransmissionFailed(rejected.details)
   }
-  def apply(file: FileUpload): Option[FileUploadError] = file match {
-    case error: ErroredFileUpload => Some(FileUploadError(error))
-    case _                        => None
-  }
 
   override val formats = Set(
     Case[FileTransmissionFailed](Json.format[FileTransmissionFailed]),

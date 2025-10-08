@@ -85,4 +85,11 @@ trait UpscanInitiateStubs {
         .willReturn(aResponse().withStatus(400))
     )
 
+  def givenDummyStartUrl(): StubMapping =
+    stubFor(
+      get(urlEqualTo("/dummy-start-url")).willReturn(
+        aResponse().withStatus(200).withBody("""<html><body><h1>Dummy Start Page</h1></body></html>""")
+      )
+    )
+
 }

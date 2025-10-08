@@ -93,6 +93,43 @@ class FileRejectedControllerISpec extends ControllerISpecBase with UpscanInitiat
           )
         )
       }
+
+      "show an error page if the request parameters are invalid" in {
+
+        setContext()
+        setFileUploads(
+          FileUploads(files =
+            Seq(
+              FileUpload.Accepted(
+                Nonce.Any,
+                Timestamp.Any,
+                "f029444f-415c-4dec-9cf2-36774ec63ab8",
+                "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
+                ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+                "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+                "test.pdf",
+                "application/pdf",
+                4567890
+              ),
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
+            )
+          )
+        )
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+        val callbackUrl =
+          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+        val result = await(
+          request(
+            "/file-rejected?zoo=2b72fe99-8adf-4edb-865e-622ae710f77c&foo=EntityTooLarge&bar=Entity+Too+Large"
+          ).get()
+        )
+
+        result.status shouldBe Status.INTERNAL_SERVER_ERROR
+
+      }
     }
 
     "POST /file-rejected" should {
@@ -135,6 +172,34 @@ class FileRejectedControllerISpec extends ControllerISpecBase with UpscanInitiat
             )
           )
         )
+      }
+
+      "return 500 if parameters are invalid" in {
+
+        setContext()
+        setFileUploads(
+          FileUploads(files =
+            Seq(
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
+            )
+          )
+        )
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result = await(
+          request("/file-rejected").post(
+            Json.obj(
+              fields = "zoo" -> "2b72fe99-8adf-4edb-865e-622ae710f77c",
+              "foo"    -> "EntityTooLarge",
+              "bar" -> "Entity Too Large"
+            )
+          )
+        )
+
+        result.status shouldBe 400
+
       }
     }
 

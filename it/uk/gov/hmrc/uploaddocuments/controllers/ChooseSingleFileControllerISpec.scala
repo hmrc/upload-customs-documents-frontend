@@ -134,6 +134,42 @@ class ChooseSingleFileControllerISpec extends ControllerISpecBase with UpscanIni
             )
           )
         }
+
+        "show the upload next file page and add initiate request and fail if upscan initiate fails" in {
+
+          setContext()
+          setFileUploads(
+            FileUploads(
+              Seq(
+                FileUpload.Accepted(
+                  Nonce.Any,
+                  Timestamp.Any,
+                  "f029444f-415c-4dec-9cf2-36774ec63ab8",
+                  "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
+                  ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+                  "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+                  "test.pdf",
+                  "application/pdf",
+                  4567890
+                )
+              )
+            )
+          )
+
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+          val callbackUrl =
+            appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+
+          givenUpscanInitiateFails(callbackUrl, hostUserAgent)
+          givenDummyStartUrl()
+
+          val result = await(request("/choose-file").get())
+
+          result.status shouldBe 200
+          result.body should include("Dummy Start Page")
+        }
+
       }
 
       "The maximum number of files has been uploaded" must {

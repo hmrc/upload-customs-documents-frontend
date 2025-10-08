@@ -46,6 +46,39 @@ class CallbackFromUpscanControllerISpec extends ControllerISpecBase with Externa
         }
       }
 
+      "return 400 if journey id not found" in {
+
+        val nonce   = Nonce.random
+        val context = FileUploadContext(fileUploadSessionConfig)
+        val fileUploads = FileUploads(
+          files = Seq(
+            FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
+            FileUpload.Posted(nonce, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
+          )
+        )
+
+        setContext(context)
+        setFileUploads(fileUploads)
+
+        val result =
+          await(
+            backchannelRequestWithoutSessionId(
+              s"/callback-from-upscan/journey/8f34d7cd-4263-4bcd-8b6c-62160040479e/$nonce"
+            )
+              .withHttpHeaders(HeaderNames.CONTENT_TYPE -> MimeTypes.JSON)
+              .post(Json.obj("reference" -> JsString("2b72fe99-8adf-4edb-865e-622ae710f77c")))
+          )
+
+        result.status shouldBe 400
+
+        getContext() shouldBe Some(context)
+        getFileUploads() shouldBe Some(fileUploads)
+
+        eventually {
+          verifyResultPushHasNotHappened("/continue")
+        }
+      }
+
       "modify file status to Accepted and return 204" in {
 
         val nonce = Nonce.random

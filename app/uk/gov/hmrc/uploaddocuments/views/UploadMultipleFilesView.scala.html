@@ -20,6 +20,7 @@
 @import uk.gov.hmrc.uploaddocuments.views.html.partials.multiFileUpload
 @import uk.gov.hmrc.uploaddocuments.views.html.partials.errorManager
 @import views.html.helper.CSRF
+@import play.twirl.api.HtmlFormat
 
 @this(
 govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.GovukLayoutWrapper,
@@ -144,7 +145,9 @@ appConfig: AppConfig
 
     <dl class="multi-file-upload__item-list govuk-!-margin-bottom-5"></dl>
 
-    @CSRF.formField
+    @play.filters.csrf.CSRF.getToken.map(token => {
+        <input type="hidden" name="@token.name" value="@{HtmlFormat.escape(token.value)}"/>
+      })
 
     <button type="button" class="multi-file-upload__add-another govuk-button govuk-button--secondary hidden">@serviceContent.addAnotherDocumentButtonText.getOrElse(messages("view.upload-multiple-files.addAnother"))</button>
 

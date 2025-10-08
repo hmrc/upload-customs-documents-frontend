@@ -36,8 +36,8 @@ class SessionController @Inject() (controllerComponents: MessagesControllerCompo
     Future.successful(
       continueUrl
         .flatMap(url =>
-          if (UrlValidator.isReleativeUrl(url) || UrlValidator.isValidFrontendUrl(url))
-            Some(Redirect(url))
+          if UrlValidator.isReleativeUrl(url) || UrlValidator.isValidFrontendUrl(url)
+          then Some(Redirect(url))
           else None
         )
         .getOrElse(Ok("{}"))

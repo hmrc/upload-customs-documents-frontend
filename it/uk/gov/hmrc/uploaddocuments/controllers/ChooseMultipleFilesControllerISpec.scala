@@ -28,6 +28,22 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
           result.body should include(htmlEscapedMessage("view.upload-multiple-files.heading"))
         }
 
+        "show the upload multiple files page when cookie set and yes/no question is enabled" in {
+
+          setContext(
+            FileUploadContext(fileUploadSessionConfig.copy(features = Features(showYesNoQuestionBeforeContinue = true)))
+          )
+          setFileUploads()
+
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+          val result = await(requestWithCookies("/choose-files", JsEnabled.COOKIE_JSENABLED -> "true").get())
+
+          result.status shouldBe 200
+          result.body should include(htmlEscapedPageTitle("view.upload-multiple-files.title"))
+          result.body should include(htmlEscapedMessage("view.upload-multiple-files.heading"))
+        }
+
         "show the single files page when cookie set but the feature is turned off" in {
 
           val journeyContext = fileUploadSessionConfig.copy(features = Features(showUploadMultiple = false))
@@ -528,6 +544,53 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
 
         result.status shouldBe 200
         result.body shouldBe expected
+      }
+
+      "render error page if answer is neither yes nor no" in {
+
+        val context = FileUploadContext(fileUploadSessionConfig)
+
+        setContext(context)
+        setFileUploads(nFileUploads(1))
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result =
+          await(
+            requestWithCookies("/choose-files")
+              .post(
+                Map(
+                  "choice"    -> "foo",
+                  "csrfToken" -> "6d1b707b96b03cd3ecc5440f1cd670a5f9aeb306-1759117895205-54e2b6cf40e0a2b941904b3e"
+                )
+              )
+          )
+
+        result.status shouldBe 400
+        result.body should include(htmlEscapedPageTitle("view.upload-multiple-files.title"))
+        result.body should include(htmlEscapedMessage("view.upload-multiple-files.heading"))
+      }
+
+      "render page again if missing continue url" in {
+
+        val context =
+          FileUploadContext(fileUploadSessionConfig.copy(backlinkUrl = None, continueAfterYesAnswerUrl = None))
+
+        setContext(context)
+        setFileUploads(nFileUploads(1))
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result =
+          await(
+            requestWithCookies("/choose-files").post(
+              Map("choice" -> "yes")
+            )
+          )
+
+        result.status shouldBe 200
+        result.body should include(htmlEscapedPageTitle("view.upload-multiple-files.title"))
+        result.body should include(htmlEscapedMessage("view.upload-multiple-files.heading"))
       }
     }
   }

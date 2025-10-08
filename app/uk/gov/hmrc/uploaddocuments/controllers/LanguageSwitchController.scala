@@ -22,15 +22,17 @@ import play.api.mvc._
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
-class LanguageSwitchController @Inject()(appConfig: AppConfig,
-                                         override implicit val messagesApi: MessagesApi,
-                                         controllerComponents: MessagesControllerComponents) extends FrontendController(controllerComponents) with I18nSupport {
+class LanguageSwitchController @Inject() (
+  appConfig: AppConfig,
+  override implicit val messagesApi: MessagesApi,
+  controllerComponents: MessagesControllerComponents
+) extends FrontendController(controllerComponents) with I18nSupport {
 
-  private def fallbackURL: String = "/"
+  private def fallbackURL: String            = "/upload-customs-documents/"
   private def languageMap: Map[String, Lang] = appConfig.languageMap
 
   def switchToLanguage(language: String): Action[AnyContent] = Action { implicit request =>
-    val lang = languageMap.getOrElse(language, Lang.defaultLang)
+    val lang        = languageMap.getOrElse(language, Lang.defaultLang)
     val redirectURL = request.headers.get(REFERER).getOrElse(fallbackURL)
     Redirect(redirectURL).withLang(Lang.apply(lang.code))
   }

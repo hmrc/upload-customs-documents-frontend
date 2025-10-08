@@ -22,4 +22,15 @@ trait ObjectStoreStubs {
     this
   }
 
+  def givenObjectStorePresignedUrlFails(status: Int): ObjectStoreStubs = {
+    stubFor(
+      post(urlEqualTo("/object-store/ops/presigned-url"))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+        )
+    )
+    this
+  }
+
 }

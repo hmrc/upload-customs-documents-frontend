@@ -55,6 +55,20 @@ trait ExternalApiStubs {
     content
   }
 
+  def givenSomeAction(status: Int, path: String): String = {
+    val content: String = UUID.randomUUID().toString
+    stubFor(
+      post(urlPathEqualTo(path))
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withHeader("Content-Type", "text/plain")
+            .withBody(content)
+        )
+    )
+    content
+  }
+
   def givenResultPushEndpoint(path: String, payload: Payload, status: Int): Unit =
     stubFor(
       post(urlPathEqualTo(path))

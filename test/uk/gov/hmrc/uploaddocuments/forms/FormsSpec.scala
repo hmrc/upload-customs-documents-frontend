@@ -75,4 +75,14 @@ class FormsSpec extends UnitSpec with FormValidator {
       )
     }
   }
+
+  "YesNoChoiceForm" should {
+    "bind yes or no and reject other values" in {
+      val form = Forms.YesNoChoiceForm
+      validate(form, Map("choice" -> "yes"), true)
+      validate(form, Map("choice" -> "no"), false)
+      validateErrors(form, Map(), Seq("choice" -> "error.choice.required"))
+      validateErrors(form, Map("choice" -> "foo"), Seq("choice" -> "error.choice.required"))
+    }
+  }
 }
