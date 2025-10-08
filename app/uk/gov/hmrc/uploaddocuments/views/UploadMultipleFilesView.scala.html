@@ -53,6 +53,8 @@ appConfig: AppConfig
   form: Form[Boolean]
 )(implicit request: Request[_], messages: Messages, features: Features, serviceContent: CustomizedServiceContent)
 
+@tokenOpt = @{play.filters.csrf.CSRF.getToken}
+
 @govukLayout(
   pageTitle = pageTitle("view.upload-multiple-files.title"),
   backLink = backLink.map(_.url)
@@ -145,9 +147,9 @@ appConfig: AppConfig
 
     <dl class="multi-file-upload__item-list govuk-!-margin-bottom-5"></dl>
 
-    @play.filters.csrf.CSRF.getToken.map(token => {
-        <input type="hidden" name="@token.name" value="@{HtmlFormat.escape(token.value)}"/>
-      })
+    @if(tokenOpt.isDefined){
+      <input type="hidden" name="@tokenOpt.get.name" value="@{HtmlFormat.escape(tokenOpt.get.value)}"/>
+    }
 
     <button type="button" class="multi-file-upload__add-another govuk-button govuk-button--secondary hidden">@serviceContent.addAnotherDocumentButtonText.getOrElse(messages("view.upload-multiple-files.addAnother"))</button>
 
