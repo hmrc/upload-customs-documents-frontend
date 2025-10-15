@@ -16,7 +16,6 @@ export class MultiFileUpload extends Component {
   private submitBtn: HTMLInputElement;
   private addAnotherBtn: HTMLButtonElement;
   private uploadMoreMessage: HTMLElement;
-  private notifications: HTMLElement;
   private itemTpl: string;
   private inputTpl: string;
   private itemList: HTMLUListElement;
@@ -24,7 +23,7 @@ export class MultiFileUpload extends Component {
   private dropZone: HTMLElement;
   private lastFileIndex = 0;
   private readonly errorManager;
-  private draggedFiles: {[key: string]: File} = {};
+  private draggedFiles: { [key: string]: File } = {};
 
   constructor(form: HTMLFormElement) {
     super(form);
@@ -84,7 +83,6 @@ export class MultiFileUpload extends Component {
       fileNumber: 'multi-file-upload__number',
       progressBar: 'multi-file-upload__progress-bar',
       uploadMore: 'multi-file-upload__upload-more-message',
-      notifications: 'multi-file-upload__notifications',
       description: 'multi-file-upload__description'
     };
 
@@ -106,7 +104,6 @@ export class MultiFileUpload extends Component {
     this.uploadMoreMessage = this.container.querySelector(`.${this.classes.uploadMore}`);
     this.formStatus = this.container.querySelector(`.${this.classes.formStatus}`);
     this.submitBtn = this.container.querySelector(`#${this.classes.submit}`);
-    this.notifications = this.container.querySelector(`.${this.classes.notifications}`);
     this.dropZone = this.container.closest('.govuk-template__body');
   }
 
@@ -156,16 +153,15 @@ export class MultiFileUpload extends Component {
 
   private createUploadedItem(fileData: unknown): HTMLElement | undefined {
     const item = this.addItemWithFileInput();
-    if(item){
+    if (item) {
       const fileInput = this.getFileInputFromItem(item);
       const fileName = this.extractFileName(fileData['fileName']);
       const filePreview = this.getFilePreviewElement(item);
 
       this.setItemState(item, UploadState.Uploaded);
-      this.getFileNamePlaceholderElements(item).forEach((elem) => {elem.textContent = fileName});
+      this.getFileNamePlaceholderElements(item).forEach((elem) => { elem.textContent = fileName });
       this.getDescriptionElement(item).textContent = fileData['description'];
 
-      //filePreview.textContent = fileName;
       filePreview.href = fileData['previewUrl'];
 
       fileInput.dataset.multiFileUploadFileRef = fileData['reference'];
@@ -178,13 +174,13 @@ export class MultiFileUpload extends Component {
 
   private createWaitingItem(file: File): HTMLElement | undefined {
     const item = this.addItemWithFileInput();
-    if(item){
+    if (item) {
       const fileName = file.name;
       const fileInput = this.getFileInputFromItem(item);
 
       this.setItemState(item, UploadState.Waiting);
-      this.getFileNamePlaceholderElements(item).forEach((elem) => {elem.textContent = fileName});
-      if(this.messages.newFileDescription){
+      this.getFileNamePlaceholderElements(item).forEach((elem) => { elem.textContent = fileName });
+      if (this.messages.newFileDescription) {
         this.getDescriptionElement(item).textContent = this.messages.newFileDescription;
       }
 
@@ -224,7 +220,7 @@ export class MultiFileUpload extends Component {
         this.errorManager.removeAllErrors();
       }
       const firstFileInput = this.inputList.querySelector(`.${this.classes.file}`);
-      this.errorManager.addError(firstFileInput.id, this.messages.noFilesUploadedError,undefined);
+      this.errorManager.addError(firstFileInput.id, this.messages.noFilesUploadedError, undefined);
       this.errorManager.focusSummary();
       e.preventDefault();
     }
@@ -238,7 +234,7 @@ export class MultiFileUpload extends Component {
   }
 
   private addItem(): HTMLElement | undefined {
-     if(this.getItems().length < this.config.maxFiles){
+    if (this.getItems().length < this.config.maxFiles) {
       const fileNumber = this.getItems().length + 1;
       const itemParams = {
         fileNumber: fileNumber.toString()
@@ -247,7 +243,7 @@ export class MultiFileUpload extends Component {
 
       this.bindItemEvents(item);
       this.itemList.prepend(item);
-      if(this.messages.newFileDescription){
+      if (this.messages.newFileDescription) {
         this.getDescriptionElement(item).textContent = this.messages.newFileDescription;
       }
       this.updateButtonVisibility();
@@ -259,7 +255,7 @@ export class MultiFileUpload extends Component {
   }
 
   private addItemWithFileInput(): HTMLElement | undefined {
-    if(this.getItems().length < this.config.maxFiles){
+    if (this.getItems().length < this.config.maxFiles) {
       const fileNumber = this.getItems().length + 1;
       const fileIndex = ++this.lastFileIndex;
       const itemParams = {
@@ -280,7 +276,7 @@ export class MultiFileUpload extends Component {
 
       this.bindItemEvents(item);
       this.itemList.prepend(item);
-      if(this.messages.newFileDescription){
+      if (this.messages.newFileDescription) {
         this.getDescriptionElement(item).textContent = this.messages.newFileDescription;
       }
       this.updateButtonVisibility();
@@ -292,7 +288,7 @@ export class MultiFileUpload extends Component {
   }
 
   private addUploadInput(): HTMLElement {
-    if(this.getInputs().length===0 && this.getItems().length < this.config.maxFiles){
+    if (this.getInputs().length === 0 && this.getItems().length < this.config.maxFiles) {
       const fileNumber = this.getItems().length + 1;
       const fileIndex = ++this.lastFileIndex;
       const inputParams = {
@@ -309,7 +305,6 @@ export class MultiFileUpload extends Component {
       const input = parseHtml(this.inputTpl, inputParams) as HTMLElement;
       this.bindInputEvents(input);
       this.inputList.append(input);
-      const file  = this.getFileInputFromItem(input);
       return input;
     } else {
       return this.getInputs()[0];
@@ -317,7 +312,7 @@ export class MultiFileUpload extends Component {
   }
 
   private addUploadInputWithFileAndLabel(oldFileInput: HTMLInputElement, oldLabel: HTMLElement): HTMLElement {
-    if(this.getInputs().length===0 && this.getItems().length <= this.config.maxFiles){
+    if (this.getInputs().length === 0 && this.getItems().length <= this.config.maxFiles) {
       const fileNumber = this.getItems().length + 1;
       const fileIndex = ++this.lastFileIndex;
       const inputParams = {
@@ -351,7 +346,7 @@ export class MultiFileUpload extends Component {
     const label = this.getInputLabelElement(fileInput.parentElement);
     const description = this.messages.newFileDescription;
     if (!label || !description) return false;
-    else { 
+    else {
       const isFirstFileOfItsKind = !this.hasAlreadyFileWithDescription(description);
       if (isFirstFileOfItsKind && this.messages.chooseFirstFileLabel) {
         label.textContent = this.messages.chooseFirstFileLabel;
@@ -364,7 +359,7 @@ export class MultiFileUpload extends Component {
 
   private hasAlreadyFileWithDescription(description: String): Boolean {
     if (!description) return false;
-    else { 
+    else {
       const result = this.getItems().find((item) => {
         const descriptionElem = this.getDescriptionElement(item);
         return descriptionElem.textContent === description;
@@ -392,7 +387,7 @@ export class MultiFileUpload extends Component {
     else {
       this.removeItem(item);
     }
-    
+
   }
 
   private requestRemoveFile(fileInput: HTMLInputElement) {
@@ -415,6 +410,8 @@ export class MultiFileUpload extends Component {
     });
     this.addNotification(message);
     this.removeItem(item);
+    var file = this.container.querySelector('.multi-file-upload__file') as HTMLElement;
+    if (file) file.focus();
   }
 
   private removeItem(item: HTMLElement): void {
@@ -479,23 +476,21 @@ export class MultiFileUpload extends Component {
     this.handleFileInputChange(fileInput);
   }
 
-  private handleFileInputChange(fileInput: HTMLInputElement): void {  
+  private handleFileInputChange(fileInput: HTMLInputElement): void {
 
     this.errorManager.removeAllErrors();
 
-    if (!fileInput.files.length || fileInput.files.length==0) {
+    if (!fileInput.files.length || fileInput.files.length == 0) {
       return;
-    } else {
-      console.debug(fileInput.files.length);
     }
 
-    if(this.config.enableMultipleFilesPicker && fileInput.files.length>1){
+    if (this.config.enableMultipleFilesPicker && fileInput.files.length > 1) {
       this.errorManager.removeAllErrors();
       [...fileInput.files].forEach((file, i) => {
         this.createWaitingItem(file);
       });
       const input = this.getInputFromFile(fileInput);
-      if(input){
+      if (input) {
         const label = this.getInputLabelElement(input);
         input.parentElement.removeChild(input);
         fileInput.parentElement.removeChild(fileInput);
@@ -509,7 +504,7 @@ export class MultiFileUpload extends Component {
     }
   }
 
-  private processFileFromInput(fileInput: HTMLInputElement): void {  
+  private processFileFromInput(fileInput: HTMLInputElement): void {
 
     const file: File = fileInput.files[0];
 
@@ -524,7 +519,7 @@ export class MultiFileUpload extends Component {
     }
 
     const input = this.getInputFromFile(fileInput);
-    if(input){
+    if (input) {
       const label = this.getInputLabelElement(input);
       const item = this.addItem();
       input.parentElement.removeChild(input);
@@ -534,9 +529,9 @@ export class MultiFileUpload extends Component {
       const itemContent = this.getItemContentElement(item);
       item.insertBefore(label, itemContent);
       label.after(fileInput);
-  
+
       const fileName = this.extractFileName(fileInput.value)
-      this.getFileNamePlaceholderElements(item).forEach((elem) => {elem.textContent = fileName});
+      this.getFileNamePlaceholderElements(item).forEach((elem) => { elem.textContent = fileName });
       this.setItemState(item, UploadState.Waiting);
     }
     this.updateButtonVisibility();
@@ -566,7 +561,12 @@ export class MultiFileUpload extends Component {
     this.updateButtonVisibility();
     this.errorManager.removeError(fileInput.id);
 
-    this.getFileNamePlaceholderElements(item).forEach((elem) => {elem.textContent = fileName});
+    this.getFileNamePlaceholderElements(item).forEach((elem) => { elem.textContent = fileName });
+
+    const message = parseTemplate(this.messages.documentUploading, {
+      fileName: fileName
+    });
+    this.addNotification(message);
 
     this.uploadData[fileInput.id].uploadHandle = this.uploadFile(fileInput);
   }
@@ -574,15 +574,15 @@ export class MultiFileUpload extends Component {
   private prepareFormData(fileInput: HTMLInputElement, data): FormData {
     const formData = new FormData();
 
-    if(data) {
+    if (data && data.fields) {
       for (const [key, value] of Object.entries(data.fields)) {
         formData.append(key, value as string);
       }
     }
 
-    if(this.draggedFiles && this.draggedFiles[fileInput.id]) {
+    if (this.draggedFiles && this.draggedFiles[fileInput.id]) {
       formData.append('file', this.draggedFiles[fileInput.id]);
-    } else if(fileInput.files.length>0){
+    } else if (fileInput.files.length > 0) {
       formData.append('file', fileInput.files[0]);
     } else {
       console.error(`Missing file data for input ${fileInput.id}`)
@@ -655,7 +655,7 @@ export class MultiFileUpload extends Component {
     const fileInput = this.getFileByReference(fileRef);
     const data = this.uploadData[fileInput.id];
     const error = response['errorMessage'] || this.messages.genericError;
-    
+
     this.errorManager.removeError(fileInput.id);
 
     switch (response['fileStatus']) {
@@ -693,15 +693,15 @@ export class MultiFileUpload extends Component {
   private handleFileStatusSuccessful(fileInput: HTMLInputElement, previewUrl: string, description: string) {
     const item = this.getItemFromFile(fileInput);
 
-    this.addNotification(parseTemplate(this.messages.documentUploaded, {
-      fileName: this.getFileName(fileInput)
-    }));
-
     this.getFilePreviewElement(item).href = previewUrl;
     this.getDescriptionElement(item).textContent = description;
     this.setItemState(item, UploadState.Uploaded);
     this.updateButtonVisibility();
     this.updateFormStatusVisibility();
+
+    this.addNotification(parseTemplate(this.messages.documentUploaded, {
+      fileName: this.getFileName(fileInput)
+    }));
   }
 
   private handleFileStatusFailed(fileInput: HTMLInputElement, errorMessage: string) {
@@ -767,7 +767,9 @@ export class MultiFileUpload extends Component {
   }
 
   private updateUploadProgress(item, value): void {
-    item.querySelector(`.${this.classes.progressBar}`).style.width = `${value}%`;
+    var progressBar = item.querySelector(`.${this.classes.progressBar}`)
+    progressBar.style.width = `${value}%`;
+    progressBar.ariaValueNow = value.toString();
   }
 
   private toggleRemoveButton(item: HTMLElement, state: boolean): void {
@@ -787,14 +789,8 @@ export class MultiFileUpload extends Component {
   }
 
   private addNotification(message: string): void {
-    const element = document.createElement('p');
-    element.textContent = message;
-
-    this.notifications.append(element);
-
-    window.setTimeout(() => {
-      element.remove();
-    }, 1000);
+    var input = this.container.querySelector('#multi-file-upload__notifications')
+    if (input) input.ariaLabel = message;
   }
 
   private toggleAddButton(state: boolean): void {
@@ -851,7 +847,7 @@ export class MultiFileUpload extends Component {
 
   private getFileName(fileInput: HTMLInputElement): string {
     const item = this.getItemFromFile(fileInput);
-    if(item){
+    if (item) {
       const fileName = this.getFileNameElement(item)?.textContent.trim();
 
       if (fileName && fileName.length) {
