@@ -563,11 +563,6 @@ export class MultiFileUpload extends Component {
 
     this.getFileNamePlaceholderElements(item).forEach((elem) => { elem.textContent = fileName });
 
-    const message = parseTemplate(this.messages.documentUploading, {
-      fileName: fileName
-    });
-    this.addNotification(message);
-
     this.uploadData[fileInput.id].uploadHandle = this.uploadFile(fileInput);
   }
 
