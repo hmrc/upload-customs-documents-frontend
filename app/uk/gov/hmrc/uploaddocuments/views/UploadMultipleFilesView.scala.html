@@ -136,6 +136,8 @@ appConfig: AppConfig
     @if(form.errors.nonEmpty){data-multi-file-upload-initial-error="@form.errors.map(error => messages(error.message,error.args:_*)).head"}
   >
 
+    <span id="multi-file-upload__notifications" aria-live="assertive" role="alert"></span>
+
     @html.p(
       content = Html(messages("view.upload-multiple-files.uploadMoreFilesThanLimit", maximumNumberOfFiles)),
       classes="govuk-body multi-file-upload__upload-more-message hidden"
@@ -187,8 +189,6 @@ appConfig: AppConfig
 
       @html.button("form.upload-multiple-files.continue")
     </div>
-
-    <div class="multi-file-upload__notifications govuk-visually-hidden" aria-live="polite" role="status"></div>
 
     <script type="text/x-template" id="multi-file-upload-item-tpl"> @multiFileUpload.item(filePickerAcceptFilter) </script>
     <script type="text/x-template" id="multi-file-upload-input-tpl"> @multiFileUpload.input(filePickerAcceptFilter) </script>
