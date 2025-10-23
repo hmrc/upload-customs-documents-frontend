@@ -27,9 +27,6 @@ module.exports = function (env) {
               presets: [
                 '@babel/typescript',
                 '@babel/preset-env'
-              ],
-              plugins: [
-                '@babel/plugin-proposal-class-properties'
               ]
             }
           }
