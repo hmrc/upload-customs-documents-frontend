@@ -18,37 +18,13 @@ package uk.gov.hmrc.play.http.ws
 
 import org.apache.pekko.actor.ActorSystem
 import play.api.Configuration
-import play.api.libs.json.{Json, Writes}
 import play.api.libs.ws.WSClient
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.client.{HttpClientV2Impl, RequestBuilderImpl}
-import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.play.audit.http.HttpAuditing
-import uk.gov.hmrc.play.bootstrap.http.DefaultHttpClient
 
 import java.net.URL
 import javax.inject.{Inject, Singleton}
-import scala.concurrent.{ExecutionContext, Future}
-import play.api.libs.ws.WSBodyWritables.writeableOf_JsValue
-
-@Singleton
-class UploadHttpClient @Inject() (
-  config: Configuration,
-  httpAuditing: HttpAuditing,
-  wsClient: WSClient,
-  actorSystem: ActorSystem
-) extends DefaultHttpClient(config, httpAuditing, wsClient, actorSystem) {
-
-  override def doPost[A](
-    url: String,
-    body: A,
-    headers: Seq[(String, String)]
-  )(implicit rds: Writes[A], ec: ExecutionContext): Future[HttpResponse] =
-    execute(buildRequest(url, deduplicate(headers)).withBody(Json.toJson(body)), "POST")
-      .map(WSHttpResponse.apply)
-
-  private def deduplicate(headers: Seq[(String, String)]): Seq[(String, String)] =
-    headers.groupBy(_._1).map { case (k, vs) => (k, vs.last) }.values.toSeq
-}
 
 @Singleton
 class UploadHttpClientV2 @Inject() (
