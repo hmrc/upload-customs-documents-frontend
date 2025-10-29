@@ -47,7 +47,18 @@ class ChooseMultipleFilesController @Inject() (
               .putJourneyContext(journeyConfig.copy(userWantsToUploadNextFile = false))
               .map { _ =>
                 if (preferUploadMultipleFiles && journeyConfig.config.features.showUploadMultiple) {
-                  Ok(renderView(journeyConfig, files, YesNoChoiceForm))
+                  if (journeyConfig.config.features.showYesNoQuestionBeforeContinue &&
+                    journeyConfig.config.prePopulateYesOrNoForm.nonEmpty) {
+                    Ok(
+                      renderView(
+                        journeyConfig,
+                        files,
+                        YesNoChoiceForm.fill(Some(journeyConfig.config.prePopulateYesOrNoForm).value.get)
+                      )
+                    )
+                  } else {
+                    Ok(renderView(journeyConfig, files, YesNoChoiceForm))
+                  }
                 } else {
                   if (files.acceptedCount > 0 && !userWantsToUploadNextFile) {
                     Redirect(routes.SummaryController.showSummary)

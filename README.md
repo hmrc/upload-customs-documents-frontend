@@ -160,26 +160,27 @@ Minimal payload example:
 <a name="api-initialize-payload-config"></a>
 #### Upload session configuration schema:
 
-|field|type|required|description|
-|-----|----|--------|-----------|
-|`nonce`|number|required|Unique integer known only to the host session|
-|`continueUrl`|string|required|A host URL where to proceed after user clicks `Continue` button|
-|`callbackUrl`|string|required|A host URL where to push a callback with the uploaded files metadata|
-|`continueAfterYesAnswerUrl`|string|optional|A host URL where to redirect after user selects `Yes`, defaults to `backlinkUrl`.|
-|`continueWhenFullUrl`|string|optional|A host URL where to proceed after user clicks `Continue` (or selects `No` in the form) and there are no more file slots left, defaults to `continueUrl`|
-|`continueWhenEmptyUrl`|string|optional|A host URL where to proceed after user clicks `Continue` (or selects `No` in the form) and none file has been uploaded yet, defaults to `continueUrl`|
-|`backlinkUrl`|string|optional|A host URL where to retreat when user clicks backlink, otherwise a default `history.back()` action.|
-|`sendoffUrl`|string|optional|A host URL where to send off the user if the current session has been deactivated (wiped out), defaults to `content.serviceUrl` or `http://www.gov.uk` if missing.|
-|`minimumNumberOfFiles`|number|optional|Minimum number of files user can upload, usually 0 or 1, defaults to 1|
-|`maximumNumberOfFiles`|number|optional|Maximum number of files user can upload, defaults to 10|
-|`initialNumberOfEmptyRows`|number|optional|Initial number of empty choose file rows, defaults to 3|
-|`maximumFileSizeBytes`|number|optional|Maximum size in bytes of a single file user can upload, defaults to 10485760 (10MB)|
-|`allowedContentTypes`|string|optional|A comma separated list of allowed MIME types of the file, defaults to `image/jpeg,image/png,application/pdf,text/plain`|
-|`allowedFileExtensions`|string|optional|A comma separated list of allowed file extensions to be used in a browser file picker|
-|`newFileDescription`|string|optional|Template of description of a new file in a limited HMTL format allowing use of `b`, `em`, `i`, `strong`, `u`, `span` tags only|
-|`cargo`|any|optional|An opaque JSON carried from and to the host service|
-|[`content`](#api-initialize-payload-config-content)|object|optional|Content customization|
-|[`features`](#api-initialize-payload-config-features)|object|optional|Features customization|
+|field| type    |required| description                                                                                                                                                       |
+|-----|---------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+|`nonce`| number  |required| Unique integer known only to the host session                                                                                                                     |
+|`continueUrl`| string  |required| A host URL where to proceed after user clicks `Continue` button                                                                                                   |
+|`callbackUrl`| string  |required| A host URL where to push a callback with the uploaded files metadata                                                                                              |
+|`continueAfterYesAnswerUrl`| string  |optional| A host URL where to redirect after user selects `Yes`, defaults to `backlinkUrl`.                                                                                 |
+|`continueWhenFullUrl`| string  |optional| A host URL where to proceed after user clicks `Continue` (or selects `No` in the form) and there are no more file slots left, defaults to `continueUrl`           |
+|`continueWhenEmptyUrl`| string  |optional| A host URL where to proceed after user clicks `Continue` (or selects `No` in the form) and none file has been uploaded yet, defaults to `continueUrl`             |
+|`backlinkUrl`| string  |optional| A host URL where to retreat when user clicks backlink, otherwise a default `history.back()` action.                                                               |
+|`sendoffUrl`| string  |optional| A host URL where to send off the user if the current session has been deactivated (wiped out), defaults to `content.serviceUrl` or `http://www.gov.uk` if missing. |
+|`minimumNumberOfFiles`| number  |optional| Minimum number of files user can upload, usually 0 or 1, defaults to 1                                                                                            |
+|`maximumNumberOfFiles`| number  |optional| Maximum number of files user can upload, defaults to 10                                                                                                           |
+|`initialNumberOfEmptyRows`| number  |optional| Initial number of empty choose file rows, defaults to 3                                                                                                           |
+|`maximumFileSizeBytes`| number  |optional| Maximum size in bytes of a single file user can upload, defaults to 10485760 (10MB)                                                                               |
+|`allowedContentTypes`| string  |optional| A comma separated list of allowed MIME types of the file, defaults to `image/jpeg,image/png,application/pdf,text/plain`                                           |
+|`allowedFileExtensions`| string  |optional| A comma separated list of allowed file extensions to be used in a browser file picker                                                                             |
+|`prePopulateYesOrNoForm`| boolean |optional| Prepoulates the radio options for Yes or No form. true populates Yes radio button and false populates No radio button                                             |
+|`newFileDescription`| string  |optional| Template of description of a new file in a limited HMTL format allowing use of `b`, `em`, `i`, `strong`, `u`, `span` tags only                                    |
+|`cargo`| any     |optional| An opaque JSON carried from and to the host service                                                                                                               |
+|[`content`](#api-initialize-payload-config-content)| object  |optional| Content customization                                                                                                                                             |
+|[`features`](#api-initialize-payload-config-features)| object  |optional| Features customization                                                                                                                                            |
 
 <a name="api-initialize-payload-config-content"></a>
 #### Upload session content customization schema:

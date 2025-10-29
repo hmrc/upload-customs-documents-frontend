@@ -38,6 +38,7 @@ final case class FileUploadSessionConfig(
   maximumFileSizeBytes: Long = defaultMaximumFileSizeBytes,
   allowedContentTypes: String = defaultAllowedContentTypes,
   allowedFileExtensions: Option[String] = None,
+  prePopulateYesOrNoForm: Option[Boolean] = None, // prepopulates yes form value when true and no form value when false
   cargo: Option[JsValue] = None, // opaque data carried through, from and to the host service,
   newFileDescription: Option[String] = None, // description of the new file added,
   features: Features = Features(), // upload feature switches
@@ -86,6 +87,7 @@ object FileUploadSessionConfig {
         and (JsPath \ "maximumFileSizeBytes").readWithDefault[Long](defaultMaximumFileSizeBytes)
         and (JsPath \ "allowedContentTypes").readWithDefault[String](defaultAllowedContentTypes)
         and (JsPath \ "allowedFileExtensions").readNullable[String]
+        and (JsPath \ "prePopulateYesOrNoForm").readNullable[Boolean]
         and (JsPath \ "cargo").readNullable[JsValue]
         and (JsPath \ "newFileDescription").readNullable[String]
         and (JsPath \ "features").readWithDefault[Features](Features())
@@ -105,6 +107,7 @@ object FileUploadSessionConfig {
         and (JsPath \ "maximumFileSizeBytes").write[Long]
         and (JsPath \ "allowedContentTypes").write[String]
         and (JsPath \ "allowedFileExtensions").writeNullable[String]
+        and (JsPath \ "prePopulateYesOrNoForm").writeNullable[Boolean]
         and (JsPath \ "cargo").writeNullable[JsValue]
         and (JsPath \ "newFileDescription").writeNullable[String]
         and (JsPath \ "features").write[Features]
