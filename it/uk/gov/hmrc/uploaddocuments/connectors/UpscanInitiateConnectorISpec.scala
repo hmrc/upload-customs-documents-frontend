@@ -26,6 +26,17 @@ class UpscanInitiateConnectorISpec extends UpscanInitiateConnectorISpecSetup {
         result.uploadRequest.href shouldBe testUploadRequest.href
         result.uploadRequest.fields.toSet should contain theSameElementsAs (testUploadRequest.fields.toSet)
       }
+
+      "return error if upscan initiate fails" in {
+        givenUpscanInitiateFails("https://myservice.com/callback", "dummy.service")
+        givenAuditConnector()
+
+        intercept[Exception] {
+          await(
+            connector.initiate("dummy.service", UpscanInitiateRequest(callbackUrl = "https://myservice.com/callback"))
+          )
+        }
+      }
     }
   }
 

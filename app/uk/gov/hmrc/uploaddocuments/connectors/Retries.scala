@@ -19,7 +19,7 @@ package uk.gov.hmrc.uploaddocuments.connectors
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.pattern.after
 import play.api.Configuration
-import uk.gov.hmrc.play.http.logging.Mdc
+import uk.gov.hmrc.mdc.Mdc
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import scala.concurrent.duration._

@@ -16,32 +16,33 @@
 
 package uk.gov.hmrc.uploaddocuments.connectors
 
-import org.apache.pekko.actor.ActorSystem
 import com.codahale.metrics.MetricRegistry
+import org.apache.pekko.actor.ActorSystem
 import play.api.libs.json.Json
-import uk.gov.hmrc.http.{HeaderCarrier, HttpPost}
+import play.api.libs.ws.JsonBodyWritables.*
+import uk.gov.hmrc.http.HttpReads.Implicits.*
+import uk.gov.hmrc.http.client.HttpClientV2
+import uk.gov.hmrc.http.{HeaderCarrier, HttpResponse}
 import uk.gov.hmrc.uploaddocuments.connectors.httpParsers.FileUploadResultPushConnectorReads
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.{Error, Payload, Request}
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
-import java.net.URL
+import java.net.{URI, URL}
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.Try
-import play.api.libs.json.Writes
-import java.net.URI
 
 @Singleton
 class FileUploadResultPushConnector @Inject() (
   appConfig: AppConfig,
-  http: HttpPost,
+  http: HttpClientV2,
   val kenshooRegistry: MetricRegistry,
   val actorSystem: ActorSystem
 ) extends HttpAPIMonitor with Retries with LoggerUtil {
 
-  import FileUploadResultPushConnector._
+  import FileUploadResultPushConnector.*
 
   def push(request: Request)(implicit hc: HeaderCarrier, jid: JourneyId, ec: ExecutionContext): Future[Response] = {
     val responseReads = new FileUploadResultPushConnectorReads(request.hostService)
@@ -49,17 +50,20 @@ class FileUploadResultPushConnector @Inject() (
       monitor(s"ConsumedAPI-push-file-uploads-${request.hostService.userAgent}-POST") {
         withUrl(request) { endpointUrl =>
           val payload = Payload(request, appConfig.baseExternalCallbackUrl)
-          Logger.debug(
-            s"[push] JourneyId: '${jid.value}' - sending notification to host service. Url: '$endpointUrl', Body: \n${Json
-                .prettyPrint(Json.toJson(payload)(Payload.writeNoDownloadUrl))}"
-          )
-          http
-            .POST[Payload, Response](URI.create(endpointUrl).toURL(), payload)(
-              implicitly[Writes[Payload]],
-              responseReads,
-              request.hostService.populate(hc).withExtraHeaders("FileUploadJourney" -> jid.value),
-              ec
+          Logger
+            .debug(
+              s"[push] JourneyId: '${jid.value}' - sending notification to host service. Url: '$endpointUrl', Body: \n${Json
+                  .prettyPrint(Json.toJson(payload)(Payload.writeNoDownloadUrl))}"
             )
+          http
+            .post(URI.create(endpointUrl).toURL())(
+              request.hostService.populate(hc).withExtraHeaders("FileUploadJourney" -> jid.value)
+            )
+            .withBody(Json.toJson(payload))
+            .execute[HttpResponse]
+            .flatMap { response =>
+              Future(responseReads.read("POST", endpointUrl, response))
+            }
             .recover { case exception =>
               Logger.debug(
                 s"[push] JourneyId: '${jid.value}' - Exception when handling the HttpResponse from the host service"

@@ -20,12 +20,12 @@ import com.google.inject.ImplementedBy
 import play.api.Configuration
 import play.api.i18n.Lang
 import play.api.mvc.{Call, RequestHeader}
-import uk.gov.hmrc.play.bootstrap.binders.SafeRedirectUrl
 import uk.gov.hmrc.play.bootstrap.config.ServicesConfig
 import uk.gov.hmrc.uploaddocuments.connectors.Retries
 
 import javax.inject.Inject
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import java.net.URLEncoder
 
 @ImplementedBy(classOf[AppConfigImpl])
 trait AppConfig {
@@ -50,7 +50,7 @@ trait AppConfig {
   val contactFormServiceIdentifier: String
 
   def requestUri(implicit request: RequestHeader): String =
-    SafeRedirectUrl(baseExternalCallbackUrl + request.uri).encodedUrl
+    URLEncoder.encode(baseExternalCallbackUrl + request.uri, "UTF-8")
 
   def reportProblemUrl(implicit request: RequestHeader): String =
     s"$contactHost/contact/problem_reports_nonjs?newTab=true&service=$contactFormServiceIdentifier&backUrl=$requestUri"
@@ -59,6 +59,7 @@ trait AppConfig {
   val timeout: Int
   val countdown: Int
   val fileUploadResultPushRetryIntervals: Seq[FiniteDuration]
+  val upscanInitiateRetryIntervals: Seq[FiniteDuration]
   val upscanInitialWaitTime: Duration
   val upscanWaitInterval: Duration
   def lockReleaseCheckInterval: Duration
@@ -81,6 +82,9 @@ class AppConfigImpl @Inject() (config: ServicesConfig, configuration: Configurat
 
   override val fileUploadResultPushRetryIntervals: Seq[FiniteDuration] =
     Retries.getConfIntervals("fileUploadResultPush.retryIntervals", configuration)
+
+  override val upscanInitiateRetryIntervals: Seq[FiniteDuration] =
+    Retries.getConfIntervals("upscan.retryIntervals", configuration)
 
   override val upscanInitialWaitTime: Duration = Duration.apply(config.getString("upscan.initialCallbackWaitTime"))
   override val upscanWaitInterval: Duration    = Duration.apply(config.getString("upscan.waitInterval"))
