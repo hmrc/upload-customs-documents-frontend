@@ -20,10 +20,14 @@
 
 @import uk.gov.hmrc.uploaddocuments.views.CommonUtilsHelper.RichOptionString
 
+@import uk.gov.hmrc.govukfrontend.views.html.components.*
+
 @this()
 
 @(params: SummaryList)
+
 @import params._
+
 <dl class="@toClasses("govuk-summary-list", classes)"@toAttributes(attributes)>
 @for(row <- rows) {
   <div class="@toClasses("govuk-summary-list__row", row.classes)">

@@ -14,14 +14,11 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 @import uk.gov.hmrc.uploaddocuments.models.{CustomizedServiceContent,Features}
+@import uk.gov.hmrc.uploaddocuments.views.ViewHelpers.pageTitle
 
 @this(
-        govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.GovukLayoutWrapper,
-        forms: uk.gov.hmrc.uploaddocuments.views.components.forms,
-        html: uk.gov.hmrc.uploaddocuments.views.components.html,
-        appConfig: AppConfig
+      govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.GovukLayoutWrapper
 )
 
 @(successAction: Call, failureAction: Call, checkStatusAction: Call, backLink: Option[Call])(implicit request: Request[_], messages: Messages,features:Features, serviceContent: CustomizedServiceContent)

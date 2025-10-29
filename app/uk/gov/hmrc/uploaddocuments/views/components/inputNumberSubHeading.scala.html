@@ -14,9 +14,19 @@
  * limitations under the License.
  *@
 
+@import uk.gov.hmrc.govukfrontend.views.html.components.GovukInput
+@import uk.gov.hmrc.govukfrontend.views.html.components.Input
+@import uk.gov.hmrc.govukfrontend.views.html.components.Label
+@import uk.gov.hmrc.govukfrontend.views.html.components.Text
+@import uk.gov.hmrc.govukfrontend.views.html.components.Hint
+@import uk.gov.hmrc.govukfrontend.views.html.components.ErrorMessage
+@import uk.gov.hmrc.govukfrontend.views.html.components.HtmlContent
+@import play.twirl.api.HtmlFormat
+@import uk.gov.hmrc.uploaddocuments.views.ViewHelpers
+
 @this(
     govukInput: GovukInput,
-    pageHeading: components.pageHeading
+    pageHeading: pageHeading
 )
 
 @(form: Form[_],

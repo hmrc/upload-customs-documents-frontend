@@ -15,14 +15,13 @@
  *@
 
 @import uk.gov.hmrc.uploaddocuments.models.{FileUploads, CustomizedServiceContent,Features}
-@import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 @import uk.gov.hmrc.uploaddocuments.views.SummaryViewHelper
+@import uk.gov.hmrc.uploaddocuments.views.ViewHelpers.pageTitle
 
 @this(
         govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.GovukLayoutWrapper,
         forms: uk.gov.hmrc.uploaddocuments.views.components.forms,
         html: uk.gov.hmrc.uploaddocuments.views.components.html,
-        appConfig: AppConfig,
         context: SummaryViewHelper
 )
 

@@ -15,14 +15,15 @@
  *@
 
 @import uk.gov.hmrc.uploaddocuments.models.{FileUploads,CustomizedServiceContent,Features}
-@import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 @import uk.gov.hmrc.uploaddocuments.views.SummaryViewHelper
+@import uk.gov.hmrc.uploaddocuments.views.ViewHelpers.pageWithFormTitle
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.content.Text
 
 @this(
         govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.GovukLayoutWrapper,
         forms: uk.gov.hmrc.uploaddocuments.views.components.forms,
         html: uk.gov.hmrc.uploaddocuments.views.components.html,
-        appConfig: AppConfig,
         context: SummaryViewHelper
 )
 

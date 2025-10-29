@@ -18,6 +18,10 @@
 @import uk.gov.hmrc.hmrcfrontend.views.viewmodels.charactercount.CharacterCount
 @import uk.gov.hmrc.hmrcfrontend.views.html.components.HmrcCharacterCount
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.content.Content
+@import uk.gov.hmrc.govukfrontend.views.html.components.Label
+@import uk.gov.hmrc.govukfrontend.views.html.components.Hint
+@import uk.gov.hmrc.govukfrontend.views.html.components.Text
+
 @this(hmrcCharacterCount: HmrcCharacterCount)
 
 @(
@@ -28,6 +32,7 @@
         hint: Option[Content] = None,
         classes: String = ""
 )(implicit messages: Messages)
+
 @hmrcCharacterCount(CharacterCount(
     label = Label(classes = labelClasses,
         isPageHeading = true,
