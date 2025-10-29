@@ -15,21 +15,21 @@
  *@
 
 @import uk.gov.hmrc.uploaddocuments.models.{FileUploads,FileUpload,UploadRequest,FileUploadError,CustomizedServiceContent,Features}
-@import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 @import uk.gov.hmrc.uploaddocuments.views.UploadFileViewHelper
 @import uk.gov.hmrc.uploaddocuments.views.html.partials.multiFileUpload
 @import uk.gov.hmrc.uploaddocuments.views.html.partials.errorManager
-@import views.html.helper.CSRF
 @import play.twirl.api.HtmlFormat
+@import uk.gov.hmrc.uploaddocuments.views.ViewHelpers.pageTitle
+@import uk.gov.hmrc.uploaddocuments.views.ViewHelpers.pageHeading
+@import uk.gov.hmrc.govukfrontend.views.html.components.Label
+@import uk.gov.hmrc.govukfrontend.views.html.components.Text
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.content.Text
 
 @this(
-govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.GovukLayoutWrapper,
-forms: uk.gov.hmrc.uploaddocuments.views.components.forms,
-html: uk.gov.hmrc.uploaddocuments.views.components.html,
-details: uk.gov.hmrc.uploaddocuments.views.html.components.details,
-govukFileUpload: GovukFileUpload,
-govukButton: GovukButton,
-appConfig: AppConfig
+  govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.GovukLayoutWrapper,
+  forms: uk.gov.hmrc.uploaddocuments.views.components.forms,
+  html: uk.gov.hmrc.uploaddocuments.views.components.html
 )
 
 @(

@@ -17,11 +17,9 @@
 @import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 @import uk.gov.hmrc.hmrcfrontend.views.viewmodels.language._
 @import uk.gov.hmrc.uploaddocuments.controllers.routes
-@import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcReportTechnicalIssueHelper
 @import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcTrackingConsentSnippet
 @import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcStandardHeader
 @import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcStandardFooter
-@import views.html.helper.CSPNonce
 @import uk.gov.hmrc.uploaddocuments.controllers.routes.SignOutController
 @import uk.gov.hmrc.hmrcfrontend.views.Aliases.UserResearchBanner
 @import uk.gov.hmrc.uploaddocuments.models.CustomizedServiceContent
@@ -30,18 +28,24 @@
 @import uk.gov.hmrc.hmrcfrontend.config.ContactFrontendConfig
 @import uk.gov.hmrc.hmrcfrontend.views.Aliases.{Cy, En, ReportTechnicalIssue}
 
+@import uk.gov.hmrc.govukfrontend.views.html.components.GovukBackLink
+@import uk.gov.hmrc.govukfrontend.views.html.components.BackLink
+@import uk.gov.hmrc.govukfrontend.views.html.components.Text
+@import uk.gov.hmrc.govukfrontend.views.html.components.HtmlContent
+@import uk.gov.hmrc.govukfrontend.views.html.components.PhaseBanner
+@import uk.gov.hmrc.govukfrontend.views.html.components.Tag
+@import uk.gov.hmrc.uploaddocuments.views.html.components.languageSelection
 
 @this(
-govukLayout: GovukLayout,
-govukBackLink: GovukBackLink,
-appConfig: AppConfig,
-hmrcReportTechnicalIssueHelper: HmrcReportTechnicalIssueHelper,
-hmrcTrackingConsentSnippet: HmrcTrackingConsentSnippet,
-hmrcStandardHeader: HmrcStandardHeader,
-hmrcStandardFooter: HmrcStandardFooter,
-languageSelection: components.languageSelection,
-hmrcReportTechnicalIssue: HmrcReportTechnicalIssue, 
-contactFrontendConfig: ContactFrontendConfig
+  govukLayout: GovukLayout,
+  govukBackLink: GovukBackLink,
+  appConfig: AppConfig,
+  hmrcTrackingConsentSnippet: HmrcTrackingConsentSnippet,
+  hmrcStandardHeader: HmrcStandardHeader,
+  hmrcStandardFooter: HmrcStandardFooter,
+  languageSelection: languageSelection,
+  hmrcReportTechnicalIssue: HmrcReportTechnicalIssue, 
+  contactFrontendConfig: ContactFrontendConfig
 )
 
 @(pageTitle: Option[String] = None, timeout: Boolean = true, js: Option[Html] = None, backLink: Option[String] =

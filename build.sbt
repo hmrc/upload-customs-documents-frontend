@@ -14,13 +14,6 @@ lazy val root = (project in file("."))
     PlayKeys.playDefaultPort := 10110,
     RoutesKeys.routesImport += "uk.gov.hmrc.uploaddocuments.models.JourneyId",
     RoutesKeys.routesImport += "uk.gov.hmrc.play.bootstrap.binders.RedirectUrl",
-    TwirlKeys.templateImports ++= Seq(
-      "play.twirl.api.HtmlFormat",
-      "uk.gov.hmrc.govukfrontend.views.html.components._",
-      "uk.gov.hmrc.hmrcfrontend.views.html.{components => hmrcComponents}",
-      "uk.gov.hmrc.uploaddocuments.views.html.components",
-      "uk.gov.hmrc.uploaddocuments.views.ViewHelpers._"
-    ),
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     CodeCoverageSettings.settings,
     Compile / unmanagedResourceDirectories += baseDirectory.value / "resources",
