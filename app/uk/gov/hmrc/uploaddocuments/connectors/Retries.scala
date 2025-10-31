@@ -22,7 +22,7 @@ import play.api.Configuration
 import uk.gov.hmrc.mdc.Mdc
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 

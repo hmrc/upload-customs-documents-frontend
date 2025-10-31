@@ -1,6 +1,6 @@
 package uk.gov.hmrc.uploaddocuments.stubs
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import org.scalatest.concurrent.Eventually
 import org.scalatest.time.Millis
 import org.scalatest.time.Seconds

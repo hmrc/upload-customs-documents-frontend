@@ -1,11 +1,11 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.libs.ws.{DefaultWSCookie, StandaloneWSRequest}
-import play.api.mvc._
+import play.api.mvc.*
 import uk.gov.hmrc.crypto.PlainText
 import uk.gov.hmrc.http.{HeaderCarrier, SessionId, SessionKeys}
 import uk.gov.hmrc.mongo.cache.CacheItem
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.support.{SHA256, ServerISpec, TestData}
@@ -21,7 +21,7 @@ trait ControllerISpecBase extends ServerISpec {
 
   lazy val newJourneyRepo = app.injector.instanceOf[JourneyCacheRepository]
 
-  import play.api.i18n._
+  import play.api.i18n.*
   implicit val messages: Messages = MessagesImpl(Lang("en"), app.injector.instanceOf[MessagesApi])
 
   def sessionCookie(implicit hc: HeaderCarrier) = sessionCookieBaker

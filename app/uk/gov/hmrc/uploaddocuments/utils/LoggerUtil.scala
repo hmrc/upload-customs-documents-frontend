@@ -35,19 +35,11 @@ trait LoggerUtil {
   object Logger {
 
     def debug(message: => String)(implicit mc: MarkerContext): Unit = logger.debug(prefixLog(message))
-    def debug(message: => String, error: => Throwable)(implicit mc: MarkerContext): Unit =
-      logger.debug(prefixLog(message), error)
 
     def info(message: => String)(implicit mc: MarkerContext): Unit = logger.info(prefixLog(message))
-    def info(message: => String, error: => Throwable)(implicit mc: MarkerContext): Unit =
-      logger.info(prefixLog(message), error)
 
     def warn(message: => String)(implicit mc: MarkerContext): Unit = logger.warn(prefixLog(message))
-    def warn(message: => String, error: => Throwable)(implicit mc: MarkerContext): Unit =
-      logger.warn(prefixLog(message), error)
 
     def error(message: => String)(implicit mc: MarkerContext): Unit = logger.error(prefixLog(message))
-    def error(message: => String, error: => Throwable)(implicit mc: MarkerContext): Unit =
-      logger.error(prefixLog(message), error)
   }
 }

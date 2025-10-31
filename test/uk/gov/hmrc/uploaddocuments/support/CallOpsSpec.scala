@@ -18,16 +18,16 @@ package uk.gov.hmrc.uploaddocuments.support
 
 import java.io.File
 
-import com.typesafe.config._
+import com.typesafe.config.*
 import play.api.{Configuration, Environment, Mode}
 import uk.gov.hmrc.uploaddocuments.support.CallOps.localFriendlyUrl
 
 class CallOpsSpec extends UnitSpec {
 
-  val testEnv = Environment(new File(""), classOf[CallOpsSpec].getClassLoader, Mode.Test)
-  val prodEnv = Environment(new File(""), classOf[CallOpsSpec].getClassLoader, Mode.Prod)
-  val devEnv = Environment(new File(""), classOf[CallOpsSpec].getClassLoader, Mode.Dev)
-  val devConf = Configuration(ConfigFactory.parseString(""" run.mode = "Dev" """))
+  val testEnv  = Environment(new File(""), classOf[CallOpsSpec].getClassLoader, Mode.Test)
+  val prodEnv  = Environment(new File(""), classOf[CallOpsSpec].getClassLoader, Mode.Prod)
+  val devEnv   = Environment(new File(""), classOf[CallOpsSpec].getClassLoader, Mode.Dev)
+  val devConf  = Configuration(ConfigFactory.parseString(""" run.mode = "Dev" """))
   val prodConf = Configuration(ConfigFactory.parseString(""" run.mode = "Prod" """))
 
   "CallOps" should {

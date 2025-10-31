@@ -20,7 +20,7 @@ import org.mongodb.scala.bson.BsonDocument
 import org.scalatest.BeforeAndAfterEach
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
-import uk.gov.hmrc.uploaddocuments.support.TestData._
+import uk.gov.hmrc.uploaddocuments.support.TestData.*
 import uk.gov.hmrc.uploaddocuments.support.{AppISpec, LogCapturing}
 import play.api.mvc.Results
 import scala.concurrent.Future

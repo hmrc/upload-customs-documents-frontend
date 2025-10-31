@@ -1,7 +1,7 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.libs.json.{JsObject, JsValue, Json}
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
 import play.api.libs.ws.writeableOf_String
 import play.api.libs.ws.readableAsJson

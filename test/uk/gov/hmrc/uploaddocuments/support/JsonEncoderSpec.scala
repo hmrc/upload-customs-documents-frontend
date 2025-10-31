@@ -22,11 +22,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.TextNode
 
 import scala.jdk.CollectionConverters
-import ch.qos.logback.classic.spi.ILoggingEvent
-import ch.qos.logback.classic.LoggerContext
-import ch.qos.logback.core.OutputStreamAppender
-import java.io.OutputStream
-import java.nio.ByteBuffer
 import com.fasterxml.jackson.databind.JsonNode
 
 class JsonEncoderSpec extends UnitSpec with LogCapturing {
@@ -63,43 +58,5 @@ class JsonEncoderSpec extends UnitSpec with LogCapturing {
       encoder.decodeMessage(node, message)
       node.get("message") shouldBe new TextNode(message)
     }
-
-    "encode event without json message" ignore {
-      assertLog("foo", """"message":"foo"""")
-    }
-
-    "encode event with json message" ignore {
-      assertLog("""json{"foo":"bar"}""", """"ucdf":{"foo":"bar"}""")
-    }
-
-    def assertLog(message: String, expected: String) = {
-
-      val context  = new LoggerContext()
-      val appender = new OutputStreamAppender[ILoggingEvent]
-      appender.setContext(context)
-      val buf = ByteBuffer.allocateDirect(1024)
-      val out = new OutputStream {
-        override def write(b: Int): Unit = {
-          println(b.toHexString)
-          buf.put(b.toByte)
-        }
-      }
-      appender.setOutputStream(out)
-      val encoder = new JsonEncoder()
-      encoder.setContext(context)
-      appender.setEncoder(encoder)
-      appender.start()
-      val logger = context.getLogger("foo")
-      logger.addAppender(appender)
-      logger.info(message)
-      buf.flip()
-      val array = Array.ofDim[Byte](buf.limit())
-      buf.get(array)
-      val log = new String(array)
-      println(log)
-      log.contains(expected) shouldBe true
-      buf.clear()
-    }
   }
-
 }

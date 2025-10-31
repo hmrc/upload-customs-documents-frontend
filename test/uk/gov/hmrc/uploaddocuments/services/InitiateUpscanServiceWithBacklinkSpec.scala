@@ -39,7 +39,7 @@
 // import uk.gov.hmrc.http.HeaderCarrier
 // import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
 // import uk.gov.hmrc.uploaddocuments.models.FileUploadSessionConfig.defaultMaximumFileSizeBytes
-// import uk.gov.hmrc.uploaddocuments.models._
+// import uk.gov.hmrc.uploaddocuments.models.*
 // import uk.gov.hmrc.uploaddocuments.services.mocks.MockFileUploadService
 // import uk.gov.hmrc.uploaddocuments.support.JsEnabled.COOKIE_JSENABLED
 // import uk.gov.hmrc.uploaddocuments.support.UnitSpec

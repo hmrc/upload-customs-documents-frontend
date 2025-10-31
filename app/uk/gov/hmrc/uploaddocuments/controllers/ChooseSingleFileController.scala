@@ -18,7 +18,7 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent, Call, Request}
 import play.twirl.api.HtmlFormat
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, InitiateUpscanService, JourneyContextService}
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import uk.gov.hmrc.uploaddocuments.views.html.UploadSingleFileView

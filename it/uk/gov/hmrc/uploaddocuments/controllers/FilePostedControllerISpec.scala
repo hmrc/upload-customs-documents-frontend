@@ -1,6 +1,6 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 
 class FilePostedControllerISpec extends ControllerISpecBase {
 

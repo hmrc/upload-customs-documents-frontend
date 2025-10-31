@@ -21,27 +21,28 @@ import uk.gov.hmrc.mongo.lock.{LockRepository, LockService}
 import uk.gov.hmrc.uploaddocuments.models.JourneyId
 import uk.gov.hmrc.uploaddocuments.services.ScheduleAfter
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
-import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
+import scala.concurrent.duration.Duration
 
 import scala.concurrent.{ExecutionContext, Future}
 
 trait JourneyLocking extends LoggerUtil {
 
   val lockRepositoryProvider: LockRepository
-  val appConfig: AppConfig
+  def lockReleaseCheckInterval: Duration
+  def lockTimeout: Duration
 
   def lockKeeper(implicit journeyId: JourneyId) = LockService(
     lockRepository = lockRepositoryProvider,
     lockId = journeyId.value,
-    ttl = appConfig.lockTimeout
+    ttl = lockTimeout
   )
 
   def takeLock[T](
     timeOutResult: => Future[T]
   )(f: => Future[T])(implicit ec: ExecutionContext, scheduler: Scheduler, journeyId: JourneyId): Future[T] = {
 
-    val timeOut       = System.nanoTime() + appConfig.lockTimeout.toNanos
-    val checkInterval = appConfig.lockReleaseCheckInterval
+    val timeOut       = System.nanoTime() + lockTimeout.toNanos
+    val checkInterval = lockReleaseCheckInterval
 
     def tryLock(): Future[T] =
       lockKeeper

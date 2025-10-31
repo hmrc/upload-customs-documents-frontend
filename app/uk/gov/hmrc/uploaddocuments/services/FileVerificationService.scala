@@ -19,7 +19,7 @@ package uk.gov.hmrc.uploaddocuments.services
 import org.apache.pekko.actor.Scheduler
 import play.api.i18n.Messages
 import uk.gov.hmrc.uploaddocuments.controllers.routes
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import javax.inject.Inject

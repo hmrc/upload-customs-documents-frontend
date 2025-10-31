@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.models
 
-import play.api.libs.json._
+import play.api.libs.json.*
 import uk.gov.hmrc.uploaddocuments.support.{JsonFormatTest, UnitSpec}
 
 import java.time.ZonedDateTime

@@ -1,8 +1,8 @@
-import sbt._
-import sbt.Keys._
+import sbt.*
+import sbt.Keys.*
 import xsbti.{Position, Problem, Severity}
-import com.typesafe.sbt.web._
-import com.typesafe.sbt.web.incremental._
+import com.typesafe.sbt.web.*
+import com.typesafe.sbt.web.incremental.*
 import com.typesafe.sbt.packager
 import scala.io.Source
 import scala.sys.process.{Process, ProcessBuilder}
@@ -30,13 +30,13 @@ object SbtNpm extends AutoPlugin {
   object autoImport {
     object NpmKeys {
       val packageJsonDirectory = SettingKey[File]("packageJsonDirectory", "Root directory of package.json")
-      val npmInstall = TaskKey[Int]("npm-install", "Run npm install")
-      val npmTest = TaskKey[Int]("npm-test", "Run npm test")
+      val npmInstall           = TaskKey[Int]("npm-install", "Run npm install")
+      val npmTest              = TaskKey[Int]("npm-test", "Run npm test")
     }
   }
 
-  import SbtWeb.autoImport._
-  import autoImport.NpmKeys._
+  import SbtWeb.autoImport.*
+  import autoImport.NpmKeys.*
 
   override def projectSettings: Seq[Setting[_]] =
     inConfig(Assets)(
@@ -46,8 +46,8 @@ object SbtNpm extends AutoPlugin {
         commands ++= packageJsonDirectory(base => Seq(npmCommand(base))).value,
         npmInstall := {
           val logger: ManagedLogger = (Assets / streams).value.log
-          val projectRoot: File = baseDirectory.value
-          val nodeModulesDir = packageJsonDirectory.value / "node_modules"
+          val projectRoot: File     = baseDirectory.value
+          val nodeModulesDir        = packageJsonDirectory.value / "node_modules"
           if (nodeModulesDir.exists() && nodeModulesDir.isDirectory()) {
             logger.info(
               s"[sbt-npm] Folder ${nodeModulesDir.relativeTo(projectRoot).getOrElse(nodeModulesDir)} already exists."
@@ -79,7 +79,7 @@ object SbtNpm extends AutoPlugin {
 
   def npmProcess(failureMessage: String)(base: File, args: String*): Int = {
     val processBuilder = process(base, args: _*)
-    val exitValue = processBuilder.run().exitValue()
+    val exitValue      = processBuilder.run().exitValue()
     if (exitValue != 0)
       throw new Exception(failureMessage)
     else exitValue

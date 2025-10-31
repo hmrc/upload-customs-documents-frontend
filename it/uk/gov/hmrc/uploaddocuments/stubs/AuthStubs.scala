@@ -1,6 +1,6 @@
 package uk.gov.hmrc.uploaddocuments.stubs
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import uk.gov.hmrc.uploaddocuments.support.WireMockSupport
 
 trait AuthStubs {
@@ -28,13 +28,13 @@ trait AuthStubs {
           .withRequestBody(
             equalToJson(
               s"""
-                |{
-                |  "authorise": [
-                |    { "identifiers":[], "state":"Activated", "enrolment": "${enrolment.serviceName}" },
-                |    { "authProviders": ["GovernmentGateway"] }
-                |  ],
-                |  "retrieve":["optionalCredentials","authorisedEnrolments"]
-                |}
+                 |{
+                 |  "authorise": [
+                 |    { "identifiers":[], "state":"Activated", "enrolment": "${enrolment.serviceName}" },
+                 |    { "authProviders": ["GovernmentGateway"] }
+                 |  ],
+                 |  "retrieve":["optionalCredentials","authorisedEnrolments"]
+                 |}
            """.stripMargin,
               true,
               true
@@ -44,13 +44,13 @@ trait AuthStubs {
             aResponse()
               .withStatus(200)
               .withBody(s"""
-                |{
-                |"optionalCredentials": {"providerId": "12345-credId", "providerType": "GovernmentGateway"},
-                |"authorisedEnrolments": [
-                |  { "key":"${enrolment.serviceName}", "identifiers": [
-                |    {"key":"${enrolment.identifierName}", "value": "${enrolment.identifierValue}"}
-                |  ]}
-                |]}
+                           |{
+                           |"optionalCredentials": {"providerId": "12345-credId", "providerType": "GovernmentGateway"},
+                           |"authorisedEnrolments": [
+                           |  { "key":"${enrolment.serviceName}", "identifiers": [
+                           |    {"key":"${enrolment.identifierName}", "value": "${enrolment.identifierValue}"}
+                           |  ]}
+                           |]}
           """.stripMargin)
           )
       )
@@ -61,12 +61,12 @@ trait AuthStubs {
           .withRequestBody(
             equalToJson(
               s"""
-                |{
-                |  "authorise": [
-                |    { "authProviders": ["GovernmentGateway"] }
-                |  ],
-                |  "retrieve":["optionalCredentials"]
-                |}
+                 |{
+                 |  "authorise": [
+                 |    { "authProviders": ["GovernmentGateway"] }
+                 |  ],
+                 |  "retrieve":["optionalCredentials"]
+                 |}
            """.stripMargin,
               true,
               true
@@ -100,12 +100,12 @@ trait AuthStubs {
         .withRequestBody(
           equalToJson(
             s"""
-              |{
-              |  "authorise": [
-              |    { "authProviders": ["GovernmentGateway"] }
-              |  ],
-              |  "retrieve":["optionalCredentials"]
-              |}
+               |{
+               |  "authorise": [
+               |    { "authProviders": ["GovernmentGateway"] }
+               |  ],
+               |  "retrieve":["optionalCredentials"]
+               |}
            """.stripMargin,
             true,
             true
@@ -139,12 +139,12 @@ trait AuthStubs {
         .withRequestBody(
           equalToJson(
             s"""
-              |{
-              |  "authorise": [
-              |    { "authProviders": ["PrivilegedApplication"] }
-              |  ],
-              |  "retrieve":["optionalCredentials"]
-              |}
+               |{
+               |  "authorise": [
+               |    { "authProviders": ["PrivilegedApplication"] }
+               |  ],
+               |  "retrieve":["optionalCredentials"]
+               |}
            """.stripMargin,
             true,
             true

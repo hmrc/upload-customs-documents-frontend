@@ -37,13 +37,13 @@
 // import uk.gov.hmrc.http.HeaderCarrier
 // import uk.gov.hmrc.uploaddocuments.controllers.routes
 // import uk.gov.hmrc.uploaddocuments.journeys.TestData
-// import uk.gov.hmrc.uploaddocuments.models._
+// import uk.gov.hmrc.uploaddocuments.models.*
 // import uk.gov.hmrc.uploaddocuments.services.mocks.MockFileUploadService
 // import uk.gov.hmrc.uploaddocuments.support.UnitSpec
 
 // import java.util.concurrent.TimeUnit
 // import scala.concurrent.Future
-// import scala.concurrent.duration._
+// import scala.concurrent.duration.*
 // import scala.concurrent.ExecutionContext
 // import org.scalamock.scalatest.MockFactory
 

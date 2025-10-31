@@ -1,6 +1,6 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.stubs.{ExternalApiStubs, UpscanInitiateStubs}
 import uk.gov.hmrc.uploaddocuments.support.JsEnabled
 import play.api.libs.ws.DefaultBodyReadables.readableAsString
@@ -46,7 +46,10 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
 
         "show the upload multiple files page with pre-populated no radio button when cookie set and yes/no question is enabled" in {
           setContext(
-            FileUploadContext(fileUploadSessionConfig.copy(features = Features(showYesNoQuestionBeforeContinue = true), prePopulateYesOrNoForm = Some(false)))
+            FileUploadContext(
+              fileUploadSessionConfig
+                .copy(features = Features(showYesNoQuestionBeforeContinue = true), prePopulateYesOrNoForm = Some(false))
+            )
           )
           setFileUploads()
 
@@ -57,12 +60,15 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
           result.status shouldBe 200
           result.body should include(htmlEscapedPageTitle("view.upload-multiple-files.title"))
           result.body should include(htmlEscapedMessage("view.upload-multiple-files.heading"))
-          result.body should include regex("""value=\"no\"\s*checked""")
+          result.body should include regex """value=\"no\"\s*checked"""
         }
 
         "show the upload multiple files page with pre-populated yes radio button when cookie set and yes/no question is enabled" in {
           setContext(
-            FileUploadContext(fileUploadSessionConfig.copy(features = Features(showYesNoQuestionBeforeContinue = true), prePopulateYesOrNoForm = Some(true)))
+            FileUploadContext(
+              fileUploadSessionConfig
+                .copy(features = Features(showYesNoQuestionBeforeContinue = true), prePopulateYesOrNoForm = Some(true))
+            )
           )
           setFileUploads()
 
@@ -73,7 +79,7 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
           result.status shouldBe 200
           result.body should include(htmlEscapedPageTitle("view.upload-multiple-files.title"))
           result.body should include(htmlEscapedMessage("view.upload-multiple-files.heading"))
-          result.body should include regex ("""value=\"yes\"\s*checked""")
+          result.body should include regex """value=\"yes\"\s*checked"""
         }
 
         "show the single files page when cookie set but the feature is turned off" in {

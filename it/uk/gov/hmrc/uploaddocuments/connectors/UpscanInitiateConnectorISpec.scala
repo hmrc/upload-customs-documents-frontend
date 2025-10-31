@@ -3,7 +3,7 @@ package uk.gov.hmrc.uploaddocuments.connectors
 import play.api.Application
 import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
 import uk.gov.hmrc.uploaddocuments.support.AppISpec
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.*
 import uk.gov.hmrc.uploaddocuments.models.{UpscanInitiateRequest, UpscanInitiateResponse}
 
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -29,6 +29,17 @@ class UpscanInitiateConnectorISpec extends UpscanInitiateConnectorISpecSetup {
 
       "return error if upscan initiate fails" in {
         givenUpscanInitiateFails("https://myservice.com/callback", "dummy.service")
+        givenAuditConnector()
+
+        intercept[Exception] {
+          await(
+            connector.initiate("dummy.service", UpscanInitiateRequest(callbackUrl = "https://myservice.com/callback"))
+          )
+        }
+      }
+
+      "return error if upscan initiate returns malformed json" in {
+        givenUpscanInitiateReturnsMalformedJson("https://myservice.com/callback", "dummy.service")
         givenAuditConnector()
 
         intercept[Exception] {

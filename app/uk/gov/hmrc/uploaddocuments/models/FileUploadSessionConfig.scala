@@ -16,10 +16,10 @@
 
 package uk.gov.hmrc.uploaddocuments.models
 
-import play.api.libs.functional.syntax._
+import play.api.libs.functional.syntax.*
 import play.api.libs.json.{Format, JsPath, JsValue}
 
-import UrlValidator._
+import UrlValidator.*
 
 final case class FileUploadSessionConfig(
   nonce: Nonce, // unique secret shared by the host and upload microservices

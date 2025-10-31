@@ -21,7 +21,7 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.mongo.lock.MongoLockRepository
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector
 import uk.gov.hmrc.uploaddocuments.connectors.FileUploadResultPushConnector.Response
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.Request
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.repository.{JourneyCacheRepository, JourneyLocking}
@@ -31,17 +31,21 @@ import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration.Duration
 
 class FileUploadService @Inject() (
   repo: JourneyCacheRepository,
   fileUploadResultPushConnector: FileUploadResultPushConnector,
   override val lockRepositoryProvider: MongoLockRepository,
-  override val appConfig: AppConfig,
+  val appConfig: AppConfig,
   val actorSystem: ActorSystem
 )(implicit ec: ExecutionContext)
     extends LoggerUtil with UploadLog with JourneyLocking {
 
   implicit lazy val scheduler: Scheduler = actorSystem.scheduler
+
+  def lockReleaseCheckInterval: Duration = appConfig.lockReleaseCheckInterval
+  def lockTimeout: Duration              = appConfig.lockTimeout
 
   def getFiles(implicit journeyId: JourneyId): Future[Option[FileUploads]] =
     repo.get(journeyId.value)(DataKeys.uploadedFiles)
@@ -141,27 +145,6 @@ class FileUploadService @Inject() (
           _ <- if (updateFiles.acceptedCount != fileUploads.acceptedCount) {
                  fileUploadResultPushConnector.push(Request(context, updateFiles))
                } else Future.successful(Right((): Unit))
-        } yield Some(updateFiles)
-      }
-    }
-
-  def markFileWithUpscanResponse(notification: UpscanNotification, requestNonce: Nonce)(implicit
-    context: FileUploadContext,
-    journeyId: JourneyId,
-    hc: HeaderCarrier
-  ): Future[Option[FileUploads]] =
-    takeLock[Option[FileUploads]](Future.successful(None)) {
-      withFiles[Option[FileUploads]](Future.successful(None)) { fileUploads =>
-        for {
-          updateFiles <- putFiles(updateFileUploadsWithUpscanResponse(notification, requestNonce, fileUploads))
-          _ = if (fileUploads.files == updateFiles.files) {
-                Logger.warn(
-                  "[markFileWithUpscanResponse] No files were updated following the callback from Upscan"
-                )
-                Logger.debug(
-                  s"[markFileWithUpscanResponse] No files were updated following the callback from Upscan. journeyId: '$journeyId', upscanRef: '${notification.reference}'"
-                )
-              }
         } yield Some(updateFiles)
       }
     }

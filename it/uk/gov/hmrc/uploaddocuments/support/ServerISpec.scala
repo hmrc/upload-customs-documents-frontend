@@ -16,7 +16,7 @@ abstract class ServerISpec extends BaseISpec with GuiceOneServerPerSuite {
   lazy val sessionCookieCrypto: SessionCookieCrypto = app.injector.instanceOf[SessionCookieCrypto]
 
   def wsClient = {
-    import play.shaded.ahc.org.asynchttpclient._
+    import play.shaded.ahc.org.asynchttpclient.*
     val asyncHttpClientConfig = new DefaultAsyncHttpClientConfig.Builder()
       .setMaxRequestRetry(0)
       .setShutdownQuietPeriod(0)

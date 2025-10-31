@@ -19,7 +19,7 @@ package uk.gov.hmrc.uploaddocuments.controllers.internal
 import play.api.libs.json.JsValue
 import play.api.mvc.Action
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, FileUploadsControllerHelper, JourneyContextControllerHelper}
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 
 import javax.inject.{Inject, Singleton}

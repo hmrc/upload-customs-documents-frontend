@@ -17,7 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.support
 
 import org.scalacheck.Gen
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 
 import java.time.ZonedDateTime
 

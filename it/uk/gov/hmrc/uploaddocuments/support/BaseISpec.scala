@@ -6,7 +6,7 @@ import play.api.inject.bind
 import play.api.inject.guice.GuiceApplicationBuilder
 import play.api.mvc.Result
 import play.api.test.FakeRequest
-import play.api.test.Helpers._
+import play.api.test.Helpers.*
 import play.twirl.api.HtmlFormat
 import uk.gov.hmrc.uploaddocuments.stubs.{AuthStubs, DataStreamStubs}
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
@@ -24,7 +24,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 abstract class BaseISpec
     extends UnitSpec with WireMockSupport with AuthStubs with DataStreamStubs with MetricsTestSupport {
 
-  import scala.concurrent.duration._
+  import scala.concurrent.duration.*
   override implicit val defaultTimeout: FiniteDuration = 5.seconds
 
   lazy val objectStoreClientStub = {
