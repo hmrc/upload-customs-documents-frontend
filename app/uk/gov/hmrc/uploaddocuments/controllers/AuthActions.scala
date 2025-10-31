@@ -16,13 +16,13 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.mvc.Results._
+import play.api.mvc.Results.*
 import play.api.mvc.{Request, Result, Results}
 import play.api.{Configuration, Environment, Mode}
 import uk.gov.hmrc.auth.core.AuthProvider.{GovernmentGateway, PrivilegedApplication}
-import uk.gov.hmrc.auth.core._
-import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals._
-import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
+import uk.gov.hmrc.auth.core.*
+import uk.gov.hmrc.auth.core.retrieve.v2.Retrievals.*
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.support.CallOps
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
@@ -87,12 +87,6 @@ trait AuthRedirects {
 
   def ggLoginUrl: String = host("bas-gateway-frontend") + "/bas-gateway/sign-in"
 
-  def verifyLoginUrl: String = host("citizen-auth-frontend") + "/ida/login"
-
-  def personalIVUrl: String = host("identity-verification-frontend") + "/mdtp/uplift"
-
-  def strideLoginUrl: String = host("stride-auth-frontend") + "/stride/sign-in"
-
   final lazy val defaultOrigin: String =
     config
       .getOptional[String]("sosOrigin")
@@ -108,20 +102,6 @@ trait AuthRedirects {
         "continue_url" -> Seq(continueUrl),
         "origin"       -> Seq(origin)
       )
-    )
-
-  def toVerifyLogin(continueUrl: String): Result = Redirect(verifyLoginUrl).withSession(
-    SessionKeys.redirect    -> continueUrl,
-    SessionKeys.loginOrigin -> origin
-  )
-
-  def toStrideLogin(successUrl: String, failureUrl: Option[String] = None): Result =
-    Redirect(
-      strideLoginUrl,
-      Map(
-        "successURL" -> Seq(successUrl),
-        "origin"     -> Seq(origin)
-      ) ++ failureUrl.map(f => Map("failureURL" -> Seq(f))).getOrElse(Map())
     )
 
 }

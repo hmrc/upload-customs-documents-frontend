@@ -1,7 +1,7 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.http.Status
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 import play.api.libs.ws.DefaultBodyReadables.readableAsString
 
 import java.time.ZonedDateTime

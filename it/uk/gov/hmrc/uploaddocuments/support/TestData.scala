@@ -1,7 +1,7 @@
 package uk.gov.hmrc.uploaddocuments.support
 
 import uk.gov.hmrc.uploaddocuments.models.UpscanNotification.{FailureDetails, QUARANTINE, UploadDetails}
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 
 import java.time.{LocalDate, ZonedDateTime}
 

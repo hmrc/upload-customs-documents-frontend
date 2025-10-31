@@ -21,7 +21,7 @@ import play.api.mvc.Action
 import play.mvc.Http.HeaderNames
 import uk.gov.hmrc.uploaddocuments.controllers.BaseController
 import uk.gov.hmrc.uploaddocuments.controllers.BaseControllerComponents
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 
 import javax.inject.{Inject, Singleton}

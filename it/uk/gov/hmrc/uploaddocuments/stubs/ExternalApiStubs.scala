@@ -1,6 +1,6 @@
 package uk.gov.hmrc.uploaddocuments.stubs
 
-import com.github.tomakehurst.wiremock.client.WireMock._
+import com.github.tomakehurst.wiremock.client.WireMock.*
 import play.api.libs.json.Json
 import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.Payload
 import uk.gov.hmrc.uploaddocuments.support.WireMockSupport

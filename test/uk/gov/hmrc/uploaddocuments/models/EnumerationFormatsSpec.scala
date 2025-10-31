@@ -18,7 +18,7 @@ package uk.gov.hmrc.uploaddocuments.models
 
 import org.scalatest.wordspec.AnyWordSpec
 import org.scalatest.matchers.should.Matchers
-import play.api.libs.json._
+import play.api.libs.json.*
 
 class EnumerationFormatsSpec extends AnyWordSpec with Matchers {
 

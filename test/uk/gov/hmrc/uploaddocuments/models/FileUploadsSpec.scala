@@ -67,20 +67,6 @@ class FileUploadsSpec extends UnitSpec {
   )
 
   "FileUploads" should {
-//    "filter out initiated uploads" in {
-//      FileUploads(Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "foo"))).filterOutInitiated shouldBe FileUploads()
-//
-//      FileUploads(Seq(initiatedFileUpload1, initiatedFileUpload2, initiatedFileUpload3)).filterOutInitiated shouldBe FileUploads()
-//
-//      FileUploads(Seq(postedFileUpload1, initiatedFileUpload2, failedFileUpload, initiatedFileUpload3)).filterOutInitiated shouldBe
-//        FileUploads(Seq(postedFileUpload1, failedFileUpload))
-//
-//      FileUploads(Seq(postedFileUpload1, initiatedFileUpload2, rejectedFileUpload)).filterOutInitiated shouldBe
-//        FileUploads(Seq(postedFileUpload1, rejectedFileUpload))
-//
-//      FileUploads(Seq(postedFileUpload1, postedFileUpload2, postedFileUpload3)).filterOutInitiated shouldBe
-//        FileUploads(Seq(postedFileUpload1, postedFileUpload2, postedFileUpload3))
-//    }
 
     "filter accepted uploads" in {
       FileUploads(Seq(FileUpload.Initiated(Nonce.Any, Timestamp.Any, "foo"))).onlyAccepted shouldBe FileUploads()

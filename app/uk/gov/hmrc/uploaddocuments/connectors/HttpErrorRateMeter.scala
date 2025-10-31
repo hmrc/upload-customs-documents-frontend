@@ -17,7 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.connectors
 
 import com.codahale.metrics.MetricRegistry
-import uk.gov.hmrc.http._
+import uk.gov.hmrc.http.*
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import scala.concurrent.{ExecutionContext, Future}

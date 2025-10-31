@@ -18,7 +18,7 @@ package uk.gov.hmrc.uploaddocuments.models
 
 import play.api.libs.json.Format
 
-import java.time._
+import java.time.*
 import java.time.format.DateTimeFormatter
 
 /** Testing and serialization friendly timestamp wrapper. */

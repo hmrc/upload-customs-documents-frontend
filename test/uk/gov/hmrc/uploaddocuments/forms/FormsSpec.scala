@@ -16,7 +16,7 @@
 
 package uk.gov.hmrc.uploaddocuments.forms
 
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.support.{FormValidator, UnitSpec}
 
 class FormsSpec extends UnitSpec with FormValidator {

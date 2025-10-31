@@ -22,7 +22,7 @@ import ch.qos.logback.core.read.ListAppender
 import org.scalatest.Assertion
 import play.api.LoggerLike
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 trait LogCapturing { self: UnitSpec =>
 

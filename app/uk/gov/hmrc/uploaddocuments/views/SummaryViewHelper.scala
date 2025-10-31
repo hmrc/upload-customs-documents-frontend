@@ -16,11 +16,8 @@
 
 package uk.gov.hmrc.uploaddocuments.views
 
-import play.api.data.Form
 import play.api.i18n.Messages
 import play.api.mvc.Call
-import uk.gov.hmrc.govukfrontend.views.viewmodels.content.Text
-import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
 import uk.gov.hmrc.govukfrontend.views.viewmodels.summarylist.SummaryList
 import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploads}
 
@@ -28,20 +25,6 @@ import javax.inject.Singleton
 
 @Singleton
 class SummaryViewHelper extends SummaryListRowHelper {
-
-  def uploadAnotherFileItems(form: Form[_])(implicit messages: Messages): Seq[RadioItem] =
-    Seq(
-      RadioItem(
-        value = Some("yes"),
-        content = Text(messages(s"form.file-uploaded.uploadAnotherFile.yes")),
-        checked = form("uploadAnotherFile").value.contains("yes")
-      ),
-      RadioItem(
-        value = Some("no"),
-        content = Text(messages(s"form.file-uploaded.uploadAnotherFile.no")),
-        checked = form("uploadAnotherFile").value.contains("no")
-      )
-    )
 
   def summaryListOfFileUploads(
     fileUploads: FileUploads,

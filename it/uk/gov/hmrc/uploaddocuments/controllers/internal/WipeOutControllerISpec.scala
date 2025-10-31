@@ -1,7 +1,7 @@
 package uk.gov.hmrc.uploaddocuments.controllers.internal
 
 import uk.gov.hmrc.uploaddocuments.controllers.ControllerISpecBase
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 import play.api.libs.ws.writeableOf_String
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.http.SessionId

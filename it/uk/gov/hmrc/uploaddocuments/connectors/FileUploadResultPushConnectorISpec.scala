@@ -3,8 +3,8 @@ package uk.gov.hmrc.uploaddocuments.connectors
 import play.api.Application
 import play.api.libs.json.{JsNumber, JsString, Json}
 import uk.gov.hmrc.http.HeaderCarrier
-import uk.gov.hmrc.uploaddocuments.models._
-import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush._
+import uk.gov.hmrc.uploaddocuments.models.*
+import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.*
 import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
 import uk.gov.hmrc.uploaddocuments.support.{AppISpec, TestData}
 
@@ -19,7 +19,7 @@ class FileUploadResultPushConnectorISpec extends FileUploadResultPushConnectorIS
 
   implicit val jid: JourneyId = TestData.journeyId
 
-  import FileUploadResultPushConnector._
+  import FileUploadResultPushConnector.*
 
   "FileUploadResultPushConnector" when {
     "push" should {

@@ -2,7 +2,7 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.http.Status
 import play.api.libs.json.Json
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
 import play.api.libs.ws.DefaultBodyReadables.readableAsString
 import play.api.libs.ws.writeableOf_JsValue
@@ -192,7 +192,7 @@ class FileRejectedControllerISpec extends ControllerISpecBase with UpscanInitiat
           request("/file-rejected").post(
             Json.obj(
               fields = "zoo" -> "2b72fe99-8adf-4edb-865e-622ae710f77c",
-              "foo"    -> "EntityTooLarge",
+              "foo" -> "EntityTooLarge",
               "bar" -> "Entity Too Large"
             )
           )

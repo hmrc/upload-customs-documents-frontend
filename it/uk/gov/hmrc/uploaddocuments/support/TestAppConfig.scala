@@ -4,7 +4,7 @@ import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.Duration
-import scala.concurrent.duration._
+import scala.concurrent.duration.*
 
 case class TestAppConfig(
   wireMockBaseUrl: String,

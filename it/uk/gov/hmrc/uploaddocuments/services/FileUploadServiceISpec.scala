@@ -19,12 +19,12 @@ package uk.gov.hmrc.uploaddocuments.services
 import org.mongodb.scala.bson.BsonDocument
 import org.scalatest.BeforeAndAfterEach
 import play.api.test.FakeRequest
-import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush._
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.*
+import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository
 import uk.gov.hmrc.uploaddocuments.repository.JourneyCacheRepository.DataKeys
 import uk.gov.hmrc.uploaddocuments.stubs.ExternalApiStubs
-import uk.gov.hmrc.uploaddocuments.support.TestData._
+import uk.gov.hmrc.uploaddocuments.support.TestData.*
 import uk.gov.hmrc.uploaddocuments.support.{AppISpec, LogCapturing}
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 

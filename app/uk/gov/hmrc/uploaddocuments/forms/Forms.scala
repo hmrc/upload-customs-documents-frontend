@@ -22,7 +22,7 @@ import uk.gov.hmrc.uploaddocuments.models.{S3UploadError, S3UploadSuccess}
 
 object Forms {
 
-  import FormFieldMappings._
+  import FormFieldMappings.*
 
   val YesNoChoiceForm = Form[Boolean](
     mapping("choice" -> yesNoMapping)(identity)(Option.apply)

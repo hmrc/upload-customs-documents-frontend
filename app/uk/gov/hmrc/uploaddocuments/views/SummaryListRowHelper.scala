@@ -29,11 +29,11 @@ trait SummaryListRowHelper {
     value: String,
     visuallyHiddenText: Option[String],
     action: (Call, String),
-    keyClasses: Option[String]   = None,
+    keyClasses: Option[String] = None,
     valueClasses: Option[String] = None,
-    url: Option[String]          = None,
-    line2: Option[String]        = None,
-    escape: Boolean              = true
+    url: Option[String] = None,
+    line2: Option[String] = None,
+    escape: Boolean = true
   )(implicit messages: Messages): SummaryListRow =
     SummaryListRow(
       key = Key(
@@ -42,11 +42,15 @@ trait SummaryListRowHelper {
       ),
       value = Value(
         content = HtmlContent(
-          s"""${if (url.nonEmpty)
-            s"<a class='govuk-link file-upload__file-preview' href='${url.get}' target='_blank' rel='noopener noreferrer'>${if (escape) HtmlFormat.escape(value)
-            else value}</a>"
-          else
-            s"${if (escape) HtmlFormat.escape(value) else value}"} 
+          s"""${
+              if (url.nonEmpty)
+                s"<a class='govuk-link file-upload__file-preview' href='${url.get}' target='_blank' rel='noopener noreferrer'>${
+                    if (escape) HtmlFormat.escape(value)
+                    else value
+                  }</a>"
+              else
+                s"${if (escape) HtmlFormat.escape(value) else value}"
+            } 
           ${line2.getOrElse("")}
           """
         ),
@@ -56,8 +60,8 @@ trait SummaryListRowHelper {
         Actions(
           items = Seq(
             ActionItem(
-              href               = action._1.url,
-              content            = Text(messages(action._2)),
+              href = action._1.url,
+              content = Text(messages(action._2)),
               visuallyHiddenText = visuallyHiddenText.map(messages.apply(_))
             )
           ),

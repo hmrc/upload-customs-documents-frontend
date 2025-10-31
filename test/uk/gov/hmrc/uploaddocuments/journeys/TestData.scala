@@ -16,9 +16,9 @@
 
 package uk.gov.hmrc.uploaddocuments.journeys
 
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 
-import java.time._
+import java.time.*
 import scala.concurrent.Future
 
 trait TestData {

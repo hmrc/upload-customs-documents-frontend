@@ -18,7 +18,7 @@ package uk.gov.hmrc.uploaddocuments.forms
 
 import play.api.data.Forms.{optional, text}
 import play.api.data.Mapping
-import play.api.data.validation._
+import play.api.data.validation.*
 
 object FormFieldMappings {
 

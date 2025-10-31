@@ -17,7 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.i18n.I18nSupport
-import play.api.mvc._
+import play.api.mvc.*
 import play.api.{Configuration, Environment}
 import uk.gov.hmrc.auth.core.AuthConnector
 import uk.gov.hmrc.http.HeaderCarrier
@@ -48,6 +48,8 @@ abstract class BaseController(
   final def env: Environment             = components.environment
   final def authConnector: AuthConnector = components.authConnector
 
+  val govukStartUrl: String = components.appConfig.govukStartUrl
+
   final protected def controllerComponents: MessagesControllerComponents = components.messagesControllerComponents
 
   final def journeyIdFromSession(implicit hc: HeaderCarrier): Option[JourneyId] =
@@ -61,7 +63,5 @@ abstract class BaseController(
     if (!isEnabled) logger.debug("javascript is disabled")
     isEnabled
   }
-
-  final def govukStartUrl: String = components.appConfig.govukStartUrl
 
 }

@@ -18,7 +18,7 @@ package uk.gov.hmrc.uploaddocuments.wiring
 
 import com.google.inject.name.Named
 import play.api.i18n.MessagesApi
-import play.api.mvc.Results._
+import play.api.mvc.Results.*
 import play.api.mvc.{Request, RequestHeader, Result}
 import play.api.{Configuration, Environment, Mode}
 import uk.gov.hmrc.auth.core.{InsufficientEnrolments, NoActiveSession}
@@ -65,7 +65,7 @@ class ErrorHandler @Inject() (
     auditServerError(request, exception)
     implicit val r = Request(request, "")
     Future.successful(exception match {
-      case _: NoActiveSession        => toGGLogin(if (isDevEnv) s"http://${request.host}${request.uri}" else s"${request.uri}")
+      case _: NoActiveSession => toGGLogin(if (isDevEnv) s"http://${request.host}${request.uri}" else s"${request.uri}")
       case _: InsufficientEnrolments => Forbidden
       case _ =>
         Ok(
@@ -94,7 +94,7 @@ object EventTypes {
 
 trait ErrorAuditing extends HttpAuditEvent {
 
-  import EventTypes._
+  import EventTypes.*
 
   def auditConnector: AuditConnector
 
@@ -122,7 +122,7 @@ trait ErrorAuditing extends HttpAuditEvent {
   def auditClientError(request: RequestHeader, statusCode: Int, message: String)(implicit
     ec: ExecutionContext
   ): Unit = {
-    import play.api.http.Status._
+    import play.api.http.Status.*
     statusCode match {
       case NOT_FOUND =>
         auditConnector.sendEvent(

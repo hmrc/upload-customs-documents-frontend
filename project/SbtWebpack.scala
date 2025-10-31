@@ -1,8 +1,8 @@
 import com.typesafe.sbt.packager
-import com.typesafe.sbt.web._
-import com.typesafe.sbt.web.incremental._
-import sbt.Keys._
-import sbt._
+import com.typesafe.sbt.web.*
+import com.typesafe.sbt.web.incremental.*
+import sbt.Keys.*
+import sbt.*
 import sbt.internal.util.ManagedLogger
 import xsbti.{Position, Problem, Reporter, Severity}
 
@@ -58,8 +58,8 @@ object SbtWebpack extends AutoPlugin {
   }
 
   import SbtNpm.autoImport.NpmKeys
-  import SbtWeb.autoImport._
-  import WebKeys._
+  import SbtWeb.autoImport.*
+  import WebKeys.*
   import autoImport.WebpackKeys
 
   final val unscopedWebpackSettings = Seq(
@@ -92,7 +92,7 @@ object SbtWebpack extends AutoPlugin {
     // Therefore, we need to deduplicate the files by choosing the one in the target directory.
     // Otherwise, the "duplicate mappings" error would occur.
     deduplicators += {
-      val targetDir = (WebpackKeys.webpack / resourceManaged).value
+      val targetDir             = (WebpackKeys.webpack / resourceManaged).value
       val targetDirAbsolutePath = targetDir.getAbsolutePath
 
       { files: Seq[File] => files.find(_.getAbsolutePath.startsWith(targetDirAbsolutePath)) }
@@ -110,17 +110,17 @@ object SbtWebpack extends AutoPlugin {
     } else ""
 
   final def runWebpackConfigs(acceptedIds: Seq[String]) = Def.task {
-    val tag = "[sbt-webpack]"
+    val tag                   = "[sbt-webpack]"
     val logger: ManagedLogger = (Assets / streams).value.log
-    val targetDir: File = (Assets / WebpackKeys.webpack / resourceManaged).value
+    val targetDir: File       = (Assets / WebpackKeys.webpack / resourceManaged).value
 
-    val nodeModulesPath: File = (WebpackKeys.webpack / WebpackKeys.nodeModules).value
-    val webpackReporter: Reporter = (Assets / reporter).value
-    val webpackBinary: File = (WebpackKeys.webpack / WebpackKeys.binary).value
-    val outputDirectory: File = (WebpackKeys.webpack / resourceManaged).value
-    val assetsLocation: File = (Assets / sourceDirectory).value
-    val assetsWebJarsLocation: File = (Assets / webJarsDirectory).value
-    val projectRoot: File = baseDirectory.value
+    val nodeModulesPath: File        = (WebpackKeys.webpack / WebpackKeys.nodeModules).value
+    val webpackReporter: Reporter    = (Assets / reporter).value
+    val webpackBinary: File          = (WebpackKeys.webpack / WebpackKeys.binary).value
+    val outputDirectory: File        = (WebpackKeys.webpack / resourceManaged).value
+    val assetsLocation: File         = (Assets / sourceDirectory).value
+    val assetsWebJarsLocation: File  = (Assets / webJarsDirectory).value
+    val projectRoot: File            = baseDirectory.value
     val webpackSourceDirectory: File = (WebpackKeys.webpack / sourceDirectory).value
 
     val webpackConfigs: Seq[autoImport.WebpackConfig] =
@@ -178,10 +178,10 @@ object SbtWebpack extends AutoPlugin {
           incremental.syncIncremental(cacheDirectory / configTag, sources) { modifiedSources =>
             if (modifiedSources.nonEmpty) {
               logger.info(s"""
-                |$configTag Detected ${modifiedSources.size} changed files:
-                |$configTag - ${modifiedSources
-                .map(f => f.relativeTo(projectRoot).getOrElse(f).toString())
-                .mkString(s"\n$configTag - ")}
+                             |$configTag Detected ${modifiedSources.size} changed files:
+                             |$configTag - ${modifiedSources
+                              .map(f => f.relativeTo(projectRoot).getOrElse(f).toString())
+                              .mkString(s"\n$configTag - ")}
            """.stripMargin.trim)
 
               Webpack
@@ -207,16 +207,16 @@ object SbtWebpack extends AutoPlugin {
                       problems = Seq(new Problem {
                         override def category() = ""
                         override def severity() = Severity.Error
-                        override def message() = error
+                        override def message()  = error
                         override def position() =
                           new Position {
-                            override def line() = java.util.Optional.empty()
-                            override def lineContent() = ""
-                            override def offset() = java.util.Optional.empty()
-                            override def pointer() = java.util.Optional.empty()
+                            override def line()         = java.util.Optional.empty()
+                            override def lineContent()  = ""
+                            override def offset()       = java.util.Optional.empty()
+                            override def pointer()      = java.util.Optional.empty()
                             override def pointerSpace() = java.util.Optional.empty()
-                            override def sourcePath() = java.util.Optional.empty()
-                            override def sourceFile() = java.util.Optional.empty()
+                            override def sourcePath()   = java.util.Optional.empty()
+                            override def sourceFile()   = java.util.Optional.empty()
                           }
                       })
                     )
@@ -282,7 +282,7 @@ object SbtWebpack extends AutoPlugin {
       additionalEnvironmentProperties: Map[String, String],
       logger: ManagedLogger
     ): Either[String, WebpackExecutionResult] = {
-      import sbt._
+      import sbt.*
 
       if (!webpackBinary.exists() || !webpackBinary.isFile())
         Left(s"webpack binary file ${webpackBinary.getPath()} not found")
@@ -381,8 +381,8 @@ object SbtWebpack extends AutoPlugin {
 
   object Shell {
     def execute(cmd: Seq[String], cwd: File, envs: (String, String)*): (Int, Seq[String]) = {
-      var output = Vector.empty[String]
-      val process = Process(cmd, cwd, envs: _*)
+      var output   = Vector.empty[String]
+      val process  = Process(cmd, cwd, envs: _*)
       val exitCode = process.!(ProcessLogger(s => output = output.:+(s.trim)))
       (exitCode, output)
     }

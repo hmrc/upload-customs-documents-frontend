@@ -17,7 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush
 
 import play.api.libs.json.{Format, JsValue, Json, Writes}
-import uk.gov.hmrc.uploaddocuments.models._
+import uk.gov.hmrc.uploaddocuments.models.*
 
 case class Payload(nonce: Nonce, uploadedFiles: Seq[UploadedFile], cargo: Option[JsValue])
 
@@ -38,12 +38,14 @@ object Payload {
 
   implicit val format: Format[Payload] = Json.format[Payload]
 
-  //Used by logging as we can't leak the internal AWS Download URL to Kibana (even in QA/Staging)
+  // Used by logging as we can't leak the internal AWS Download URL to Kibana (even in QA/Staging)
   val writeNoDownloadUrl: Writes[Payload] = Writes { model =>
-    Json.toJson(Payload(
-      model.nonce,
-      model.uploadedFiles.map(_.copy(downloadUrl = "")),
-      model.cargo
-    ))(format)
+    Json.toJson(
+      Payload(
+        model.nonce,
+        model.uploadedFiles.map(_.copy(downloadUrl = "")),
+        model.cargo
+      )
+    )(format)
   }
 }

@@ -23,14 +23,14 @@ class FileUploadFailureFormatSpec extends UnitSpec {
 
   "FileUploadFailure format" should {
 
-    "serialize and deserialize FileTransmissionFailed" ignore new JsonFormatTest[FileUploadError](info) {
+    "serialize and deserialize FileTransmissionFailed" in new JsonFormatTest[FileUploadError](info) {
       validateJsonFormat(
-        """{"FileTransmissionFailed":{"error":{"errorMessage":"c","key":"a","errorCode":"b","errorRequestId":"e","errorResource":"d"}}}""".stripMargin,
+        """{"FileTransmissionFailed":{"error":{"key":"a","errorCode":"b","errorMessage":"c","errorRequestId":"e","errorResource":"d"}}}""".stripMargin,
         FileTransmissionFailed(error = S3UploadError("a", "b", "c", Some("e"), Some("d")))
       )
     }
 
-    "serialize and deserialize FileVerificationFailed" ignore new JsonFormatTest[FileUploadError](info) {
+    "serialize and deserialize FileVerificationFailed" in new JsonFormatTest[FileUploadError](info) {
       validateJsonFormat(
         """{"FileVerificationFailed":{"details":{"failureReason":"QUARANTINE","message":"This file has virus."}}}""".stripMargin,
         FileVerificationFailed(details =
