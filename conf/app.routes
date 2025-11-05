@@ -43,3 +43,5 @@ GET        /sign-out/timeout                                        @uk.gov.hmrc
 
 GET        /language/:lang                                          @uk.gov.hmrc.uploaddocuments.controllers.LanguageSwitchController.switchToLanguage(lang: String)
 GET        /assets/*file                                            controllers.Assets.versioned(path="/public", file: Asset)
+
+OPTIONS    /*url                                                    @uk.gov.hmrc.uploaddocuments.controllers.StartController.options(url: String)
