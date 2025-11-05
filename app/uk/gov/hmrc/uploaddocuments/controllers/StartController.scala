@@ -22,6 +22,7 @@ import uk.gov.hmrc.uploaddocuments.views.html.StartView
 import javax.inject.{Inject, Singleton}
 import uk.gov.hmrc.uploaddocuments.support.JsEnabled
 import play.api.mvc.DiscardingCookie
+import scala.concurrent.Future
 
 @Singleton
 class StartController @Inject() (view: StartView, components: BaseControllerComponents)
@@ -33,4 +34,16 @@ class StartController @Inject() (view: StartView, components: BaseControllerComp
       .discardingCookies(DiscardingCookie(JsEnabled.COOKIE_JSENABLED))
   }
 
+  final def options(url: String): Action[AnyContent] = Action.async { _ =>
+    Future.successful(NoContent.withHeaders(CORS.headers*))
+  }
+
+}
+
+object CORS {
+
+  val headers = List(
+    "Access-Control-Allow-Origin"  -> "*",
+    "Access-Control-Allow-Methods" -> "GET, POST, OPTIONS"
+  )
 }
