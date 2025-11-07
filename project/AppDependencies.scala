@@ -2,13 +2,13 @@ import sbt.*
 
 object AppDependencies {
 
-  val bootstrapVersion = "10.3.0"
+  val bootstrapVersion = "10.4.0"
   val playSuffix       = "-play-30"
 
   val compile = Seq(
     "uk.gov.hmrc"                  %% s"bootstrap-frontend$playSuffix"  % bootstrapVersion,
     "uk.gov.hmrc.mongo"            %% s"hmrc-mongo$playSuffix"          % "2.10.0",
-    "uk.gov.hmrc"                  %% s"play-frontend-hmrc$playSuffix"  % "12.19.0",
+    "uk.gov.hmrc"                  %% s"play-frontend-hmrc$playSuffix"  % "12.20.0",
     "com.sun.mail"                  % "javax.mail"                      % "1.6.2",
     "org.jsoup"                     % "jsoup"                           % "1.21.2",
     "com.fasterxml.jackson.module" %% "jackson-module-scala"            % "2.17.1",
