@@ -26,7 +26,8 @@ import uk.gov.hmrc.uploaddocuments.support.UnitSpec
 
 class FileUploadResultPushConnectorReadsSpec extends UnitSpec {
 
-  object TestFileUploadResultPushConnectorReads extends FileUploadResultPushConnectorReads(HostService.Any)(JourneyId("foo"))
+  object TestFileUploadResultPushConnectorReads
+      extends FileUploadResultPushConnectorReads(HostService.Any)(JourneyId("foo"))
 
   "FileUploadResultPushConnectorReads.reads" when {
 
@@ -35,7 +36,11 @@ class FileUploadResultPushConnectorReadsSpec extends UnitSpec {
       "return the success response" in {
 
         val expectedResult = FileUploadResultPushConnector.SuccessResponse
-        val actualResult = TestFileUploadResultPushConnectorReads.read("POST", "/foo/bar", HttpResponse(Status.NO_CONTENT, json = Json.obj(), Map()))
+        val actualResult = TestFileUploadResultPushConnectorReads.read(
+          "POST",
+          "/foo/bar",
+          HttpResponse(Status.NO_CONTENT, json = Json.obj(), Map())
+        )
 
         actualResult shouldBe expectedResult
       }
@@ -45,8 +50,13 @@ class FileUploadResultPushConnectorReadsSpec extends UnitSpec {
 
       "return an error response" in {
 
-        val expectedResult = Left(Error(Status.SERVICE_UNAVAILABLE, s"Failure pushing uploaded files to /foo/bar: { } ${HostService.Any}"))
-        val actualResult = TestFileUploadResultPushConnectorReads.read("POST", "/foo/bar", HttpResponse(Status.SERVICE_UNAVAILABLE, json = Json.obj(), Map()))
+        val expectedResult =
+          Left(Error(Status.SERVICE_UNAVAILABLE, s"Failure pushing uploaded files to /foo/bar: { } ${HostService.Any}"))
+        val actualResult = TestFileUploadResultPushConnectorReads.read(
+          "POST",
+          "/foo/bar",
+          HttpResponse(Status.SERVICE_UNAVAILABLE, json = Json.obj(), Map())
+        )
 
         actualResult shouldBe expectedResult
       }

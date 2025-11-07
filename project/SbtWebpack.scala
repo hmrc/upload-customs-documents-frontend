@@ -65,10 +65,6 @@ object SbtWebpack extends AutoPlugin {
   final val unscopedWebpackSettings = Seq(
     WebpackKeys.binary := (Assets / sourceDirectory).value / "node_modules" / ".bin" / "webpack",
     WebpackKeys.nodeModules := new File("./node_modules"),
-    WebpackKeys.webpack := runWebpackConfigs(Seq.empty)
-      .dependsOn(Assets / WebKeys.webModules)
-      .dependsOn(NpmKeys.npmInstall)
-      .value,
     WebpackKeys.webpackOnly := Def.inputTaskDyn {
       val ids = sbt.complete.Parsers.spaceDelimited("<args>").parsed
       runWebpackConfigs(ids)
@@ -85,9 +81,7 @@ object SbtWebpack extends AutoPlugin {
     WebpackKeys.webpack / sourceDirectory := (Assets / sourceDirectory).value,
     WebpackKeys.webpack / resourceManaged := webTarget.value / "webpack",
     WebpackKeys.webpack / sbt.Keys.skip := false,
-    packager.Keys.dist := (packager.Keys.dist dependsOn WebpackKeys.webpack).value,
     managedResourceDirectories += (WebpackKeys.webpack / resourceManaged).value,
-    resourceGenerators += WebpackKeys.webpack,
     // Because sbt-webpack might compile sources and output into the same file.
     // Therefore, we need to deduplicate the files by choosing the one in the target directory.
     // Otherwise, the "duplicate mappings" error would occur.

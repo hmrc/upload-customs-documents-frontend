@@ -1,6 +1,10 @@
 import play.sbt.routes.RoutesKeys
-import sbt.Tests.{Group, SubProcess}
-import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.*
+import uk.gov.hmrc.DefaultBuildSettings
+
+ThisBuild / majorVersion := 0
+ThisBuild / scalaVersion := "3.3.6"
+
+val appName = "upload-customs-documents-frontend"
 
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
 
@@ -8,7 +12,6 @@ lazy val root = (project in file("."))
   .settings(
     name := "upload-customs-documents-frontend",
     organization := "uk.gov.hmrc",
-    scalaVersion := "3.3.6",
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
     PlayKeys.playDefaultPort := 10110,
@@ -44,19 +47,19 @@ lazy val root = (project in file("."))
     ),
     scalacOptions += s"-Wconf:src=${target.value}/scala-${scalaBinaryVersion.value}/routes/.*:s,src=${target.value}/scala-${scalaBinaryVersion.value}/twirl/.*:s"
   )
-  .configs(IntegrationTest)
-  .settings(
-    Defaults.itSettings,
-    IntegrationTest / Keys.fork := false,
-    IntegrationTest / unmanagedSourceDirectories += baseDirectory(_ / "it").value,
-    IntegrationTest / parallelExecution := false,
-    IntegrationTest / testGrouping := oneForkedJvmPerTest((IntegrationTest / definedTests).value),
-    IntegrationTest / javaOptions += "-Djava.locale.providers=CLDR,JRE"
-  )
   .disablePlugins(JUnitXmlReportPlugin) // Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
 
-def oneForkedJvmPerTest(tests: Seq[TestDefinition]) =
-  tests.map { test =>
-    new Group(test.name, Seq(test), SubProcess(ForkOptions().withRunJVMOptions(Vector(s"-Dtest.name=${test.name}"))))
-  }
+
+lazy val it = (project in file("it"))
+  .enablePlugins(PlayScala, SbtDistributablesPlugin)
+  .dependsOn(root % "test->test") // the "test->test" allows reusing test code and test dependencies
+  .settings(DefaultBuildSettings.itSettings())
+  .settings(libraryDependencies ++= AppDependencies.test)
+  .settings(CodeCoverageSettings.settings*)
+  .settings(
+    publish / skip := true,
+    Test / testOptions += Tests.Argument("-o", "-h", "it/target/html-report")
+  )
+
+addCommandAlias("runAllChecks", "clean;compile;scalafmtAll;coverage;test;it/test;coverageReport")

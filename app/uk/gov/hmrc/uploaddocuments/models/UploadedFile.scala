@@ -28,9 +28,9 @@ case class UploadedFile(
   fileName: String,
   fileMimeType: String,
   fileSize: Int,
-  cargo: Option[JsValue]      = None, // data carried through, from and to host service
+  cargo: Option[JsValue] = None, // data carried through, from and to host service
   description: Option[String] = None,
-  previewUrl: Option[String]  = None
+  previewUrl: Option[String] = None
 )
 
 object UploadedFile {
@@ -48,7 +48,9 @@ object UploadedFile {
           f.fileMimeType,
           f.fileSize,
           f.cargo,
-          f.safeDescription))
+          f.safeDescription
+        )
+      )
     case _ => None
   }
 }

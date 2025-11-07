@@ -24,11 +24,12 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class ContinueToHostController @Inject()(components: BaseControllerComponents,
-                                         override val fileUploadService: FileUploadService,
-                                         override val journeyContextService: JourneyContextService)
-                                        (implicit ec: ExecutionContext)
-  extends BaseController(components) with JourneyContextControllerHelper with FileUploadsControllerHelper {
+class ContinueToHostController @Inject() (
+  components: BaseControllerComponents,
+  override val fileUploadService: FileUploadService,
+  override val journeyContextService: JourneyContextService
+)(implicit ec: ExecutionContext)
+    extends BaseController(components) with JourneyContextControllerHelper with FileUploadsControllerHelper {
 
   // GET /continue-to-host
   final val continueToHost: Action[AnyContent] = Action.async { implicit request =>

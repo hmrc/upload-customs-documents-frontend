@@ -23,10 +23,12 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class RemoveController @Inject()(components: BaseControllerComponents,
-                                 override val journeyContextService: JourneyContextService,
-                                 fileUploadService: FileUploadService)
-                                (implicit ec: ExecutionContext) extends BaseController(components) with JourneyContextControllerHelper {
+class RemoveController @Inject() (
+  components: BaseControllerComponents,
+  override val journeyContextService: JourneyContextService,
+  fileUploadService: FileUploadService
+)(implicit ec: ExecutionContext)
+    extends BaseController(components) with JourneyContextControllerHelper {
 
   // GET /uploaded/:reference/remove
   final def removeFileUploadByReference(reference: String): Action[AnyContent] = Action.async { implicit request =>
@@ -54,7 +56,7 @@ class RemoveController @Inject()(components: BaseControllerComponents,
     whenInSession { implicit journeyId =>
       whenAuthenticated {
         withJourneyContext { implicit journeyContext =>
-          fileUploadService.removeFile(reference).map { _ => NoContent }
+          fileUploadService.removeFile(reference).map(_ => NoContent)
         }
       }
     }

@@ -37,20 +37,24 @@ trait FormMatchers {
   def haveOnlyErrors(expectedErrors: FormError*): Matcher[Seq[FormError]] =
     new Matcher[Seq[FormError]] {
       override def apply(errors: Seq[FormError]): MatchResult = {
-        val found = errors.map(e => (e.key, e.messages)).toSet
-        val expected = expectedErrors.map(e => (e.key, e.messages)).toSet
-        val unexpected = found.diff(expected)
+        val found       = errors.map(e => (e.key, e.messages)).toSet
+        val expected    = expectedErrors.map(e => (e.key, e.messages)).toSet
+        val unexpected  = found.diff(expected)
         val unfulfilled = expected.diff(found)
         if (found == expected)
           MatchResult(true, "", s"")
         else
           MatchResult(
             false,
-            s"Only ${expectedErrors.size} error(s) has been expected but got ${errors.size} error(s).${if (unexpected.nonEmpty)
-              s" Unexpected: ${unexpected.mkString(" and ")}."
-            else ""}${if (unfulfilled.nonEmpty)
-              s" Unfulfilled: ${unfulfilled.mkString(" and ")}."
-            else ""}",
+            s"Only ${expectedErrors.size} error(s) has been expected but got ${errors.size} error(s).${
+                if (unexpected.nonEmpty)
+                  s" Unexpected: ${unexpected.mkString(" and ")}."
+                else ""
+              }${
+                if (unfulfilled.nonEmpty)
+                  s" Unfulfilled: ${unfulfilled.mkString(" and ")}."
+                else ""
+              }",
             s""
           )
       }

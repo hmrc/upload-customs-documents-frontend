@@ -22,20 +22,20 @@ final case class FileUploadInitializationRequest(config: FileUploadSessionConfig
 
 object FileUploadInitializationRequest {
   implicit val formats: Format[FileUploadInitializationRequest] = Format(
-    {
-      for {
-        config        <- (JsPath \ "config").read[FileUploadSessionConfig]
-        existingFiles <- (JsPath \ "existingFiles").readWithDefault[Seq[UploadedFile]](Seq.empty)
-      } yield FileUploadInitializationRequest(config, existingFiles)
-    },
+    for {
+      config        <- (JsPath \ "config").read[FileUploadSessionConfig]
+      existingFiles <- (JsPath \ "existingFiles").readWithDefault[Seq[UploadedFile]](Seq.empty)
+    } yield FileUploadInitializationRequest(config, existingFiles),
     Json.writes[FileUploadInitializationRequest]
   )
 
-  //Used by logging as we can't leak the internal AWS Download URL to Kibana (even in QA/Staging)
+  // Used by logging as we can't leak the internal AWS Download URL to Kibana (even in QA/Staging)
   val writeNoDownloadUrl: Writes[FileUploadInitializationRequest] = Writes { model =>
-    Json.toJson(FileUploadInitializationRequest(
-      model.config,
-      model.existingFiles.map(_.copy(downloadUrl = ""))
-    ))(formats)
+    Json.toJson(
+      FileUploadInitializationRequest(
+        model.config,
+        model.existingFiles.map(_.copy(downloadUrl = ""))
+      )
+    )(formats)
   }
 }

@@ -59,7 +59,7 @@ class PreviewController @Inject() (
               case _ =>
                 HeaderNames.CONTENT_DISPOSITION ->
                   s"""inline; filename="${fileName.filter(_.toInt < 128)}"; filename*=utf-8''${RFC3986Encoder
-                    .encode(fileName)}"""
+                      .encode(fileName)}"""
             }
         )
       case _ => Future.successful(NotFound)

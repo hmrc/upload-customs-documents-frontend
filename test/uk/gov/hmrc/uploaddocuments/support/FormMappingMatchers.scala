@@ -49,19 +49,23 @@ trait FormMappingMatchers {
               s""
             )
           case Left(errors) =>
-            val found = errors.map(_.message).toSet
-            val expected = expectedErrors.toSet
-            val unexpected = found.diff(expected)
+            val found       = errors.map(_.message).toSet
+            val expected    = expectedErrors.toSet
+            val unexpected  = found.diff(expected)
             val unfulfilled = expected.diff(found)
             if (found == expected) MatchResult(true, "", s"")
             else
               MatchResult(
                 false,
-                s"Only ${expectedErrors.size} error(s) has been expected but got ${errors.size} error(s).${if (unexpected.nonEmpty)
-                  s" Unexpected: ${unexpected.mkString(" and ")}."
-                else ""}${if (unfulfilled.nonEmpty)
-                  s" Unfulfilled: ${unfulfilled.mkString(" and ")}."
-                else ""}",
+                s"Only ${expectedErrors.size} error(s) has been expected but got ${errors.size} error(s).${
+                    if (unexpected.nonEmpty)
+                      s" Unexpected: ${unexpected.mkString(" and ")}."
+                    else ""
+                  }${
+                    if (unfulfilled.nonEmpty)
+                      s" Unfulfilled: ${unfulfilled.mkString(" and ")}."
+                    else ""
+                  }",
                 s""
               )
         }
