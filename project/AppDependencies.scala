@@ -16,14 +16,14 @@ object AppDependencies {
   )
 
   val test = Seq(
-    "uk.gov.hmrc"            %% s"bootstrap-test$playSuffix"    % bootstrapVersion % "test",
-    "org.scalamock"          %% "scalamock"          % "6.2.0"    % "test",
-    "org.scalatest"          %% "scalatest"          % "3.2.19"   % "test",
-    "com.vladsch.flexmark"    % "flexmark-all"       % "0.64.8"   % "test",
-    "org.scalameta"          %% "munit-diff"         % "1.0.4"    % "test",
-    "org.scalacheck"         %% "scalacheck"         % "1.19.0"   % "test",
-    "org.scalatestplus"      %% "scalacheck-1-18"    % "3.2.19.0" % "test",
-    "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.1"    % "test",
-    "com.github.tomakehurst"  % "wiremock-jre8"      % "3.0.1"    % "test"
-  )
+    "uk.gov.hmrc"            %% s"bootstrap-test$playSuffix"    % bootstrapVersion,
+    "org.scalamock"          %% "scalamock"                     % "6.2.0",
+    "org.scalatest"          %% "scalatest"                     % "3.2.19",
+    "com.vladsch.flexmark"    % "flexmark-all"                  % "0.64.8",
+    "org.scalameta"          %% "munit-diff"                    % "1.0.4",
+    "org.scalacheck"         %% "scalacheck"                    % "1.19.0",
+    "org.scalatestplus"      %% "scalacheck-1-18"               % "3.2.19.0",
+    "org.scalatestplus.play" %% "scalatestplus-play"            % "7.0.1",
+    "com.github.tomakehurst"  % "wiremock-jre8"                 % "3.0.1"
+  ).map(_ % Test)
 }
