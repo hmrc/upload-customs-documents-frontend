@@ -285,16 +285,12 @@ Each uploaded file can be marked with a label. Each empty input row can have a l
 
 ### Running the tests
 
-    sbt test it:test
-
-### Running the tests with coverage
-
-    sbt clean coverageOn test it:test coverageReport
+    sbt runAllChecks
 
 ### Running the app locally
 
-    sm --start UPLOAD_CUSTOMS_DOCUMENTS_ALL
-    sm --stop UPLOAD_CUSTOMS_DOCUMENTS_FRONTEND 
+    sm2 --start UPLOAD_CUSTOMS_DOCUMENTS_ALL
+    sm2 --stop UPLOAD_CUSTOMS_DOCUMENTS_FRONTEND 
     sbt run
 
 It should then be listening on port 10110
