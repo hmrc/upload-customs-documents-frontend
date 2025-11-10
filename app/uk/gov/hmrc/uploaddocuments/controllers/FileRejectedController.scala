@@ -69,7 +69,7 @@ class FileRejectedController @Inject() (
   // GET /journey/:journeyId/file-rejected
   final def asyncMarkFileUploadAsRejected(implicit journeyId: JourneyId): Action[AnyContent] = Action.async {
     implicit request =>
-      rejectedAsyncLogicWithStatus(NoContent.withHeaders(CORS.headers*))
+      rejectedAsyncLogicWithStatus(NoContent)
   }
 
   private def rejectedAsyncLogicWithStatus(

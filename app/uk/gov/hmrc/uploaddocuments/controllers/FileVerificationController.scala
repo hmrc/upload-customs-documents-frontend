@@ -55,7 +55,7 @@ class FileVerificationController @Inject() (
               )(
                 {
                   case _: FileUpload.Accepted => Future(Redirect(routes.SummaryController.showSummary))
-                  case _ => Future(Redirect(routes.ChooseSingleFileController.showChooseFile(None)))
+                  case _                      => Future(Redirect(routes.ChooseSingleFileController.showChooseFile(None)))
                 },
                 Future(Ok(renderWaitingView(journeyContext, upscanReference)))
               )
@@ -106,8 +106,8 @@ class FileVerificationController @Inject() (
             appConfig.upscanWaitInterval.toMillis,
             timeoutNanoTime
           )(
-            _ => Future(Created.withHeaders(CORS.headers*)),
-            Future(Accepted.withHeaders(CORS.headers*))
+            _ => Future(Created),
+            Future(Accepted)
           )
       }
     }
