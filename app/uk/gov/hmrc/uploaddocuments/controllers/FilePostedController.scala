@@ -41,8 +41,7 @@ class FilePostedController @Inject() (components: BaseControllerComponents, file
             Logger.debug(s"[asyncMarkFileUploadAsPosted] Query Params Received: ${request.queryString}")
             Future.successful(BadRequest)
           },
-          s3UploadSuccess =>
-            fileUploadService.markFileAsPosted(s3UploadSuccess.key).map(_ => Created.withHeaders(CORS.headers*))
+          s3UploadSuccess => fileUploadService.markFileAsPosted(s3UploadSuccess.key).map(_ => Created)
         )
   }
 }
