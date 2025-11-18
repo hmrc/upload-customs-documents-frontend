@@ -1,5 +1,4 @@
 import play.sbt.routes.RoutesKeys
-import sbt.Tests.{Group, SubProcess}
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.*
 
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
@@ -55,7 +54,3 @@ lazy val root = (project in file("."))
   .disablePlugins(JUnitXmlReportPlugin) // Required to prevent https://github.com/scalatest/scalatest/issues/1427
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
 
-def oneForkedJvmPerTest(tests: Seq[TestDefinition]) =
-  tests.map { test =>
-    new Group(test.name, Seq(test), SubProcess(ForkOptions().withRunJVMOptions(Vector(s"-Dtest.name=${test.name}"))))
-  }
