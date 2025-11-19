@@ -27,6 +27,7 @@
 @import uk.gov.hmrc.hmrcfrontend.views.html.components.HmrcReportTechnicalIssue
 @import uk.gov.hmrc.hmrcfrontend.config.ContactFrontendConfig
 @import uk.gov.hmrc.hmrcfrontend.views.Aliases.{Cy, En, ReportTechnicalIssue}
+@import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl
 
 @import uk.gov.hmrc.govukfrontend.views.html.components.GovukBackLink
 @import uk.gov.hmrc.govukfrontend.views.html.components.BackLink
@@ -74,8 +75,8 @@ None, refresh: Int = 0)(contentBlock: Html)(implicit request: RequestHeader, mes
   data-message-suffix="@messages("view.timedout.dialog.message.suffix")"
   data-timeout="@serviceContent.timeoutSeconds.getOrElse(appConfig.timeout)"
   data-countdown="@serviceContent.countdownSeconds.getOrElse(appConfig.countdown)"
-  data-keep-alive-url="@routes.SessionController.keepAlive(serviceContent.keepAliveUrl)"
-  data-sign-out-url="@{appConfig.baseExternalCallbackUrl + routes.SignOutController.signOutTimeout(serviceContent.timedOutUrl).url}"/>
+  data-keep-alive-url="@routes.SessionController.keepAlive(serviceContent.keepAliveUrl.map(RedirectUrl.apply))"
+  data-sign-out-url="@{appConfig.baseExternalCallbackUrl + routes.SignOutController.signOutTimeout(serviceContent.timedOutUrl.map(RedirectUrl.apply)).url}"/>
 }
 }
 
@@ -127,7 +128,7 @@ None, refresh: Int = 0)(contentBlock: Html)(implicit request: RequestHeader, mes
   headerBlock = Some(hmrcStandardHeader(
     serviceName = serviceContent.serviceName.orElse(Some(messages("site.serviceName"))),
     serviceUrl = serviceContent.serviceUrl,
-    signOutUrl = if(timeout) Some(SignOutController.signOut(serviceContent.signOutUrl).url) else None,
+    signOutUrl = if(timeout) Some(SignOutController.signOut(serviceContent.signOutUrl.map(RedirectUrl.apply)).url) else None,
     phaseBanner = serviceContent.phaseBanner.map{
       case CustomizedServiceContent.PhaseBanner.alpha => 
         PhaseBanner(tag = Some(Tag(content = Text(messages("phase.alpha")))), content = HtmlContent(phaseBannerContent))

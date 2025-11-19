@@ -36,10 +36,10 @@ GET        /preview/:reference/:fileName                            @uk.gov.hmrc
 GET        /continue-to-host                                        @uk.gov.hmrc.uploaddocuments.controllers.ContinueToHostController.continueToHost
 
 GET        /timedout                                                @uk.gov.hmrc.uploaddocuments.controllers.SessionController.showTimeoutPage
-GET        /keep-alive                                              @uk.gov.hmrc.uploaddocuments.controllers.SessionController.keepAlive(continueUrl: Option[String] ?= None)
+GET        /keep-alive                                              @uk.gov.hmrc.uploaddocuments.controllers.SessionController.keepAlive(continueUrl: Option[RedirectUrl] ?= None)
 
-GET        /sign-out                                                @uk.gov.hmrc.uploaddocuments.controllers.SignOutController.signOut(continueUrl: Option[String] ?= None)
-GET        /sign-out/timeout                                        @uk.gov.hmrc.uploaddocuments.controllers.SignOutController.signOutTimeout(continueUrl: Option[String] ?= None)
+GET        /sign-out                                                @uk.gov.hmrc.uploaddocuments.controllers.SignOutController.signOut(continueUrl: Option[RedirectUrl] ?= None)
+GET        /sign-out/timeout                                        @uk.gov.hmrc.uploaddocuments.controllers.SignOutController.signOutTimeout(continueUrl: Option[RedirectUrl] ?= None)
 
 GET        /language/:lang                                          @uk.gov.hmrc.uploaddocuments.controllers.LanguageSwitchController.switchToLanguage(lang: String)
 GET        /assets/*file                                            controllers.Assets.versioned(path="/public", file: Asset)
