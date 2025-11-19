@@ -17,23 +17,33 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.play.bootstrap.binders.{OnlyRelative, RedirectUrl, SafeRedirectUrl}
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import javax.inject.Inject
 import uk.gov.hmrc.uploaddocuments.models.UrlValidator
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 class SignOutController @Inject() (controllerComponents: MessagesControllerComponents, appConfig: AppConfig)
-    extends FrontendController(controllerComponents) {
+    extends FrontendController(controllerComponents) with LoggerUtil {
 
-  final def signOut(continueUrl: Option[String]): Action[AnyContent] = Action { _ =>
-    continueUrl.fold(Redirect(appConfig.signOutUrl))(url =>
-      if (UrlValidator.isReleativeUrl(url) || UrlValidator.isValidFrontendUrl(url))
-        Redirect(appConfig.signOutUrl, Map("continue" -> Seq(url)))
-      else
-        Redirect(appConfig.signOutUrl)
-    )
+  final def signOut(continueUrl: Option[RedirectUrl]): Action[AnyContent] = Action { _ =>
+    continueUrl.fold(Redirect(appConfig.signOutUrl)){ url =>
+      url.getEither(OnlyRelative) match {
+        case Right(safeUrl: SafeRedirectUrl) =>
+          Redirect(appConfig.signOutUrl, Map("continue" -> Seq(safeUrl.url)))
+        case Left(e) =>
+          if (UrlValidator.isValidFrontendUrl(url.unsafeValue)) {
+            Logger.info(s"[SignOutController.signOut] Using unsafeUrl, $e")
+            Redirect(appConfig.signOutUrl, Map("continue" -> Seq(url.unsafeValue)))
+          } else {
+            Redirect(appConfig.signOutUrl)
+          }
+      }
+    } 
   }
 
-  final def signOutTimeout(continueUrl: Option[String]): Action[AnyContent] = signOut(continueUrl)
+  final def signOutTimeout(continueUrl: Option[RedirectUrl]): Action[AnyContent] = signOut(continueUrl)
 }

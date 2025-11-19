@@ -17,30 +17,39 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent, MessagesControllerComponents}
+import uk.gov.hmrc.play.bootstrap.binders.{OnlyRelative, RedirectUrl, SafeRedirectUrl}
+import uk.gov.hmrc.play.bootstrap.binders.RedirectUrl.*
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendController
 import uk.gov.hmrc.uploaddocuments.views.html.TimedOutView
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.Future
 import uk.gov.hmrc.uploaddocuments.models.UrlValidator
+import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 @Singleton
 class SessionController @Inject() (controllerComponents: MessagesControllerComponents, timedOutView: TimedOutView)
-    extends FrontendController(controllerComponents) {
+    extends FrontendController(controllerComponents) with LoggerUtil {
 
   final val showTimeoutPage: Action[AnyContent] = Action.async { implicit request =>
     Future.successful(Ok(timedOutView()))
   }
 
-  final def keepAlive(continueUrl: Option[String]): Action[AnyContent] = Action.async { _ =>
+  final def keepAlive(continueUrl: Option[RedirectUrl]): Action[AnyContent] = Action.async { _ =>
     Future.successful(
-      continueUrl
-        .flatMap(url =>
-          if UrlValidator.isReleativeUrl(url) || UrlValidator.isValidFrontendUrl(url)
-          then Some(Redirect(url))
-          else None
-        )
-        .getOrElse(Ok("{}"))
+      continueUrl.flatMap( url =>
+        url.getEither(OnlyRelative) match {
+          case Right(safeUrl: SafeRedirectUrl) =>
+            Some(Redirect(safeUrl.url))
+          case Left(e) =>
+            if (UrlValidator.isValidFrontendUrl(url.unsafeValue)) {
+              Logger.info(s"[SessionController.keepAlive] Using unsafeUrl, $e")
+              Some(Redirect(url.unsafeValue))
+            } else {
+              None
+            }
+        }
+      ).getOrElse(Ok("{}"))
     )
   }
 }
