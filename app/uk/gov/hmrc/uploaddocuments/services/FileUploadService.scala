@@ -149,6 +149,18 @@ class FileUploadService @Inject() (
       }
     }
 
+  private def hasAllowedExtension(fileName: String, allowedFileExtensions: String): Boolean = {
+    val fileExt = {
+      val idx = fileName.lastIndexOf('.')
+      if (idx < 0) "" else fileName.substring(idx).toLowerCase
+    }
+    val allowed = allowedFileExtensions.split(",").map { ext =>
+      val trimmed = ext.trim.toLowerCase
+      if (trimmed.startsWith(".")) trimmed else s".$trimmed"
+    }
+    allowed.contains(fileExt)
+  }
+
   private def updateFileUploadsWithUpscanResponse(
     notification: UpscanNotification,
     requestNonce: Nonce,
@@ -158,34 +170,47 @@ class FileUploadService @Inject() (
       case fileUpload if fileUpload.nonce == requestNonce =>
         notification match {
           case UpscanFileReady(_, url, uploadDetails) =>
-            fileUploads.files
-              .collectFirst {
-                case file: FileUpload.Accepted
-                    if file.checksum == uploadDetails.checksum && file.reference != notification.reference =>
-                  FileUpload.Duplicate(
+            val invalidExtension = context.config.allowedFileExtensions.exists { allowedExts =>
+              !hasAllowedExtension(uploadDetails.fileName, allowedExts)
+            }
+            if (invalidExtension) {
+              val allowedExts = context.config.allowedFileExtensions.getOrElse("")
+              FileUpload.Failed(
+                fileUpload.nonce,
+                Timestamp.now,
+                fileUpload.reference,
+                UpscanNotification.FailureDetails(UpscanNotification.REJECTED, s"INVALID_EXTENSION:$allowedExts")
+              )
+            } else {
+              fileUploads.files
+                .collectFirst {
+                  case file: FileUpload.Accepted
+                      if file.checksum == uploadDetails.checksum && file.reference != notification.reference =>
+                    FileUpload.Duplicate(
+                      fileUpload.nonce,
+                      Timestamp.now,
+                      fileUpload.reference,
+                      uploadDetails.checksum,
+                      existingFileName = file.fileName,
+                      duplicateFileName = uploadDetails.fileName
+                    )
+                }
+                .getOrElse {
+                  logSuccess(context, uploadDetails, fileUpload.timestamp)
+                  FileUpload.Accepted(
                     fileUpload.nonce,
                     Timestamp.now,
                     fileUpload.reference,
+                    url,
+                    uploadDetails.uploadTimestamp,
                     uploadDetails.checksum,
-                    existingFileName = file.fileName,
-                    duplicateFileName = uploadDetails.fileName
+                    FileUpload.sanitizeFileName(uploadDetails.fileName),
+                    uploadDetails.fileMimeType,
+                    uploadDetails.size,
+                    description = context.config.newFileDescription
                   )
-              }
-              .getOrElse {
-                logSuccess(context, uploadDetails, fileUpload.timestamp)
-                FileUpload.Accepted(
-                  fileUpload.nonce,
-                  Timestamp.now,
-                  fileUpload.reference,
-                  url,
-                  uploadDetails.uploadTimestamp,
-                  uploadDetails.checksum,
-                  FileUpload.sanitizeFileName(uploadDetails.fileName),
-                  uploadDetails.fileMimeType,
-                  uploadDetails.size,
-                  description = context.config.newFileDescription
-                )
-              }
+                }
+            }
           case UpscanFileFailed(_, failureDetails) =>
             logFailure(context, failureDetails, fileUpload.timestamp)
             FileUpload.Failed(fileUpload.nonce, Timestamp.now, fileUpload.reference, failureDetails)
