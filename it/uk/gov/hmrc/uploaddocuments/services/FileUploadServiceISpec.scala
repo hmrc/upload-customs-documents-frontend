@@ -369,6 +369,102 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
             }
           }
 
+          "allowedFileExtensions is configured" when {
+
+            "the uploaded file's extension does NOT match" must {
+
+              "mark the file as FAILED with INVALID_EXTENSION and NOT push a notification to the host service" in {
+
+                val configWithExtensions = fileUploadSessionConfig.copy(allowedFileExtensions = Some(".pdf,.xlsx"))
+                val fileUploadContext    = FileUploadContext(configWithExtensions)
+                val files               = FileUploads(Seq(acceptedFileUpload, fileUploadPosted))
+
+                await(testFileUploadService.putFiles(files)(journeyId))
+                await(repo.collection.countDocuments().toFuture()) shouldBe 1
+
+                // upscanFileReady defaults to "file.png" which is not in .pdf,.xlsx
+                val upscanNotification = upscanFileReady(fileUploadPosted.reference)
+                val updatedFiles = FileUploads(
+                  Seq(
+                    acceptedFileUpload,
+                    FileUpload.Failed(
+                      nonce     = fileUploadPosted.nonce,
+                      timestamp = Timestamp.Any,
+                      reference = fileUploadPosted.reference,
+                      details   = UpscanNotification.FailureDetails(
+                        UpscanNotification.REJECTED,
+                        "INVALID_EXTENSION:.pdf,.xlsx"
+                      )
+                    )
+                  )
+                )
+
+                await(
+                  testFileUploadService.markFileWithUpscanResponseAndNotifyHost(
+                    notification = upscanNotification,
+                    requestNonce = fileUploadPosted.nonce
+                  )(fileUploadContext, journeyId, hc(FakeRequest()))
+                ) shouldBe Some(updatedFiles)
+
+                await(repo.collection.countDocuments().toFuture()) shouldBe 1
+                await(testFileUploadService.getFiles(journeyId)) shouldBe Some(updatedFiles)
+
+                eventually {
+                  verifyResultPushHasNotHappened("/result-post-url")
+                }
+              }
+            }
+
+            "the uploaded file's extension matches" must {
+
+              "mark the file as ACCEPTED and push a notification to the host service" in {
+
+                val configWithExtensions = fileUploadSessionConfig.copy(allowedFileExtensions = Some(".pdf,.png"))
+                val fileUploadContext    = FileUploadContext(configWithExtensions)
+                val files               = FileUploads(Seq(acceptedFileUpload, fileUploadPosted))
+
+                await(testFileUploadService.putFiles(files)(journeyId))
+                await(repo.collection.countDocuments().toFuture()) shouldBe 1
+
+                // upscanFileReady defaults to "file.png" which is in .pdf,.png
+                val upscanNotification = upscanFileReady(fileUploadPosted.reference)
+                val updatedFiles = FileUploads(
+                  Seq(
+                    acceptedFileUpload,
+                    FileUpload.Accepted(
+                      nonce          = fileUploadPosted.nonce,
+                      timestamp      = Timestamp.Any,
+                      reference      = fileUploadPosted.reference,
+                      checksum       = upscanNotification.uploadDetails.checksum,
+                      url            = upscanNotification.downloadUrl,
+                      uploadTimestamp = upscanNotification.uploadDetails.uploadTimestamp,
+                      fileName       = upscanNotification.uploadDetails.fileName,
+                      fileMimeType   = upscanNotification.uploadDetails.fileMimeType,
+                      fileSize       = upscanNotification.uploadDetails.size
+                    )
+                  )
+                )
+
+                givenResultPushEndpoint(
+                  path    = "/result-post-url",
+                  payload = Payload(Request(fileUploadContext, updatedFiles), appConfig.baseExternalCallbackUrl),
+                  status  = 204
+                )
+
+                await(
+                  testFileUploadService.markFileWithUpscanResponseAndNotifyHost(
+                    notification = upscanNotification,
+                    requestNonce = fileUploadPosted.nonce
+                  )(fileUploadContext, journeyId, hc(FakeRequest()))
+                ) shouldBe Some(updatedFiles)
+
+                await(repo.collection.countDocuments().toFuture()) shouldBe 1
+                await(testFileUploadService.getFiles(journeyId)) shouldBe Some(updatedFiles)
+              }
+            }
+
+          }
+
           "the response is FAILED (QUARANTINED)" must {
 
             "update the files to mark it as FAILED and do NOT push a notification to inform the host service" in {

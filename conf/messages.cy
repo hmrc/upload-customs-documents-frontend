@@ -137,6 +137,7 @@ error.file-upload.required=Uwchlwythwch ddogfen ategol
 error.file-upload.invalid-size-small=Mae’r ffeil dan sylw yn wag
 error.file-upload.invalid-size-large=Mae’n rhaid i’r ffeil dan sylw fod yn llai na {0}
 error.file-upload.invalid-type=Mae’n rhaid i’r ffeil dan sylw fod ar ffurf {1}
+error.file-upload.invalid-extension=Mae’n rhaid i’r ffeil dan sylw gael estyniad o {1}
 error.file-upload.quarantine=Mae feirws yn y ffeil dan sylw – uwchlwythwch un wahanol
 error.file-upload.unknown=Nid oedd modd uwchlwytho’r ffeil dan sylw
 error.file-upload.remove.try-again=Nid oedd modd tynnu’r ffeil dan sylw – rhowch gynnig arall arni

@@ -709,7 +709,7 @@ export class MultiFileUpload extends Component {
     this.addUploadInputWithFileAndLabel(fileInput, label);
 
     this.errorManager.removeAllErrors();
-    this.errorManager.addError(fileInput.id, errorMessage, this.getFileName(fileInput));
+    this.errorManager.addError(fileInput.id, errorMessage, "");
     item.remove();
     this.updateInputLabel(this.getFileInputFromItem(this.getInputs()[0]));
     this.updateFileNumbers();
