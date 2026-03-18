@@ -80,6 +80,10 @@
       id = "file",
       value = Some(""),
       describedBy = None,
+      javascript = Some(true),
+      noFileChosenText = Some(messages("fileUpload.noFileChosen")),
+      chooseFilesButtonText = Some(messages("fileUpload.choose")),
+      dropInstructionText = Some(messages("fileUpload.dropZone")),
       label = Label(
         content = Text(
           if(fileUploads.isEmpty || !newFileDescription.exists(fileUploads.hasFileWithDescription(_)))
