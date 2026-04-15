@@ -35,7 +35,8 @@
 @import uk.gov.hmrc.govukfrontend.views.html.components.HtmlContent
 @import uk.gov.hmrc.govukfrontend.views.html.components.PhaseBanner
 @import uk.gov.hmrc.govukfrontend.views.html.components.Tag
-@import uk.gov.hmrc.uploaddocuments.views.html.components.languageSelection
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.servicenavigation._
+@import uk.gov.hmrc.govukfrontend.views.html.components.implicits._
 
 @this(
   govukLayout: GovukLayout,
@@ -44,7 +45,6 @@
   hmrcTrackingConsentSnippet: HmrcTrackingConsentSnippet,
   hmrcStandardHeader: HmrcStandardHeader,
   hmrcStandardFooter: HmrcStandardFooter,
-  languageSelection: languageSelection,
   hmrcReportTechnicalIssue: HmrcReportTechnicalIssue, 
   contactFrontendConfig: ContactFrontendConfig
 )
@@ -85,12 +85,6 @@ None, refresh: Int = 0)(contentBlock: Html)(implicit request: RequestHeader, mes
 }
 
 @beforeContentBlock = {
-  @if(features.showLanguageSelection){
-    @languageSelection(
-      appConfig.languageMap,
-      appConfig.routeToSwitchLanguage
-    )
-  }
   @if(backLink.isDefined) {
     @govukBackLink(BackLink(href = backLink.get, content = Text(messages("site.back")), attributes = Map("id" -> "back-link")))
   } else {
@@ -126,8 +120,13 @@ None, refresh: Int = 0)(contentBlock: Html)(implicit request: RequestHeader, mes
   bodyEndBlock = None,
   scriptsBlock = Some(scripts),
   headerBlock = Some(hmrcStandardHeader(
-    serviceName = serviceContent.serviceName.orElse(Some(messages("site.serviceName"))),
-    serviceUrl = serviceContent.serviceUrl,
+    serviceName = Some(""),
+    serviceNavigation = Some(
+        ServiceNavigation(
+            serviceName = serviceContent.serviceName.orElse(Some(messages("site.serviceName"))),
+            serviceUrl = serviceContent.serviceUrl
+        ).withLanguageToggle()
+    ),
     signOutUrl = if(timeout) Some(SignOutController.signOut(serviceContent.signOutUrl.map(RedirectUrl.apply)).url) else None,
     phaseBanner = serviceContent.phaseBanner.map{
       case CustomizedServiceContent.PhaseBanner.alpha => 
