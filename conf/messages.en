@@ -5,13 +5,7 @@ phase.beta=BETA
 
 # Site wide messages
 # ----------------------------------------------------------
-site.fullStop =.
 site.back = Back
-site.review = Review
-site.delete = Delete
-site.edit = Change
-site.hidden-delete = Delete {0}
-site.hidden-edit = Change {0}
 site.no = No
 site.yes = Yes
 site.continue = Continue
@@ -34,8 +28,12 @@ site.logOut = log out
 site.youCan = You can:
 site.file.remove = Remove
 site.switchLanguage=Newid yr iaith ir Gymraeg
+
+# Site dates
+# ----------------------------------------------------------
 site.today = today
 site.tomorrow = tomorrow
+site.datetime.preposition=at
 
 site.Jan = January
 site.Feb = February
@@ -50,9 +48,8 @@ site.Oct = October
 site.Nov = November
 site.Dec = December
 
-site.datetime.preposition=at
-
 # Validation errors
+# ----------------------------------------------------------
 error.summary.heading=There is a problem
 error.prefix=Error:
 error.email=Enter a valid email address
@@ -62,10 +59,13 @@ error.year.invalid-format=Enter a year
 error.day.invalid-format=Enter a day
 error.month.invalid-format=Enter a month
 
+# Buttons
+# ----------------------------------------------------------
 button.continue=Continue
 button.submit=Submit
 
 # Global errors
+# ----------------------------------------------------------
 global.error.404.title=Page not found
 global.error.404.heading=Page not found
 global.error.404.line1=If you typed the web address, check it is correct.
@@ -91,7 +91,7 @@ feedback.link=feedback (opens in a new tab)
 feedback.after=will help us to improve it.
 
 # Footer Links
-# -----------------------
+# ----------------------------------------------------------
 footer.cookies         = Cookies
 footer.privacy         = Privacy policy
 footer.termsConditions = Terms and conditions
@@ -146,6 +146,8 @@ view.upload-file.help.fileFormat4=Microsoft (Word, Excel or PowerPoint)
 view.upload-file.help.fileFormat5=Open Document Format (ODF)
 view.upload-file.help.line4=You cannot upload zip files or documents that are password-protected.
 
+# View Summaries
+# ----------------------------------------------------------
 view.summary.empty.title=You haven’t uploaded any documents
 view.summary.empty.heading=You haven’t uploaded any documents
 view.summary.singular.title=You’ve uploaded 1 document
@@ -158,7 +160,8 @@ view.summary.list.singular.heading=Document you’ve uploaded
 view.summary.list.heading=Documents you’ve uploaded
 view.summary.maximum=You can upload up to {0} files.
 
-form.upload-file.file=Upload a file
+# Forms
+# ----------------------------------------------------------
 form.upload-file.submit=Upload
 form.file-uploaded.choice.yes= Yes 
 form.file-uploaded.choice.no= No 
@@ -166,6 +169,8 @@ form.file-uploaded.choice.noConditional=By continuing, you will now submit all t
 form.file-uploaded.continue=Continue
 form.upload-multiple-files.continue=Continue
 
+# File Upload Errors
+# ----------------------------------------------------------
 error.file-upload.required=Upload a supporting document
 error.file-upload.invalid-size-small=The selected file is empty
 error.file-upload.invalid-size-large=The selected file must be smaller than {0}
@@ -182,13 +187,14 @@ error.file-upload.duplicate=The selected file has already been uploaded
 # ----------------------------------------------------------
 error.browser.title.prefix = Error:
 error.summary.title=There is a problem
+
 date.day = Day
 date.month = Month
 date.year = Year
+
 time.hour = Hour
 time.minutes = Minute
 time.period = am or pm
-time.period.none=
 time.period.am=am
 time.period.pm=pm
 
@@ -203,4 +209,3 @@ skip.link=Skip to main content
 
 view.timedout.dialog.message=For your security, we will sign you out in
 view.timedout.dialog.message.suffix=We will not save your answers.
-

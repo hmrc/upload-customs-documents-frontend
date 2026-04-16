@@ -3,15 +3,9 @@ service.name=Anfon dogfennau i’w gwirio gan y tollau
 phase.alpha=ALPHA
 phase.beta=BETA
 
-
+# Site wide messages
+# ----------------------------------------------------------
 site.back=Yn ôl
-site.review=Adolygu
-site.delete=Dileu
-site.edit=Newid
-site.hidden-delete=Dileu {0}
-site.hidden-edit=Newid {0}
-site.notProvided=Heb ei ddarparu
-site.logOut=allgofnodi
 site.no=Na
 site.yes=Iawn
 site.continue=Yn eich blaen
@@ -25,11 +19,22 @@ site.serviceName=Anfon dogfennau i’w gwirio gan y tollau
 site.govuk=GOV.UK
 site.signOut=Allgofnodi
 site.getHelpWithThisPage=Help gyda’r dudalen hon
+site.notProvided=Heb ei ddarparu
 site.incomplete=Heb lenwi
+site.warning = Rhybudd:
+site.opensInNewWindowOrTab = (yn agor tab newydd)
 site.change=Newid
+site.logOut=allgofnodi
 site.youCan=Gallwch wneud y canlynol:
 site.file.remove=Tynnu
 site.switchLanguage=Change the language to English
+
+# Site dates
+# ----------------------------------------------------------
+site.today=heddiw
+site.tomorrow=yfory
+site.datetime.preposition=am
+
 site.Jan=Ionawr
 site.Feb=Chwefror
 site.March=Mawrth
@@ -42,15 +47,25 @@ site.Sept=Medi
 site.Oct=Hydref
 site.Nov=Tachwedd
 site.Dec=Rhagfyr
-site.datetime.preposition=am
-site.today=heddiw
-site.tomorrow=yfory
+
+# Validation errors
+# ----------------------------------------------------------
 error.summary.heading=Mae problem wedi codi
 error.prefix=Gwall:
+error.email=Nodwch gyfeiriad e-bost dilys
+error.date.required=Nodwch ddyddiad yn y fformat cywir
+error.date.invalid-format=Dyddiad annilys
+error.year.invalid-format=Nodwch flwyddyn
+error.day.invalid-format=Nodwch ddiwrnod
+error.month.invalid-format=Nodwch fis
 
+# Buttons
+# ----------------------------------------------------------
 button.submit=Cyflwyno
 button.continue=Yn eich blaen
 
+# Global errors
+# ----------------------------------------------------------
 global.error.404.title=Heb ddod o hyd i’r dudalen
 global.error.404.heading=Heb ddod o hyd i’r dudalen
 global.error.404.line1=Os gwnaethoch deipio’r cyfeiriad gwe, gwiriwch ei fod yn gywir.
@@ -69,19 +84,32 @@ external.update.error.500.heading=Mae’n ddrwg gennym, mae rhywbeth wedi mynd o
 external.update.error.500.line1=Mae’n bosibl eich bod wedi nodi manylion anghywir
 external.update.error.500.line2=Rhowch gynnig arall ar <a class="govuk-link" target="_blank" rel="noopener noreferrer" href="{0}">nodi cyfeirnod eich achos</a>.
 
+# Banner
+# ----------------------------------------------------------
 feedback.before=Gwasanaeth newydd yn hwn – bydd eich
 feedback.link=adborth
 feedback.after=yn ein helpu i’w wella.
+
+# Footer Links
+# ----------------------------------------------------------
 footer.cookies=Cwcis
 footer.privacy=Polisi preifatrwydd
 footer.termsConditions=Telerau ac amodau
 footer.govukHelp=Help wrth ddefnyddio GOV.UK
 footer.accessibilityStatement=Datganiad hygyrchedd
+
+# Research Banner Content
+# ----------------------------------------------------------
 researchBanner.heading=Helpwch i wella gwasanaethau CThEM
 researchBanner.inviteLink=Helpwch i wella gwasanaethau digidol drwy ymuno â phanel defnyddwyr CThEM (yn agor ffenestr newydd)
 researchBanner.closeLink=Dim diolch
 
+# Summary messages
+# ----------------------------------------------------------
 summary.file-names=Enwau’r ffeiliau
+
+# File upload messages
+# ----------------------------------------------------------
 view.upload-multiple-files.heading=Uwchlwytho’ch dogfennau
 view.upload-multiple-files.title=Uwchlwytho’ch dogfennau
 view.upload-multiple-files.uploadMoreFilesThanLimit=Gallwch uwchlwytho hyd at {0} ffeil. Er mwyn uwchlwytho rhagor, mae’n rhaid i chi gyflwyno’r ffeiliau hyn yn gyntaf, ac wedyn defnyddio’r gwasanaeth eto.
@@ -89,6 +117,7 @@ view.upload-multiple-files.document=Dogfen
 view.upload-multiple-files.remove=Tynnu
 view.upload-multiple-files.removing=Tynnu...
 view.upload-multiple-files.pending=Ar y gweill
+view.upload-multiple-files.preview=Rhagolwg
 view.upload-multiple-files.uploaded=Barod i gyflwyno
 view.upload-multiple-files.documentUploaded=Mae dogfen {0} wedi’i huwchlwytho
 view.upload-multiple-files.documentDeleted=Mae dogfen {0} wedi’i dileu
@@ -98,9 +127,6 @@ view.upload-multiple-files.stillTransferring=Nid yw’r ffeil dan sylw wedi’i 
 view.upload-multiple-files.uploadOnSelect=Dewiswch eich ffeiliau i ddechrau eu huwchlwytho
 view.upload-multiple-files.line1=Gallwch uwchlwytho hyd at {0} dogfen.
 view.upload-multiple-files.line2=Mae’n rhaid i bob dogfen fod yn llai na 6MB.
-view.upload-multiple-files.c1601=Ar gyfer yr allforyn hwn, mae’n rhaid i chi uwchlwytho ffurflen C1601 – Cyflwyno nwyddau i’w hallforio (cyraeddiadau). Gallwch gynnwys dogfennau ategol eraill hefyd.
-view.upload-multiple-files.c1602=Ar gyfer yr allforyn hwn, mae’n rhaid i chi uwchlwytho ffurflen C1602 – Rhoi gwybod am nwyddau sy’n gadael (ymadawiadau). Gallwch gynnwys dogfennau ategol eraill hefyd.
-view.upload-multiple-files.c1603=Ar gyfer yr allforyn hwn, mae’n rhaid i chi uwchlwytho ffurflen C1603 – Rhoi gwybod yn ôl-weithredol am gyrhaeddiad. Gallwch gynnwys dogfennau ategol eraill hefyd.
 view.upload-multiple-files.addAnother=Ychwanegu dogfen arall
 view.upload-file.first.title=Uwchlwythwch eich dogfen gyntaf
 view.upload-file.first.heading=Uwchlwythwch eich dogfen gyntaf
@@ -119,20 +145,32 @@ view.upload-file.help.fileFormat3=e-bost (.txt neu .msg)
 view.upload-file.help.fileFormat4=Microsoft (Word, Excel neu PowerPoint)
 view.upload-file.help.fileFormat5=Fformat Dogfen Agored (ODF)
 view.upload-file.help.line4=Ni allwch uwchlwytho ffeiliau zip na dogfennau sydd wedi’u diogelu gan gyfrinair.
-view.summary.singular.title=Rydych wedi uwchlwytho {0} o ddogfennau
-view.summary.singular.heading=Rydych wedi uwchlwytho {0} o ddogfennau
+
+# View Summaries
+# ----------------------------------------------------------
+view.summary.empty.title=Nid ydych wedi uwchlwytho unrhyw ddogfennau
+view.summary.empty.heading=Nid ydych wedi uwchlwytho unrhyw ddogfennau
+view.summary.singular.title=Rydych wedi uwchlwytho 1 o ddogfennau
+view.summary.singular.heading=Rydych wedi uwchlwytho 1 o ddogfennau
 view.summary.plural.title=Rydych wedi uwchlwytho {0} o ddogfennau
 view.summary.plural.heading=Rydych wedi uwchlwytho {0} o ddogfennau
+view.summary.uploadFile.heading=A hoffech uwchlwytho dogfen?
 view.summary.uploadAnotherFile.heading=A hoffech uwchlwytho dogfen arall?
 view.summary.list.singular.heading=Dogfennau rydych wedi’u huwchlwytho
 view.summary.list.heading=Dogfennau rydych wedi’u huwchlwytho
-view.summary.maximum=Gallwch uwchlwytho hyd at {0} ffeil. Er mwyn uwchlwytho rhagor, mae’n rhaid i chi gyflwyno’r ffeiliau hyn yn gyntaf, ac wedyn defnyddio’r gwasanaeth eto.
+view.summary.maximum=Gallwch uwchlwytho hyd at {0} ffeil.
+
+# Forms
+# ----------------------------------------------------------
 form.upload-file.submit=Uwchlwytho
 form.file-uploaded.choice.yes= Iawn 
 form.file-uploaded.choice.no= Na 
 form.file-uploaded.choice.noConditional=Drwy barhau, byddwch nawr yn cyflwyno’r holl ddogfennau rydych wedi’u huwchlwytho
 form.file-uploaded.continue=Yn eich blaen
 form.upload-multiple-files.continue=Yn eich blaen
+
+# File Upload Errors
+# ----------------------------------------------------------
 error.file-upload.required=Uwchlwythwch ddogfen ategol
 error.file-upload.invalid-size-small=Mae’r ffeil dan sylw yn wag
 error.file-upload.invalid-size-large=Mae’n rhaid i’r ffeil dan sylw fod yn llai na {0}
@@ -145,20 +183,28 @@ error.file-upload.duplicate=Mae’r ffeil dan sylw eisoes wedi’i huwchlwytho
 error.file-upload.try-again=Nid oedd modd uwchlwytho’r ffeil dan sylw  - rhowch gynnig arall arni
 error.choice.required=Dewiswch ‘Iawn’ os hoffech uwchlwytho dogfen arall
 
+# Common form messages
+# ----------------------------------------------------------
 error.browser.title.prefix=Gwall:
 error.summary.title=Mae problem wedi codi
+
 date.day=Diwrnod
 date.month=Mis
 date.year=Blwyddyn
+
 time.hour=Awr
 time.minutes=Munudau
+time.period=am neu pm
+time.period.am=am
+time.period.pm=pm
+
+# Timed Out messages
+# -----------------------------------------------------------
 view.timedout.title=Er eich diogelwch, gwnaethom eich allgofnodi
 view.timedout.heading=Er eich diogelwch, gwnaethom eich allgofnodi
 view.timedout.description=Ni wnaethom gadw’ch atebion.
 view.timedout.signIn=Mewngofnodi
-time.period=am neu pm
-time.period.am=am
-time.period.pm=pm
+
 skip.link=Ewch yn syth i‘r prif gynnwys
 
 view.timedout.dialog.message=Er eich diogelwch, byddwn yn eich allgofnodi cyn pen
