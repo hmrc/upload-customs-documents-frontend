@@ -7,7 +7,7 @@ lazy val root = (project in file("."))
   .settings(
     name := "upload-customs-documents-frontend",
     organization := "uk.gov.hmrc",
-    scalaVersion := "3.3.6",
+    scalaVersion := "3.3.7",
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
     PlayKeys.playDefaultPort := 10110,
@@ -41,7 +41,12 @@ lazy val root = (project in file("."))
         output = "stylesheets/print.css"
       )
     ),
-    scalacOptions += s"-Wconf:src=${target.value}/scala-${scalaBinaryVersion.value}/routes/.*:s,src=${target.value}/scala-${scalaBinaryVersion.value}/twirl/.*:s"
+    scalacOptions ++= Seq(
+      s"-Wconf:src=${target.value}/scala-${scalaBinaryVersion.value}/routes/.*:s",
+      s"-Wconf:src=${target.value}/scala-${scalaBinaryVersion.value}/twirl/.*:s",
+      "-Wconf:src=routes/.*:s",
+      "-Wconf:msg=Flag.*repeatedly:s"
+    )
   )
   .configs(IntegrationTest)
   .settings(

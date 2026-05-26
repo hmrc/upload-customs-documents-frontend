@@ -15,7 +15,7 @@ module.exports = function (env) {
     devtool: 'source-map',
     entry: Object.values(env.entry),
     resolve: {
-      extensions: ['.sass', '.scss'],
+      extensions: ['.css','.sass', '.scss'],
       alias: {
         'node_modules': path.join(__dirname, 'node_modules'),
         'webjars': env.webjars.path
