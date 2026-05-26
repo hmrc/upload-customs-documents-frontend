@@ -8,7 +8,7 @@ object AppDependencies {
   val compile: Seq[ModuleID] = Seq(
     "uk.gov.hmrc"                  %% s"bootstrap-frontend$playSuffix"  % bootstrapVersion,
     "uk.gov.hmrc.mongo"            %% "hmrc-mongo-play-30"              % "2.12.0",
-    "uk.gov.hmrc"                  %% "play-frontend-hmrc-play-30"      % "12.32.1",
+    "uk.gov.hmrc"                  %% "play-frontend-hmrc-play-30"      % "12.32.0",
     "com.sun.mail"                  % "javax.mail"                      % "1.6.2",
     "org.jsoup"                     % "jsoup"                           % "1.22.2",
     "com.fasterxml.jackson.module" %% "jackson-module-scala"            % "2.21.3",
