@@ -122,7 +122,6 @@ class ChooseMultipleFilesController @Inject() (
       checkFileVerificationStatus = routes.FileVerificationController.checkFileVerificationStatus,
       removeFile = routes.RemoveController.removeFileUploadByReferenceAsync,
       previewFile = routes.PreviewController.previewFileUploadByReference,
-      markFileRejected = routes.FileRejectedController.markFileUploadAsRejectedAsync,
       continueAction = if (context.config.features.showYesNoQuestionBeforeContinue) {
         routes.ChooseMultipleFilesController.continueWithYesNo
       } else { routes.ContinueToHostController.continueToHost },

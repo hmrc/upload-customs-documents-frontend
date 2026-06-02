@@ -45,6 +45,7 @@ lazy val root = (project in file("."))
       s"-Wconf:src=${target.value}/scala-${scalaBinaryVersion.value}/routes/.*:s",
       s"-Wconf:src=${target.value}/scala-${scalaBinaryVersion.value}/twirl/.*:s",
       "-Wconf:src=routes/.*:s",
+      "-Wconf:src=.*twirl.*&msg=unused import:s",
       "-Wconf:msg=Flag.*repeatedly:s"
     )
   )

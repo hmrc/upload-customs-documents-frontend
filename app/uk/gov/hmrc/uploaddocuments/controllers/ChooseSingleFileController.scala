@@ -87,6 +87,6 @@ class ChooseSingleFileController @Inject() (
       failureAction = routes.ChooseSingleFileController.showChooseFile(backLinkToSummary),
       checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(initiateResponse.reference),
       backLink = backRoute
-    )(implicitly[Request[_]], journeyConfig.messages, journeyConfig.config.features, journeyConfig.config.content)
+    )(implicitly[Request[_]], journeyConfig.messages, journeyConfig.config.content)
   }
 }

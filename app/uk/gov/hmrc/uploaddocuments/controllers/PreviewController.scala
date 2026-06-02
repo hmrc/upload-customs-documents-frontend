@@ -24,6 +24,7 @@ import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploads, RFC3986Encod
 import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 
 import javax.inject.{Inject, Singleton}
+import scala.annotation.unused
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -35,8 +36,8 @@ class PreviewController @Inject() (
     extends BaseController(components) with FileStream with FileUploadsControllerHelper {
 
   // GET /preview/:reference/:fileName
-  final def previewFileUploadByReference(reference: String, fileName: String): Action[AnyContent] = Action.async {
-    implicit request =>
+  final def previewFileUploadByReference(reference: String, @unused fileName: String): Action[AnyContent] =
+    Action.async { implicit request =>
       whenInSession { implicit journeyId =>
         whenAuthenticated {
           withFileUploads { files =>
@@ -44,7 +45,7 @@ class PreviewController @Inject() (
           }
         }
       }
-  }
+    }
 
   private def streamFileFromUspcan(reference: String, files: FileUploads) =
     files.files.find(_.reference == reference) match {
@@ -59,7 +60,7 @@ class PreviewController @Inject() (
               case _ =>
                 HeaderNames.CONTENT_DISPOSITION ->
                   s"""inline; filename="${fileName.filter(_.toInt < 128)}"; filename*=utf-8''${RFC3986Encoder
-                    .encode(fileName)}"""
+                      .encode(fileName)}"""
             }
         )
       case _ => Future.successful(NotFound)

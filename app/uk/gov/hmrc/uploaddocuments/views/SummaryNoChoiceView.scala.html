@@ -32,7 +32,7 @@
   previewFileCall: (String,String) => Call, 
   removeFileCall: String => Call, 
   backLink: Option[Call]
-)(implicit request: Request[_], messages: Messages, features: Features, serviceContent: CustomizedServiceContent)
+)(implicit request: Request[_], messages: Messages, serviceContent: CustomizedServiceContent)
 
 @govukLayout(
   pageTitle = pageTitle(if(fileUploads.isEmpty) "view.summary.empty.title" else if(fileUploads.isSingle) "view.summary.singular.title" else "view.summary.plural.title", fileUploads.acceptedCount)(messages, CustomizedServiceContent()),

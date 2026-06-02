@@ -94,26 +94,26 @@ class JourneyContextServiceISpec extends AppISpec with LogCapturing with BeforeA
       "provide journey context if exists" in {
         await(testjourneyContextService.putJourneyContext(fileUploadContext)(journeyId))
         await(
-          testjourneyContextService.withJourneyContext(Future.successful(Results.NotImplemented))(c =>
+          testjourneyContextService.withJourneyContext(Future.successful(Results.NotImplemented))(_ =>
             Future.successful(Results.NonAuthoritativeInformation)
-          )(c => Future.successful(Results.Ok))(journeyId)
+          )(_ => Future.successful(Results.Ok))(journeyId)
         ) shouldBe Results.Ok
       }
 
       "return journeyNotFoundResult if journey context not exists" in {
         await(
-          testjourneyContextService.withJourneyContext(Future.successful(Results.NotImplemented))(c =>
+          testjourneyContextService.withJourneyContext(Future.successful(Results.NotImplemented))(_ =>
             Future.successful(Results.NonAuthoritativeInformation)
-          )(c => Future.successful(Results.Ok))(journeyId)
+          )(_ => Future.successful(Results.Ok))(journeyId)
         ) shouldBe Results.NotImplemented
       }
 
       "return journeyNotActiveResult if journey context not active anymore" in {
         await(testjourneyContextService.putJourneyContext(fileUploadContext.deactivate())(journeyId))
         await(
-          testjourneyContextService.withJourneyContext(Future.successful(Results.NotImplemented))(c =>
+          testjourneyContextService.withJourneyContext(Future.successful(Results.NotImplemented))(_ =>
             Future.successful(Results.NonAuthoritativeInformation)
-          )(c => Future.successful(Results.Ok))(journeyId)
+          )(_ => Future.successful(Results.Ok))(journeyId)
         ) shouldBe Results.NonAuthoritativeInformation
       }
     }

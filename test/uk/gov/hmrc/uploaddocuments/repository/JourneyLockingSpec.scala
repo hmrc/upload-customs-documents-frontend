@@ -67,7 +67,7 @@ class JourneyLockingSpec extends UnitSpec with MockFactory with LogCapturing {
 
       "return the f result" in new fixture {
 
-        withCaptureOfLoggingFrom(TestJourneyLocking.logger) { logs =>
+        withCaptureOfLoggingFrom(TestJourneyLocking.logger) { _ =>
           mockTakeLock().once()
 
           val result = TestJourneyLocking.takeLock(Future.successful("TimedOut"))(Future.successful("Executed"))

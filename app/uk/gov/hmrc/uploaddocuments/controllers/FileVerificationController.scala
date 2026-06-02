@@ -71,7 +71,7 @@ class FileVerificationController @Inject() (
       failureAction = routes.ChooseSingleFileController.showChooseFile(None),
       checkStatusAction = routes.FileVerificationController.checkFileVerificationStatus(reference),
       backLink = None
-    )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
+    )(implicitly[Request[_]], context.messages, context.config.content)
 
   // GET /file-verification/:reference/status
   final def checkFileVerificationStatus(reference: String): Action[AnyContent] = Action.async { implicit request =>

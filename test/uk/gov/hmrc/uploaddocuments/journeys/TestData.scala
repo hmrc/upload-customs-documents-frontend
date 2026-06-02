@@ -61,7 +61,7 @@ trait TestData {
     )
   )
 
-  val mockUpscanInitiate: (String, UpscanInitiateRequest) => Future[UpscanInitiateResponse] = (serviceId, request) =>
+  val mockUpscanInitiate: (String, UpscanInitiateRequest) => Future[UpscanInitiateResponse] = (_, request) =>
     Future.successful(
       UpscanInitiateResponse(
         reference = "foo-bar-ref",
@@ -70,7 +70,7 @@ trait TestData {
     )
 
   val testUpscanRequest: (String, Long) => UpscanInitiateRequest =
-    (nonce, maxFileSize) =>
+    (_, maxFileSize) =>
       UpscanInitiateRequest(
         callbackUrl = "https://foo.bar/callback",
         successRedirect = Some("https://foo.bar/success"),

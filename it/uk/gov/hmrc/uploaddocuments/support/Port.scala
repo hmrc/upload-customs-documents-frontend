@@ -51,7 +51,7 @@ object Port {
     } else
       false
     catch {
-      case t: Throwable => false
+      case _: Throwable => false
     } finally if (socket != null) socket.close()
   }
 }

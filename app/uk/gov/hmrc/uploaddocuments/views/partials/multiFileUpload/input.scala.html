@@ -17,7 +17,7 @@
 @import uk.gov.hmrc.uploaddocuments.models.CustomizedServiceContent
 @import uk.gov.hmrc.uploaddocuments.models.Features
 
-@(acceptedFileExtensions: String)(implicit messages: Messages, serviceContent: CustomizedServiceContent, features: Features)
+@(acceptedFileExtensions: String)(implicit features: Features)
 <div class="multi-file-upload__input multi-file-upload__input-container">
   <label id="multi-file-upload__input-label" class="govuk-label multi-file-upload__input-label" for="file-{fileIndex}">{fileDescription}</label>
   <input class="multi-file-upload__file govuk-file-upload" type="file" id="file-{fileIndex}" accept="@acceptedFileExtensions" @if(features.enableMultipleFilesPicker){multiple} aria-controls="multi-file-upload__notifications">

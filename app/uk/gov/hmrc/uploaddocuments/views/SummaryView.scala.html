@@ -38,13 +38,6 @@
   backLink: Option[Call]
 )(implicit request: Request[_], messages: Messages, features: Features, serviceContent: CustomizedServiceContent)
 
-@conditionalContent = {
-  @html.p(
-    content = Html(messages("form.file-uploaded.uploadAnotherFile.noConditional")),
-    classes = "govuk-body govuk-!-padding-bottom-4 govuk-!-padding-top-4"
-  )
-}
-
 @govukLayout(
   pageTitle = pageWithFormTitle(if(fileUploads.isEmpty) "view.summary.empty.title" else if(fileUploads.isSingle) "view.summary.singular.title" else "view.summary.plural.title", form, fileUploads.acceptedCount)(messages, CustomizedServiceContent()),
   backLink = backLink.map(_.url)

@@ -46,7 +46,7 @@ class FileUploadsControllerHelperSpec extends UnitSpec {
 
       val fileUploadsResponse = None
 
-      val result = underTest.withFileUploads(fileUploads => Future.successful(Results.Redirect("dummy-redirect-url")))
+      val result = underTest.withFileUploads(_ => Future.successful(Results.Redirect("dummy-redirect-url")))
 
       await(result).header.headers("Location") shouldBe "dummy-gov-uk-start-url"
     }
@@ -54,7 +54,7 @@ class FileUploadsControllerHelperSpec extends UnitSpec {
     "return a redirect to the redirect url if file uploads are found" in new Fixture {
       val fileUploadsResponse = Some(FileUploads())
 
-      val result = underTest.withFileUploads(fileUploads => Future.successful(Results.Redirect("dummy-redirect-url")))
+      val result = underTest.withFileUploads(_ => Future.successful(Results.Redirect("dummy-redirect-url")))
 
       await(result).header.headers("Location") shouldBe "dummy-redirect-url"
     }
