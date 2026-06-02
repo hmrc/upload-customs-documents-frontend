@@ -37,19 +37,21 @@ class SessionController @Inject() (controllerComponents: MessagesControllerCompo
 
   final def keepAlive(continueUrl: Option[RedirectUrl]): Action[AnyContent] = Action.async { _ =>
     Future.successful(
-      continueUrl.flatMap( url =>
-        url.getEither(OnlyRelative) match {
-          case Right(safeUrl: SafeRedirectUrl) =>
-            Some(Redirect(safeUrl.url))
-          case Left(e) =>
-            if (UrlValidator.isValidFrontendUrl(url.unsafeValue)) {
-              Logger.info(s"[SessionController.keepAlive] Using unsafeUrl, $e")
-              Some(Redirect(url.unsafeValue))
-            } else {
-              None
-            }
-        }
-      ).getOrElse(Ok("{}"))
+      continueUrl
+        .flatMap(url =>
+          url.getEither(OnlyRelative) match {
+            case Right(safeUrl: SafeRedirectUrl) =>
+              Some(Redirect(safeUrl.url))
+            case Left(e) =>
+              if (UrlValidator.isValidFrontendUrl(url.unsafeValue)) {
+                Logger.info(s"[SessionController.keepAlive] Using unsafeUrl, $e")
+                Some(Redirect(url.unsafeValue))
+              } else {
+                None
+              }
+          }
+        )
+        .getOrElse(Ok("{}"))
     )
   }
 }

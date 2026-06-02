@@ -30,7 +30,7 @@ class SignOutController @Inject() (controllerComponents: MessagesControllerCompo
     extends FrontendController(controllerComponents) with LoggerUtil {
 
   final def signOut(continueUrl: Option[RedirectUrl]): Action[AnyContent] = Action { _ =>
-    continueUrl.fold(Redirect(appConfig.signOutUrl)){ url =>
+    continueUrl.fold(Redirect(appConfig.signOutUrl)) { url =>
       url.getEither(OnlyRelative) match {
         case Right(safeUrl: SafeRedirectUrl) =>
           Redirect(appConfig.signOutUrl, Map("continue" -> Seq(safeUrl.url)))
@@ -42,7 +42,7 @@ class SignOutController @Inject() (controllerComponents: MessagesControllerCompo
             Redirect(appConfig.signOutUrl)
           }
       }
-    } 
+    }
   }
 
   final def signOutTimeout(continueUrl: Option[RedirectUrl]): Action[AnyContent] = signOut(continueUrl)

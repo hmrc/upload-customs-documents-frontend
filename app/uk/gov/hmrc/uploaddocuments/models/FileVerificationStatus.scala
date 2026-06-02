@@ -24,13 +24,13 @@ import uk.gov.hmrc.uploaddocuments.views.UploadFileViewHelper
 case class FileVerificationStatus(
   reference: String,
   fileStatus: String,
-  fileMimeType: Option[String]         = None,
-  fileName: Option[String]             = None,
-  fileSize: Option[Int]                = None,
-  previewUrl: Option[String]           = None,
-  errorMessage: Option[String]         = None,
+  fileMimeType: Option[String] = None,
+  fileName: Option[String] = None,
+  fileSize: Option[Int] = None,
+  previewUrl: Option[String] = None,
+  errorMessage: Option[String] = None,
   uploadRequest: Option[UploadRequest] = None,
-  description: Option[String]          = None
+  description: Option[String] = None
 )
 
 object FileVerificationStatus {
@@ -53,10 +53,10 @@ object FileVerificationStatus {
           f.reference,
           "ACCEPTED",
           fileMimeType = Some(f.fileMimeType),
-          fileName     = Some(f.fileName),
-          fileSize     = Some(f.fileSize),
-          previewUrl   = Some(s"${filePreviewUrl(f.reference, f.fileName).url}"),
-          description  = f.safeDescription
+          fileName = Some(f.fileName),
+          fileSize = Some(f.fileSize),
+          previewUrl = Some(s"${filePreviewUrl(f.reference, f.fileName).url}"),
+          description = f.safeDescription
         )
       case f: FileUpload.Failed =>
         FileVerificationStatus(fileUpload.reference, "FAILED", errorMessage = Some(errorMessage(f)))

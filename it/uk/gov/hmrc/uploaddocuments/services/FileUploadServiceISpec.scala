@@ -377,7 +377,7 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
 
                 val configWithExtensions = fileUploadSessionConfig.copy(allowedFileExtensions = Some(".pdf,.xlsx"))
                 val fileUploadContext    = FileUploadContext(configWithExtensions)
-                val files               = FileUploads(Seq(acceptedFileUpload, fileUploadPosted))
+                val files                = FileUploads(Seq(acceptedFileUpload, fileUploadPosted))
 
                 await(testFileUploadService.putFiles(files)(journeyId))
                 await(repo.collection.countDocuments().toFuture()) shouldBe 1
@@ -388,10 +388,10 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
                   Seq(
                     acceptedFileUpload,
                     FileUpload.Failed(
-                      nonce     = fileUploadPosted.nonce,
+                      nonce = fileUploadPosted.nonce,
                       timestamp = Timestamp.Any,
                       reference = fileUploadPosted.reference,
-                      details   = UpscanNotification.FailureDetails(
+                      details = UpscanNotification.FailureDetails(
                         UpscanNotification.REJECTED,
                         "INVALID_EXTENSION:.pdf,.xlsx"
                       )
@@ -421,7 +421,7 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
 
                 val configWithExtensions = fileUploadSessionConfig.copy(allowedFileExtensions = Some(".pdf,.png"))
                 val fileUploadContext    = FileUploadContext(configWithExtensions)
-                val files               = FileUploads(Seq(acceptedFileUpload, fileUploadPosted))
+                val files                = FileUploads(Seq(acceptedFileUpload, fileUploadPosted))
 
                 await(testFileUploadService.putFiles(files)(journeyId))
                 await(repo.collection.countDocuments().toFuture()) shouldBe 1
@@ -432,23 +432,23 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
                   Seq(
                     acceptedFileUpload,
                     FileUpload.Accepted(
-                      nonce          = fileUploadPosted.nonce,
-                      timestamp      = Timestamp.Any,
-                      reference      = fileUploadPosted.reference,
-                      checksum       = upscanNotification.uploadDetails.checksum,
-                      url            = upscanNotification.downloadUrl,
+                      nonce = fileUploadPosted.nonce,
+                      timestamp = Timestamp.Any,
+                      reference = fileUploadPosted.reference,
+                      checksum = upscanNotification.uploadDetails.checksum,
+                      url = upscanNotification.downloadUrl,
                       uploadTimestamp = upscanNotification.uploadDetails.uploadTimestamp,
-                      fileName       = upscanNotification.uploadDetails.fileName,
-                      fileMimeType   = upscanNotification.uploadDetails.fileMimeType,
-                      fileSize       = upscanNotification.uploadDetails.size
+                      fileName = upscanNotification.uploadDetails.fileName,
+                      fileMimeType = upscanNotification.uploadDetails.fileMimeType,
+                      fileSize = upscanNotification.uploadDetails.size
                     )
                   )
                 )
 
                 givenResultPushEndpoint(
-                  path    = "/result-post-url",
+                  path = "/result-post-url",
                   payload = Payload(Request(fileUploadContext, updatedFiles), appConfig.baseExternalCallbackUrl),
-                  status  = 204
+                  status = 204
                 )
 
                 await(

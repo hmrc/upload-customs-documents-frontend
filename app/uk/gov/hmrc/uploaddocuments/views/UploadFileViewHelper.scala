@@ -71,10 +71,11 @@ object UploadFileViewHelper {
   }
 
   def toMessageKey(details: UpscanNotification.FailureDetails): String = details.failureReason match {
-    case UpscanNotification.QUARANTINE                                           => "error.file-upload.quarantine"
-    case UpscanNotification.REJECTED if details.message.startsWith("INVALID_EXTENSION:") => "error.file-upload.invalid-extension"
-    case UpscanNotification.REJECTED                                             => "error.file-upload.invalid-type"
-    case UpscanNotification.UNKNOWN                                              => "error.file-upload.unknown"
+    case UpscanNotification.QUARANTINE => "error.file-upload.quarantine"
+    case UpscanNotification.REJECTED if details.message.startsWith("INVALID_EXTENSION:") =>
+      "error.file-upload.invalid-extension"
+    case UpscanNotification.REJECTED => "error.file-upload.invalid-type"
+    case UpscanNotification.UNKNOWN  => "error.file-upload.unknown"
   }
 
   val duplicateFileMessageKey: String = "error.file-upload.duplicate"

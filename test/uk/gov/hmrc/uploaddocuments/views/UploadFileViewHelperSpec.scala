@@ -68,7 +68,8 @@ class UploadFileViewHelperSpec extends UnitSpec {
     }
 
     "return 'error.file-upload.invalid-type' when reason is REJECTED and message does not start with INVALID_EXTENSION:" in {
-      val details = UpscanNotification.FailureDetails(UpscanNotification.REJECTED, "MIME type application/exe is not allowed")
+      val details =
+        UpscanNotification.FailureDetails(UpscanNotification.REJECTED, "MIME type application/exe is not allowed")
       UploadFileViewHelper.toMessageKey(details) shouldBe "error.file-upload.invalid-type"
     }
 
@@ -86,8 +87,8 @@ class UploadFileViewHelperSpec extends UnitSpec {
   "UploadFileViewHelper.toMessage" should {
 
     "use the raw allowedFileExtensions (from FailureDetails message) for INVALID_EXTENSION errors, not allowedFileTypesHint" in {
-      val allowedExts     = ".pdf,.png,.xlsx"
-      val humanReadyHint  = "Excel, PNG or PDF"
+      val allowedExts    = ".pdf,.png,.xlsx"
+      val humanReadyHint = "Excel, PNG or PDF"
       val error = FileVerificationFailed(
         UpscanNotification.FailureDetails(UpscanNotification.REJECTED, s"INVALID_EXTENSION:$allowedExts")
       )
