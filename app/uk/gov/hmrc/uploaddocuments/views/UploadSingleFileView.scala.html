@@ -47,7 +47,7 @@
   failureAction: Call, 
   checkStatusAction: Call, 
   backLink: Option[Call]
-)(implicit request: Request[_], messages: Messages, features: Features, serviceContent: CustomizedServiceContent)
+)(implicit request: Request[_], messages: Messages, serviceContent: CustomizedServiceContent)
 
 @govukLayout(
   pageTitle = pageTitle(if(fileUploads.isEmpty) "view.upload-file.first.title" else "view.upload-file.next.title", maybeUploadError.isDefined),

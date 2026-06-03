@@ -95,7 +95,7 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
       "show upload a file view for export when yes and number of files below the limit" in {
 
         val context     = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files = for (i <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
+        val fileUploads = FileUploads(files = Seq.fill(FILES_LIMIT - 1)(TestData.acceptedFileUpload))
 
         setContext(context)
         setFileUploads(fileUploads)
@@ -146,7 +146,7 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
       "show upload a file view when yes and number of files below the limit" in {
 
         val context     = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files = for (i <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
+        val fileUploads = FileUploads(files = for (_ <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
 
         setContext(context)
         setFileUploads(fileUploads)
@@ -233,7 +233,7 @@ class SummaryControllerISpec extends ControllerISpecBase with UpscanInitiateStub
       "redirect to the continue_url when no and files number below the limit" in {
 
         val context     = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files = for (i <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
+        val fileUploads = FileUploads(files = for (_ <- 1 until FILES_LIMIT) yield TestData.acceptedFileUpload)
 
         setContext(context)
         setFileUploads(fileUploads)

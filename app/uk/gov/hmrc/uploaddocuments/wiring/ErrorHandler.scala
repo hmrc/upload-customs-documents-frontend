@@ -44,7 +44,7 @@ class ErrorHandler @Inject() (
   html: uk.gov.hmrc.uploaddocuments.views.components.html,
   pageNotFoundErrorView: PageNotFoundErrorView,
   errorView: ErrorView
-)(implicit val config: Configuration, val ec: ExecutionContext, appConfig: uk.gov.hmrc.uploaddocuments.wiring.AppConfig)
+)(implicit val config: Configuration, val ec: ExecutionContext)
     extends FrontendErrorHandler with AuthRedirects with ErrorAuditing {
 
   private val isDevEnv =

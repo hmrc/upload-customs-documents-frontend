@@ -106,5 +106,5 @@ class SummaryController @Inject() (
         previewFileCall = routes.PreviewController.previewFileUploadByReference,
         removeFileCall = routes.RemoveController.removeFileUploadByReference,
         backLink = None
-      )(implicitly[Request[_]], context.messages, context.config.features, context.config.content)
+      )(implicitly[Request[_]], context.messages, context.config.content)
 }

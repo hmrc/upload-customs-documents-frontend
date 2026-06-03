@@ -25,18 +25,18 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
 
 @Singleton
-class JourneyCacheRepository @Inject()(
+class JourneyCacheRepository @Inject() (
   mongoComponent: MongoComponent,
   timestampSupport: TimestampSupport,
   appConfig: AppConfig
 )(implicit ec: ExecutionContext)
     extends MongoCacheRepository(
-      mongoComponent   = mongoComponent,
-      collectionName   = "upload-customs-documents-journeys",
-      ttl              = appConfig.mongoSessionExpiration,
+      mongoComponent = mongoComponent,
+      collectionName = "upload-customs-documents-journeys",
+      ttl = appConfig.mongoSessionExpiration,
       timestampSupport = timestampSupport,
-      replaceIndexes   = true,
-      cacheIdType      = CacheIdType.SimpleCacheId
+      replaceIndexes = true,
+      cacheIdType = CacheIdType.SimpleCacheId
     )
 
 object JourneyCacheRepository {

@@ -21,7 +21,7 @@
       govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.GovukLayoutWrapper
 )
 
-@(successAction: Call, failureAction: Call, checkStatusAction: Call, backLink: Option[Call])(implicit request: Request[_], messages: Messages,features:Features, serviceContent: CustomizedServiceContent)
+@(@annotation.unused successAction: Call, @annotation.unused failureAction: Call, @annotation.unused checkStatusAction: Call, backLink: Option[Call])(implicit request: Request[_], messages: Messages, serviceContent: CustomizedServiceContent)
 
 @govukLayout(
   pageTitle = pageTitle("view.upload-file.waiting")(messages, CustomizedServiceContent()),

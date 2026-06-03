@@ -15,7 +15,6 @@
  *@
 
 @import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
-@import uk.gov.hmrc.hmrcfrontend.views.viewmodels.language.*
 @import uk.gov.hmrc.uploaddocuments.controllers.routes
 @import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcTrackingConsentSnippet
 @import uk.gov.hmrc.hmrcfrontend.views.html.helpers.HmrcStandardHeader
@@ -49,8 +48,8 @@
   contactFrontendConfig: ContactFrontendConfig
 )
 
-@(pageTitle: Option[String] = None, timeout: Boolean = true, js: Option[Html] = None, backLink: Option[String] =
-None, refresh: Int = 0)(contentBlock: Html)(implicit request: RequestHeader, messages: Messages, features: Features = Features(), serviceContent: CustomizedServiceContent = CustomizedServiceContent())
+@(pageTitle: Option[String] = None, timeout: Boolean = true, backLink: Option[String] =
+None, refresh: Int = 0)(contentBlock: Html)(implicit request: RequestHeader, messages: Messages, serviceContent: CustomizedServiceContent = CustomizedServiceContent())
 
 @head = {
 @hmrcTrackingConsentSnippet()

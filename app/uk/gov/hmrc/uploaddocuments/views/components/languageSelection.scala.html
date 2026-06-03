@@ -16,7 +16,7 @@
 
 @this()
 
-@(langMap: Map[String, Lang], langToCall: String => Call, customClass: Option[String] = None, appName: Option[String] = None)(implicit messages: Messages)
+@(langMap: Map[String, Lang], langToCall: String => Call)(implicit messages: Messages)
 
 <nav class="hmrc-language-select" aria-label="Language switcher">
   <ul class="hmrc-language-select__list">

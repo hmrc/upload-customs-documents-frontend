@@ -59,7 +59,7 @@ class JourneyContextControllerHelperSpec extends UnitSpec {
       val journeyContextResponse = None
 
       val result = underTest
-        .withJourneyContext(fileUploadContext => Future.successful(Results.Redirect("dummy-redirect-url")))
+        .withJourneyContext(_ => Future.successful(Results.Redirect("dummy-redirect-url")))
 
       await(result.header.headers("Location")) shouldBe "dummy-gov-uk-start-url"
 
@@ -80,7 +80,7 @@ class JourneyContextControllerHelperSpec extends UnitSpec {
         )
 
       val result = underTest
-        .withJourneyContext(fileUploadContext => Future.successful(Results.Redirect("dummy-redirect-url")))
+        .withJourneyContext(_ => Future.successful(Results.Redirect("dummy-redirect-url")))
 
       await(result.header.headers("Location")) shouldBe "dummy-redirect-url"
     }
@@ -100,7 +100,7 @@ class JourneyContextControllerHelperSpec extends UnitSpec {
         )
 
       val result = underTest
-        .withJourneyContext(fileUploadContext => Future.successful(Results.Redirect("dummy-redirect-url")))
+        .withJourneyContext(_ => Future.successful(Results.Redirect("dummy-redirect-url")))
 
       await(result.header.headers("Location")) shouldBe "dummy-sendoff-url"
     }
@@ -122,7 +122,7 @@ class JourneyContextControllerHelperSpec extends UnitSpec {
         )
 
       val result = underTest
-        .withJourneyContext(fileUploadContext => Future.successful(Results.Redirect("dummy-redirect-url")))
+        .withJourneyContext(_ => Future.successful(Results.Redirect("dummy-redirect-url")))
 
       await(result.header.headers("Location")) shouldBe "dummy-service-url"
     }
@@ -141,7 +141,7 @@ class JourneyContextControllerHelperSpec extends UnitSpec {
         )
 
       val result = underTest
-        .withJourneyContext(fileUploadContext => Future.successful(Results.Redirect("dummy-redirect-url")))
+        .withJourneyContext(_ => Future.successful(Results.Redirect("dummy-redirect-url")))
 
       await(result.header.headers("Location")) shouldBe "dummy-gov-uk-start-url"
     }
