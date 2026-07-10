@@ -29,19 +29,19 @@ object UploadFileViewHelper {
     previewFile: (String, String) => Call,
     maximumFileSizeBytes: Long,
     allowedFileTypesHint: String
-  )(implicit messages: Messages): String = {
+  )(using Messages): String = {
     val fileVerificationStatuses = initialFileUploads.map(file =>
       FileVerificationStatus(file, previewFile, maximumFileSizeBytes, allowedFileTypesHint)
     )
     Json.stringify(Json.toJson(fileVerificationStatuses))
   }
 
-  def toFormError(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(implicit
-    messages: Messages
+  def toFormError(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(using
+    Messages
   ): FormError =
     FormError("file", Seq(toMessage(error, maximumFileSizeBytes, allowedFileTypesHint)))
 
-  def toMessage(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(implicit
+  def toMessage(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(using
     messages: Messages
   ): String = error match {
     case FileTransmissionFailed(error) =>

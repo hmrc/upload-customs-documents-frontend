@@ -26,6 +26,7 @@ import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextSe
 
 import javax.inject.{Inject, Singleton}
 import scala.concurrent.ExecutionContext
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 
 @Singleton
@@ -33,12 +34,13 @@ class InitializeController @Inject() (
   components: BaseControllerComponents,
   fileUploadService: FileUploadService,
   journeyContextService: JourneyContextService
-)(implicit ec: ExecutionContext)
+)(using ec: ExecutionContext)
     extends BaseController(components) {
 
   // POST /internal/initialize
   final val initialize: Action[JsValue] = Action.async(parse.tolerantJson) { implicit request =>
-    implicit val hc = HeaderCarrierConverter.fromRequest(request) // required to process Session-ID from the cookie
+    given HeaderCarrier =
+      HeaderCarrierConverter.fromRequest(request) // required to process Session-ID from the cookie
     withJsonBody[FileUploadInitializationRequest] { payload =>
       whenInSession { implicit journeyId =>
         Logger.debug(s"[initialize] Call to initiate journey for journeyId: '$journeyId', body: \n${Json
@@ -50,14 +52,12 @@ class InitializeController @Inject() (
                    FileUploadContext(
                      payload.config,
                      HostService(request),
-                     userWantsToUploadNextFile = maybeExistingContext
-                       .map(_.userWantsToUploadNextFile)
-                       .getOrElse(false)
+                     userWantsToUploadNextFile = maybeExistingContext.exists(_.userWantsToUploadNextFile)
                    )
                  )
             _ <- fileUploadService.putFiles(FileUploads(payload))
           } yield Created.withHeaders(
-            HeaderNames.LOCATION -> uk.gov.hmrc.uploaddocuments.controllers.routes.StartController.start.url
+            HeaderNames.LOCATION -> uk.gov.hmrc.uploaddocuments.controllers.routes.ChooseMultipleFilesController.showChooseMultipleFiles.url
           )
         }
       }

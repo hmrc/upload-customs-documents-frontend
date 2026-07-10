@@ -22,7 +22,7 @@ object CommonUtilsHelper {
     *
     * @param optString
     */
-  implicit class RichOptionString(optString: Option[String]) {
+  extension (optString: Option[String]) {
     def mapNonEmpty[T](f: String => T): Option[T] =
       optString.filter(_.nonEmpty).map(f)
 

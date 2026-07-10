@@ -190,5 +190,27 @@ class FileUploadsSpec extends UnitSpec {
       rejectedFileUpload.isReady shouldBe true
       duplicateFileUpload.isReady shouldBe true
     }
+
+    "drop only initiated placeholders, keeping posted, accepted and errored uploads" in {
+      val initiated = FileUpload.Initiated(Nonce(1), Timestamp.Any, "ref-i")
+      val posted    = FileUpload.Posted(Nonce(2), Timestamp.Any, "ref-p")
+      val accepted = FileUpload.Accepted(
+        Nonce(3),
+        Timestamp.Any,
+        "ref-a",
+        "url",
+        ZonedDateTime.parse("2020-01-01T00:00:00Z"),
+        "checksum",
+        "f.pdf",
+        "application/pdf",
+        1
+      )
+      val rejected =
+        FileUpload.Rejected(Nonce(4), Timestamp.Any, "ref-r", S3UploadError("ref-r", "EntityTooLarge", "too big"))
+
+      val result = FileUploads(Seq(initiated, posted, accepted, rejected)).withoutInitiated
+
+      result.files shouldBe Seq(posted, accepted, rejected)
+    }
   }
 }

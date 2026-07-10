@@ -18,7 +18,7 @@ package uk.gov.hmrc.uploaddocuments.services.mocks
 
 import org.scalamock.handlers.{CallHandler1, CallHandler2, CallHandler3}
 import org.scalamock.scalatest.MockFactory
-import uk.gov.hmrc.uploaddocuments.models.{FileUploads, JourneyId}
+import uk.gov.hmrc.uploaddocuments.models.{FileUploads, JourneyId, Nonce, UpscanInitiateResponse}
 import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -31,18 +31,26 @@ trait MockFileUploadService {
   def mockGetFiles(journeyId: JourneyId)(
     response: => Future[Option[FileUploads]]
   ): CallHandler1[JourneyId, Future[Option[FileUploads]]] =
-    (mockFileUploadService.getFiles(_: JourneyId)).expects(journeyId).returning(response)
+    (mockFileUploadService.getFiles(using _: JourneyId)).expects(journeyId).returning(response)
 
   def mockPutFiles(journeyId: JourneyId, request: FileUploads)(
     response: => Future[FileUploads]
   ): CallHandler2[FileUploads, JourneyId, Future[FileUploads]] =
-    (mockFileUploadService.putFiles(_: FileUploads)(_: JourneyId)).expects(request, journeyId).returning(response)
+    (mockFileUploadService.putFiles(_: FileUploads)(using _: JourneyId)).expects(request, journeyId).returning(response)
+
+  def mockPutInitiatedFile(nonce: Nonce, upscanResponse: UpscanInitiateResponse, journeyId: JourneyId)(
+    response: => Future[Option[FileUploads]]
+  ): CallHandler3[Nonce, UpscanInitiateResponse, JourneyId, Future[Option[FileUploads]]] =
+    (mockFileUploadService
+      .putInitiatedFile(_: Nonce, _: UpscanInitiateResponse)(using _: JourneyId))
+      .expects(nonce, upscanResponse, journeyId)
+      .returning(response)
 
   def mockWithFiles[T](journeyId: JourneyId)(
     files: => Future[Option[FileUploads]]
-  )(implicit ec: ExecutionContext): CallHandler3[Future[T], FileUploads => Future[T], JourneyId, Future[T]] =
+  )(using ExecutionContext): CallHandler3[Future[T], FileUploads => Future[T], JourneyId, Future[T]] =
     (mockFileUploadService
-      .withFiles[T](_: Future[T])(_: FileUploads => Future[T])(_: JourneyId))
+      .withFiles[T](_: Future[T])(_: FileUploads => Future[T])(using _: JourneyId))
       .expects(*, *, journeyId)
       .onCall { mock =>
         files.flatMap {

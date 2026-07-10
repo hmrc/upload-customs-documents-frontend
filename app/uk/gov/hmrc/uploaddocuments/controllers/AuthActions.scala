@@ -33,7 +33,7 @@ trait AuthActions extends AuthorisedFunctions with AuthRedirects with LoggerUtil
 
   protected def whenAuthenticated[A](
     body: => Future[Result]
-  )(implicit request: Request[A], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] =
+  )(using request: Request[A], hc: HeaderCarrier, ec: ExecutionContext): Future[Result] =
     authorised(AuthProviders(GovernmentGateway, PrivilegedApplication))
       .retrieve(credentials)(_ => body)
       .recover { case e: AuthorisationException =>
@@ -44,8 +44,9 @@ trait AuthActions extends AuthorisedFunctions with AuthRedirects with LoggerUtil
 
   protected def whenAuthenticatedInBackchannel[A](
     body: => Future[Result]
-  )(implicit request: Request[A], ec: ExecutionContext): Future[Result] = {
-    implicit val hc = HeaderCarrierConverter.fromRequest(request) // required to process Session-ID from the cookie
+  )(using request: Request[A], ec: ExecutionContext): Future[Result] = {
+    given HeaderCarrier =
+      HeaderCarrierConverter.fromRequest(request) // required to process Session-ID from the cookie
     authorised(AuthProviders(GovernmentGateway, PrivilegedApplication))
       .retrieve(credentials)(_ => body)
       .recover { case e: AuthorisationException =>

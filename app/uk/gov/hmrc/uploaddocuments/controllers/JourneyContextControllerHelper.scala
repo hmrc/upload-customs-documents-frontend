@@ -27,14 +27,14 @@ trait JourneyContextControllerHelper {
   val journeyContextService: JourneyContextService
   def govukStartUrl: String
 
-  def withJourneyContext(body: FileUploadContext => Future[Result])(implicit journeyId: JourneyId): Future[Result] =
+  def withJourneyContext(body: FileUploadContext => Future[Result])(using journeyId: JourneyId): Future[Result] =
     journeyContextService.withJourneyContext(
       Future.successful(Results.Redirect(govukStartUrl))
     )(c =>
       Future.successful(
         Results.Redirect(
           c.config.sendoffUrl
-            .orElse(c.content.serviceUrl)
+            .orElse(c.config.content.serviceUrl)
             .getOrElse(govukStartUrl)
         )
       )
@@ -42,7 +42,7 @@ trait JourneyContextControllerHelper {
 
   def withJourneyContextWithErrorHandler(
     journeyNotFoundResult: => Future[Result]
-  )(body: FileUploadContext => Future[Result])()(implicit
+  )(body: FileUploadContext => Future[Result])()(using
     journeyId: JourneyId
   ): Future[Result] =
     journeyContextService

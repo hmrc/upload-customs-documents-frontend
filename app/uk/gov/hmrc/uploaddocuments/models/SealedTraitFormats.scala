@@ -44,7 +44,7 @@ trait SealedTraitFormats[A] {
       format.reads(json).map(_.asInstanceOf[A])
   }
 
-  implicit val format: Format[A] = Format(
+  given format: Format[A] = Format(
     Reads {
       case o: JsObject =>
         (for {
@@ -72,6 +72,6 @@ trait SealedTraitFormats[A] {
   )
 
   /** Instance of a typeclass declaration */
-  implicit val sealedTraitFormats: SealedTraitFormats[A] = this
+  given sealedTraitFormats: SealedTraitFormats[A] = this
 
 }

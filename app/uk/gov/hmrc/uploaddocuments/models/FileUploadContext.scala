@@ -34,10 +34,10 @@ final case class FileUploadContext(
 ) {
   def isValid: Boolean = config.isValid && hostService.userAgent.nonEmpty
 
-  implicit val content: CustomizedServiceContent = config.content
-  implicit val features: Features                = config.features
+//  given CustomizedServiceContent = config.content
+//  given Features                 = config.features
 
-  def messages(implicit m: Messages): Messages =
+  def messages(using m: Messages): Messages =
     if (config.content.yesNoQuestionRequiredError.isDefined)
       new EnhancedMessages(m, Map("error.choice.required" -> config.content.yesNoQuestionRequiredError.getOrElse("")))
     else m
@@ -77,9 +77,9 @@ object HostService {
 
   object InitializationRequestHeaders {
 
-    implicit val reads: Reads[InitializationRequestHeaders] = Json.reads[InitializationRequestHeaders]
+    given reads: Reads[InitializationRequestHeaders] = Json.reads[InitializationRequestHeaders]
 
-    implicit val writes: Writes[InitializationRequestHeaders] = Json.writes[InitializationRequestHeaders]
+    given writes: Writes[InitializationRequestHeaders] = Json.writes[InitializationRequestHeaders]
   }
 
   object Any extends HostService {
@@ -97,7 +97,7 @@ object HostService {
     InitializationRequestHeaders(headers)
   }
 
-  implicit val format: Format[HostService] =
+  given format: Format[HostService] =
     Format(
       Reads(value => InitializationRequestHeaders.reads.reads(value).orElse(JsSuccess(Any))),
       Writes {
@@ -108,6 +108,6 @@ object HostService {
 }
 
 object FileUploadContext {
-  implicit val format: Format[FileUploadContext] =
+  given format: Format[FileUploadContext] =
     Json.using[Json.WithDefaultValues].format[FileUploadContext]
 }

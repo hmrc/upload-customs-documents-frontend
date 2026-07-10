@@ -30,7 +30,7 @@ class FileVerificationService @Inject() (fileUploadService: FileUploadService) e
   def waitForUpscanResponse[T](upscanReference: String, intervalInMiliseconds: Long, timeoutNanoTime: Long)(
     readyResult: FileUpload => Future[T],
     ifTimeout: => Future[T]
-  )(implicit scheduler: Scheduler, ec: ExecutionContext, journeyId: JourneyId): Future[T] =
+  )(using scheduler: Scheduler, ec: ExecutionContext, journeyId: JourneyId): Future[T] =
     fileUploadService.withFiles[T](throw new Exception("No JourneyID found for supplied journeyID")) {
       _.files.find(_.reference == upscanReference) match {
         case Some(file) if file.isReady =>
@@ -56,7 +56,7 @@ class FileVerificationService @Inject() (fileUploadService: FileUploadService) e
       }
     }
 
-  def getFileVerificationStatus(reference: String)(implicit
+  def getFileVerificationStatus(reference: String)(using
     journeyContext: FileUploadContext,
     messages: Messages,
     journeyId: JourneyId

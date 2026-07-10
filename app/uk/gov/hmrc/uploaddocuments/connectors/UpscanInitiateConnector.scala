@@ -51,7 +51,7 @@ class UpscanInitiateConnector @Inject() (
   def initiate(
     consumingService: String,
     request: UpscanInitiateRequest
-  )(implicit hc: HeaderCarrier, ec: ExecutionContext): Future[UpscanInitiateResponse] =
+  )(using hc: HeaderCarrier, ec: ExecutionContext): Future[UpscanInitiateResponse] =
     retry(appConfig.fileUploadResultPushRetryIntervals*)(shouldRetry, errorMessage) {
       monitor(s"ConsumedAPI-upscan-v2-initiate-$consumingService-POST") {
         val url = new URL(baseUrl + upscanInitiatev2Path).toExternalForm

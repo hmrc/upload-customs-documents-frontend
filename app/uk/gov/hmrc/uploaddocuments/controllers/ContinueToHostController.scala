@@ -28,7 +28,7 @@ class ContinueToHostController @Inject() (
   components: BaseControllerComponents,
   override val fileUploadService: FileUploadService,
   override val journeyContextService: JourneyContextService
-)(implicit ec: ExecutionContext)
+)(using ExecutionContext)
     extends BaseController(components) with JourneyContextControllerHelper with FileUploadsControllerHelper {
 
   // GET /continue-to-host

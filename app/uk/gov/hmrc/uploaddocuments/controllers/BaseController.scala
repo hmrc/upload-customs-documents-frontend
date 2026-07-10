@@ -24,7 +24,6 @@ import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.bootstrap.frontend.controller.FrontendBaseController
 import uk.gov.hmrc.uploaddocuments.connectors.FrontendAuthConnector
 import uk.gov.hmrc.uploaddocuments.models.JourneyId
-import uk.gov.hmrc.uploaddocuments.support.JsEnabled.COOKIE_JSENABLED
 import uk.gov.hmrc.uploaddocuments.support.SHA256
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
@@ -52,16 +51,10 @@ abstract class BaseController(
 
   final protected def controllerComponents: MessagesControllerComponents = components.messagesControllerComponents
 
-  final def journeyIdFromSession(implicit hc: HeaderCarrier): Option[JourneyId] =
+  final def journeyIdFromSession(using hc: HeaderCarrier): Option[JourneyId] =
     hc.sessionId.map(_.value).map(SHA256.compute).map(JourneyId.apply)
 
-  final def whenInSession(body: JourneyId => Future[Result])(implicit hc: HeaderCarrier): Future[Result] =
+  final def whenInSession(body: JourneyId => Future[Result])(using hc: HeaderCarrier): Future[Result] =
     journeyIdFromSession.fold(Future.successful(Redirect(components.appConfig.govukStartUrl)))(body)
-
-  final def preferUploadMultipleFiles(implicit rh: RequestHeader): Boolean = {
-    val isEnabled = rh.cookies.get(COOKIE_JSENABLED).exists(_.value == "true")
-    if (!isEnabled) logger.debug("javascript is disabled")
-    isEnabled
-  }
 
 }

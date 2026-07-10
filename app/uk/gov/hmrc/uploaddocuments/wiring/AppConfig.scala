@@ -49,10 +49,10 @@ trait AppConfig {
   val contactHost: String
   val contactFormServiceIdentifier: String
 
-  def requestUri(implicit request: RequestHeader): String =
+  def requestUri(using request: RequestHeader): String =
     URLEncoder.encode(baseExternalCallbackUrl + request.uri, "UTF-8")
 
-  def reportProblemUrl(implicit request: RequestHeader): String =
+  def reportProblemUrl(using RequestHeader): String =
     s"$contactHost/contact/problem_reports_nonjs?newTab=true&service=$contactFormServiceIdentifier&backUrl=$requestUri"
 
   val signOutUrl: String

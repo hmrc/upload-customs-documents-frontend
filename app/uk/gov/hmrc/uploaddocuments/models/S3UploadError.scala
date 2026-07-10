@@ -45,7 +45,7 @@ case class S3UploadError(
 )
 
 object S3UploadError {
-  implicit val formats: Format[S3UploadError] = Json.format[S3UploadError]
+  given formats: Format[S3UploadError] = Json.format[S3UploadError]
 
   def from(
     key: String,

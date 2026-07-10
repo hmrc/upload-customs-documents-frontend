@@ -40,7 +40,7 @@ object FileVerificationStatus {
     filePreviewUrl: (String, String) => Call,
     maximumFileSizeBytes: Long,
     allowedFileTypesHint: String
-  )(implicit messages: Messages): FileVerificationStatus = {
+  )(using messages: Messages): FileVerificationStatus = {
     val errorMessage: ErroredFileUpload => String =
       file => UploadFileViewHelper.toMessage(FileUploadError(file), maximumFileSizeBytes, allowedFileTypesHint)
 
@@ -66,5 +66,5 @@ object FileVerificationStatus {
         FileVerificationStatus(fileUpload.reference, "DUPLICATE", errorMessage = Some(errorMessage(f)))
     }
   }
-  implicit val formats: Format[FileVerificationStatus] = Json.format[FileVerificationStatus]
+  given formats: Format[FileVerificationStatus] = Json.format[FileVerificationStatus]
 }

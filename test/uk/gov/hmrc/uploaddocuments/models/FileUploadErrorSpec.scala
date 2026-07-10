@@ -67,7 +67,7 @@ class FileUploadErrorSpec extends UnitSpec {
     }
 
     "serialize and deserialize FileTransmissionFailed" in new JsonFormatExplicitTest[FileUploadError](info) {
-      implicit val testedFormat: Format[FileUploadError] = FileUploadError.format
+      given testedFormat: Format[FileUploadError] = FileUploadError.format
       validateJsonFormat(
         """{"FileTransmissionFailed":{"error":{"key":"a","errorCode":"b","errorMessage":"c","errorRequestId":"e","errorResource":"d"}}}""".stripMargin,
         FileTransmissionFailed(error = S3UploadError("a", "b", "c", Some("e"), Some("d")))
@@ -75,7 +75,7 @@ class FileUploadErrorSpec extends UnitSpec {
     }
 
     "serialize and deserialize FileVerificationFailed" in new JsonFormatExplicitTest[FileUploadError](info) {
-      implicit val testedFormat: Format[FileUploadError] = FileUploadError.format
+      given testedFormat: Format[FileUploadError] = FileUploadError.format
       validateJsonFormat(
         """{"FileVerificationFailed":{"details":{"failureReason":"QUARANTINE","message":"This file has virus."}}}""".stripMargin,
         FileVerificationFailed(details =

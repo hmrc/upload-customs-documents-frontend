@@ -42,10 +42,10 @@ class JourneyContextControllerHelperSpec extends UnitSpec {
 
       override val journeyContextService: JourneyContextService =
         new JourneyContextService(null) { // we don't need the repository here as we are mocking the service
-          override def getJourneyContext()(implicit journeyId: JourneyId): Future[Option[FileUploadContext]] =
+          override def getJourneyContext()(using journeyId: JourneyId): Future[Option[FileUploadContext]] =
             Future.successful(journeyContextResponse)
 
-          override def putJourneyContext(journeyContext: FileUploadContext)(implicit
+          override def putJourneyContext(journeyContext: FileUploadContext)(using
             journeyId: JourneyId
           ): Future[CacheItem] =
             ??? // we don't use this in the test

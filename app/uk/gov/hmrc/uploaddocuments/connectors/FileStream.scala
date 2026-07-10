@@ -30,7 +30,7 @@ trait FileStream {
 
   val defaultFileSizeLimit: Long = 100 * 1024 * 1024
 
-  implicit val actorSystem: ActorSystem
+  given actorSystem: ActorSystem
 
   private val connectionPool: Flow[(HttpRequest, String), (Try[HttpResponse], String), NotUsed] =
     Http().superPool[String]()
