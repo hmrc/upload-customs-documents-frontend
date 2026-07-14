@@ -198,5 +198,14 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
       doc.body().html() should include("a&lt;script&gt;")
       doc.select("a[href*=/preview/ref-xss]").first().text() should include("a<script>")
     }
+
+    "prefix the browser title with Error: only when a file has errored" in {
+      render(FileUploads(Seq(rejectedFile)), Some(uploadReq), None).title should startWith(
+        messages("error.browser.title.prefix")
+      )
+      render(FileUploads(Seq(acceptedFile)), Some(uploadReq), None).title should not startWith messages(
+        "error.browser.title.prefix"
+      )
+    }
   }
 }

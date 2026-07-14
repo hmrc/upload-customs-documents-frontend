@@ -16,7 +16,7 @@
 
 @import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploads, UploadRequest, FileUploadError, CustomizedServiceContent, Features, ErroredFileUpload}
 @import uk.gov.hmrc.uploaddocuments.views.UploadFileViewHelper
-@import uk.gov.hmrc.uploaddocuments.views.ViewHelpers.{pageTitle, pageHeading}
+@import uk.gov.hmrc.uploaddocuments.views.ViewHelpers.{pageTitleWithErrors, pageHeading}
 @import uk.gov.hmrc.govukfrontend.views.html.components._
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.fileupload.{FileUpload => FileUploadViewModel}
 @import uk.gov.hmrc.govukfrontend.views.viewmodels.errorsummary.{ErrorSummary, ErrorLink}
@@ -103,7 +103,7 @@
 }
 
 @govukLayout(
-  pageTitle = pageTitle("view.upload-multiple-files.title", erroredFiles.nonEmpty),
+  pageTitle = pageTitleWithErrors("view.upload-multiple-files.title", erroredFiles.nonEmpty),
   backLink = backLink.map(_.url),
   additionalScripts = Some(pollerScript)
 ) {
