@@ -39,18 +39,13 @@ class ChooseMultipleFilesController @Inject() (
     whenInSession { implicit journeyId =>
       whenAuthenticated {
         withJourneyContext { implicit journeyConfig =>
-          initiateUpscanService.initiateNextFileUpload().flatMap { maybeInitiated =>
-            withFileUploads { files =>
-              Future.successful(
-                Ok(
-                  renderView(
-                    journeyConfig,
-                    files.withoutInitiated,
-                    maybeInitiated.map(_._1.uploadRequest)
-                  )
-                )
-              )
-            }
+          withFileUploads { files =>
+            if (files.acceptedCount >= journeyConfig.config.maximumNumberOfFiles)
+              Future.successful(Ok(renderView(journeyConfig, files.withoutInitiated, None)))
+            else
+              initiateUpscanService.initiateNextFileUpload().map { maybeInitiated =>
+                Ok(renderView(journeyConfig, files.withoutInitiated, maybeInitiated.map(_._1.uploadRequest)))
+              }
           }
         }
       }
