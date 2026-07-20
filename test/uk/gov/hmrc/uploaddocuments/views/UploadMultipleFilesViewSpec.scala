@@ -189,9 +189,15 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
         .text should include("Upload another type of document")
     }
 
+    "hide the file name, not the upscan reference, in the remove link's accessible label" in {
+      val doc = render(FileUploads(Seq(acceptedFile)), Some(uploadReq), None)
+      doc.select("a[href=/remove/ref-a] .govuk-visually-hidden").text shouldBe "invoice.pdf"
+      doc.select("a[href=/remove/ref-a]").text should not include "ref-a"
+    }
+
     "render corrected the size and types of a file" in {
       val doc = render(FileUploads(Seq(acceptedFile)), Some(uploadReq), None)
-      doc.text should include("Each file can be 9MB or smaller.")
+      doc.text should include("Each file can be 9 MB or smaller.")
       doc.text should include("Acceptable file types: PDF, JPG, PNG.")
     }
 

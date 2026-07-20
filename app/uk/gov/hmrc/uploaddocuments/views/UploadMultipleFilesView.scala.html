@@ -98,6 +98,14 @@
   }
 }
 
+@removeHiddenText(file: FileUpload) = @{
+  file match {
+    case a: FileUpload.Accepted  => a.fileName
+    case d: FileUpload.Duplicate => d.duplicateFileName
+    case _                       => typeText(file)
+  }
+}
+
 @pollerScript = {
   <script src="@controllers.routes.Assets.versioned("javascripts/upload-status-poller.js")"></script>
 }
@@ -128,7 +136,7 @@
   @html.h1(pageHeading("view.upload-multiple-files.heading"), classes = serviceContent.pageTitleClasses.getOrElse("govuk-heading-l"))
 
   @serviceContent.safeDescriptionHtml.map(d => Html(d)).getOrElse {
-    @html.p{ @messages("view.upload-multiple-files.line1", maximumFileSizeBytes / 1000000) }
+    @html.p{ @messages("view.upload-multiple-files.line1", UploadFileViewHelper.humanReadableFileSize(maximumFileSizeBytes)) }
     @html.p{ @messages("view.upload-multiple-files.line2", allowedFileTypesHint) }
   }
 
@@ -192,7 +200,7 @@
             <dd class="govuk-summary-list__actions">
               <a class="govuk-link" href="@removeFileCall(file.reference).url">
                 @messages("view.upload-multiple-files.remove")
-                <span class="govuk-visually-hidden">@file.reference</span>
+                <span class="govuk-visually-hidden">@removeHiddenText(file)</span>
               </a>
             </dd>
           </div>
