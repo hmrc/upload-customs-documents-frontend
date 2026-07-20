@@ -102,9 +102,14 @@
   <script src="@controllers.routes.Assets.versioned("javascripts/upload-status-poller.js")"></script>
 }
 
+@noscriptRefresh = {
+  <noscript><meta http-equiv="refresh" content="3"></noscript>
+}
+
 @govukLayout(
   pageTitle = pageTitleWithErrors("view.upload-multiple-files.title", erroredFiles.nonEmpty),
   backLink = backLink.map(_.url),
+  additionalHead = if (anyNonReady) Some(noscriptRefresh) else None,
   additionalScripts = Some(pollerScript)
 ) {
 
@@ -210,8 +215,4 @@
       ))
     }
   </div>
-
-  @if(anyNonReady) {
-    <noscript><meta http-equiv="refresh" content="3"></noscript>
-  }
 }

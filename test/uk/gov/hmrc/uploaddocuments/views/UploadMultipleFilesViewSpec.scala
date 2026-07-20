@@ -137,6 +137,12 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
       doc.select("#file.govuk-file-upload--error").size shouldBe 0
     }
 
+    "emit the noscript meta-refresh in the document head" in {
+      val doc = render(FileUploads(Seq(postedFile)), Some(uploadReq), None)
+      doc.head.select("noscript meta[http-equiv=refresh]").size shouldBe 1
+      doc.body.select("noscript meta[http-equiv=refresh]").size shouldBe 0
+    }
+
     "emit a noscript meta-refresh only when a non-ready row exists" in {
       render(FileUploads(Seq(postedFile)), Some(uploadReq), None)
         .select("noscript meta[http-equiv=refresh]")

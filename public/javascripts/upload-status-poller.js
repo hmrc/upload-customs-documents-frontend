@@ -1,11 +1,13 @@
 // Check file status and transition them from "Uploading" to "Uploaded" tag.
-// Every INTERVAL_MS the poller will try to get the status of files tagged in yellow (uploading).
+// Polls every 2s for 30s (15 attempts), then every 10s indefinitely.
 // Once any status changes, the poller will refresh the whole page.
+// This matches the no-JS meta-refresh fallback (every 3s, never gives up).
 (function () {
   "use strict";
 
-  var MAX_ATTEMPTS = 15;
-  var INTERVAL_MS = 2000;
+  var FAST_ATTEMPTS = 15;
+  var FAST_INTERVAL_MS = 2000;
+  var SLOW_INTERVAL_MS = 10000;
 
   // Non-terminal statuses from FileVerificationStatus.fileStatus: keep polling on these.
   var PENDING = { WAITING: true, NOT_UPLOADED: true };
@@ -32,7 +34,7 @@
     }
 
     function retry() {
-      if (attempts < MAX_ATTEMPTS) window.setTimeout(tick, INTERVAL_MS);
+      window.setTimeout(tick, attempts < FAST_ATTEMPTS ? FAST_INTERVAL_MS : SLOW_INTERVAL_MS);
     }
 
     tick();
