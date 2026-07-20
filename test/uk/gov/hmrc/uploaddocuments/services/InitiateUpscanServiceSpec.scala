@@ -80,12 +80,25 @@ class InitiateUpscanServiceSpec
 
         val result = testService.initiateNextFileUpload()(using fileUploadContext, journeyId, HeaderCarrier())
 
-        await(result) shouldBe Some((upscanResponse, updatedFiles, None))
+        await(result) shouldBe ((upscanResponse, updatedFiles))
+      }
+    }
+
+    "the upscan call fails" should {
+      "propagate the failure as a failed Future" in {
+        val upscanRequest = testService.upscanRequest(nonce, defaultMaximumFileSizeBytes)(using journeyId)
+        val exception     = new RuntimeException("upscan-initiate is down")
+
+        mockInitiate(upscanRequest, Future.failed(exception))
+
+        val result = testService.initiateNextFileUpload()(using fileUploadContext, journeyId, HeaderCarrier())
+
+        an[RuntimeException] should be thrownBy await(result)
       }
     }
 
     "the journey has no files" should {
-      "return None when putInitiatedFile finds nothing to update" in {
+      "fail with an IllegalStateException when putInitiatedFile finds nothing to update" in {
         val upscanRequest = testService.upscanRequest(nonce, defaultMaximumFileSizeBytes)(using journeyId)
 
         mockInitiate(upscanRequest, Future.successful(upscanResponse))
@@ -93,7 +106,7 @@ class InitiateUpscanServiceSpec
 
         val result = testService.initiateNextFileUpload()(using fileUploadContext, journeyId, HeaderCarrier())
 
-        await(result) shouldBe None
+        an[IllegalStateException] should be thrownBy await(result)
       }
     }
   }

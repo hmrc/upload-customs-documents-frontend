@@ -18,7 +18,7 @@ package uk.gov.hmrc.uploaddocuments.services
 
 import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.uploaddocuments.connectors.UpscanInitiateConnector
-import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploadError, FileUploads, JourneyId, Nonce, UpscanInitiateResponse}
+import uk.gov.hmrc.uploaddocuments.models.{FileUploadContext, FileUploads, JourneyId, Nonce, UpscanInitiateResponse}
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
@@ -38,7 +38,7 @@ class InitiateUpscanService @Inject() (
     journeyContext: FileUploadContext,
     journeyId: JourneyId,
     hc: HeaderCarrier
-  ): Future[Option[(UpscanInitiateResponse, FileUploads, Option[FileUploadError])]] = {
+  ): Future[(UpscanInitiateResponse, FileUploads)] = {
     val nonce           = randomNonce
     val initiateRequest = upscanRequest(nonce, journeyContext.config.maximumFileSizeBytes)
 
@@ -46,12 +46,12 @@ class InitiateUpscanService @Inject() (
       .initiate(journeyContext.hostService.userAgent, initiateRequest)
       .flatMap { upscanResponse =>
         fileUploadService.putInitiatedFile(nonce, upscanResponse).map {
-          _.map(updatedFiles => (upscanResponse, updatedFiles, updatedFiles.tofileUploadErrors.headOption))
+          case Some(updatedFiles) => (upscanResponse, updatedFiles)
+          case None =>
+            throw new IllegalStateException(
+              "[initiateNextFileUpload] could not persist the initiated file upload (journey lock or missing session)"
+            )
         }
-      }
-      .recoverWith { case e: Throwable =>
-        Logger.error(s"[initiateNextFileUpload] Failed to initiate upscan: ${e.getMessage}")
-        Future.successful(None)
       }
   }
 }

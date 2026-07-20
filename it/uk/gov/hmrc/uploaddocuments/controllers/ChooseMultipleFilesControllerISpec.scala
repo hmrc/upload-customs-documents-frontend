@@ -22,6 +22,7 @@ import uk.gov.hmrc.uploaddocuments.stubs.{ExternalApiStubs, UpscanInitiateStubs}
 import play.api.libs.ws.DefaultBodyReadables.readableAsString
 
 import java.time.ZonedDateTime
+import scala.concurrent.duration.*
 
 class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with UpscanInitiateStubs with ExternalApiStubs {
 
@@ -170,6 +171,58 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
             )
           )
         )
+      }
+
+      "reuse the existing initiated upload on a repeat render instead of calling upscan-initiate again" in {
+        setContext()
+        setFileUploads()
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+        val callbackUrl = appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+        await(request("/choose-files").get()).status shouldBe 200
+        await(request("/choose-files").get()).status shouldBe 200
+
+        verify(1, postRequestedFor(urlEqualTo("/upscan/v2/initiate")))
+      }
+
+      "initiate a fresh upload instead of reusing an Initiated row older than 30 minutes" in {
+        setContext()
+        setFileUploads(
+          FileUploads(
+            Seq(
+              FileUpload.Initiated(
+                Nonce.Any,
+                Timestamp(System.currentTimeMillis() - 31.minutes.toMillis),
+                "stale-ref",
+                Some(testUploadRequest)
+              )
+            )
+          )
+        )
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+        val callbackUrl = appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+        await(request("/choose-files").get()).status shouldBe 200
+
+        verify(1, postRequestedFor(urlEqualTo("/upscan/v2/initiate")))
+      }
+
+      "render the standard error page when upscan initiation fails" in {
+        setContext()
+        setFileUploads()
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+        val callbackUrl = appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+        givenUpscanInitiateFails(callbackUrl, hostUserAgent)
+
+        val result = await(request("/choose-files").get())
+
+        // The platform ErrorHandler (see PreviewControllerISpec for the same pattern) renders the
+        // standard error view with an Ok status rather than a 5xx status.
+        result.status shouldBe 200
+        result.body should include(htmlEscapedPageTitle("global.error.500.title"))
+        result.body should include(htmlEscapedMessage("global.error.500.heading"))
       }
 
       "not initiate Upscan and hide the upload form when the maximum number of files is reached" in {

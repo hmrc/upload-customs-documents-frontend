@@ -22,6 +22,7 @@ import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, InitiateUpscanSe
 import uk.gov.hmrc.uploaddocuments.views.html.UploadMultipleFilesView
 
 import javax.inject.{Inject, Singleton}
+import scala.concurrent.duration.*
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
@@ -34,6 +35,9 @@ class ChooseMultipleFilesController @Inject() (
 )(using ExecutionContext)
     extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper {
 
+  /** An Initiated upload older than this must not be reused; its pre-signed S3 request may have expired. */
+  private val initiatedUploadReuseMaxAgeMillis: Long = 30.minutes.toMillis
+
   // GET /choose-files
   final val showChooseMultipleFiles: Action[AnyContent] = Action.async { implicit request =>
     whenInSession { implicit journeyId =>
@@ -43,8 +47,13 @@ class ChooseMultipleFilesController @Inject() (
             if (files.acceptedCount >= journeyConfig.config.maximumNumberOfFiles)
               Future.successful(Ok(renderView(journeyConfig, files.withoutInitiated, None)))
             else
-              initiateUpscanService.initiateNextFileUpload().map { maybeInitiated =>
-                Ok(renderView(journeyConfig, files.withoutInitiated, maybeInitiated.map(_._1.uploadRequest)))
+              files.findInitiatedWithRequest.filter(_.timestamp.duration < initiatedUploadReuseMaxAgeMillis) match {
+                case Some(initiated) =>
+                  Future.successful(Ok(renderView(journeyConfig, files.withoutInitiated, initiated.uploadRequest)))
+                case None =>
+                  initiateUpscanService.initiateNextFileUpload().map { case (upscanResponse, updatedFiles) =>
+                    Ok(renderView(journeyConfig, updatedFiles.withoutInitiated, Some(upscanResponse.uploadRequest)))
+                  }
               }
           }
         }

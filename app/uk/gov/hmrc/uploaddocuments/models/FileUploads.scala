@@ -48,6 +48,9 @@ case class FileUploads(files: Seq[FileUpload] = Seq.empty) {
       case _                       => true
     })
 
+  lazy val findInitiatedWithRequest: Option[FileUpload.Initiated] =
+    files.collectFirst { case i: FileUpload.Initiated if i.uploadRequest.isDefined => i }
+
   def hasFileWithDescription(description: String): Boolean =
     files.exists { case a: FileUpload.Accepted => a.safeDescription.contains(description); case _ => false }
 

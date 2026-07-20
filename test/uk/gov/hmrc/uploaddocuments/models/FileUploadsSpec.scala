@@ -212,5 +212,19 @@ class FileUploadsSpec extends UnitSpec {
 
       result.files shouldBe Seq(posted, accepted, rejected)
     }
+
+    "findInitiatedWithRequest" should {
+      "return the first Initiated entry that still carries its uploadRequest" in {
+        val bare = FileUpload.Initiated(Nonce(1), Timestamp.Any, "ref-bare", uploadRequest = None)
+        val live = FileUpload.Initiated(
+          Nonce(2),
+          Timestamp.Any,
+          "ref-live",
+          uploadRequest = Some(UploadRequest("https://s3", Map("k" -> "v")))
+        )
+        FileUploads(Seq(bare, live)).findInitiatedWithRequest shouldBe Some(live)
+        FileUploads(Seq(bare)).findInitiatedWithRequest shouldBe None
+      }
+    }
   }
 }
