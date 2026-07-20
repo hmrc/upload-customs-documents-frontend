@@ -197,6 +197,46 @@ class FileUploadServiceISpec extends AppISpec with ExternalApiStubs with LogCapt
           }
         }
       }
+
+      "when a file exists with the supplied key and errored rows are present" must {
+
+        "update the file, mark its state as POSTED, and drop the errored rows" in {
+
+          val files = FileUploads(Seq(fileUploadInitiated, fileUploadRejected, acceptedFileUpload))
+          val key   = fileUploadInitiated.reference
+
+          await(testFileUploadService.putFiles(files)(using journeyId))
+          await(repo.collection.countDocuments().toFuture()) shouldBe 1
+
+          val updatedFiles = FileUploads(
+            Seq(
+              FileUpload.Posted(Nonce.Any, Timestamp.Any, key),
+              acceptedFileUpload
+            )
+          )
+
+          await(testFileUploadService.markFileAsPosted(key)(using journeyId)) shouldBe Some(updatedFiles)
+          await(repo.collection.countDocuments().toFuture()) shouldBe 1
+
+          await(testFileUploadService.getFiles(using journeyId)) shouldBe Some(updatedFiles)
+        }
+      }
+
+      "when a file DOES NOT exist with the supplied key and errored rows are present" must {
+
+        "leave the errored rows untouched" in {
+
+          val files = FileUploads(Seq(fileUploadRejected))
+
+          await(testFileUploadService.putFiles(files)(using journeyId))
+          await(repo.collection.countDocuments().toFuture()) shouldBe 1
+
+          await(testFileUploadService.markFileAsPosted("no-such-key")(using journeyId)) shouldBe None
+
+          await(repo.collection.countDocuments().toFuture()) shouldBe 1
+          await(testFileUploadService.getFiles(using journeyId)) shouldBe Some(files)
+        }
+      }
     }
 
     "calling .putInitiatedFile()" should {

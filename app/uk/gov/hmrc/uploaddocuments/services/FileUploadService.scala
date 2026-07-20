@@ -82,19 +82,22 @@ class FileUploadService @Inject() (
   def markFileAsPosted(key: String)(using journeyId: JourneyId): Future[Option[FileUploads]] =
     takeLock[Option[FileUploads]](Future.successful(None)) {
       withFiles[Option[FileUploads]](Future.successful(None)) { files =>
-        val updatedFileUploads =
-          FileUploads(files.files.map {
-            case FileUpload.Initiated(nonce, _, `key`, _, _) => FileUpload.Posted(nonce, Timestamp.now, key)
-            case file                                        => file
-          })
-
-        if (updatedFileUploads == files) {
+        val keyMatchesInitiated = files.files.exists {
+          case FileUpload.Initiated(_, _, `key`, _, _) => true
+          case _                                       => false
+        }
+        if (!keyMatchesInitiated) {
           Logger.info(s"[markFileAsPosted] No file with the supplied journeyID & key was updated and marked as posted")
           Logger.debug(
             s"[markFileAsPosted] No file with the supplied journeyID: '$journeyId' & key: '$key' was updated and marked as posted"
           )
           Future.successful(None)
         } else {
+          val updatedFileUploads = FileUploads(files.files.flatMap {
+            case FileUpload.Initiated(nonce, _, `key`, _, _) => Some(FileUpload.Posted(nonce, Timestamp.now, key))
+            case _: ErroredFileUpload                        => None
+            case file                                        => Some(file)
+          })
           putFiles(updatedFileUploads).map(_ => Some(updatedFileUploads))
         }
       }
