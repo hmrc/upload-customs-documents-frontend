@@ -52,8 +52,6 @@ class FilePostedControllerSpec extends AnyWordSpec with Matchers {
     override val countdown: Int                                          = 2
     override val fileUploadResultPushRetryIntervals: Seq[FiniteDuration] = Seq.empty
     override val upscanInitiateRetryIntervals: Seq[FiniteDuration]       = Seq.empty
-    override val upscanInitialWaitTime: Duration                         = 2.seconds
-    override val upscanWaitInterval: Duration                            = 500.milliseconds
     override def lockReleaseCheckInterval: Duration                      = 500.milliseconds
     override def lockTimeout: Duration                                   = 2.seconds
   }

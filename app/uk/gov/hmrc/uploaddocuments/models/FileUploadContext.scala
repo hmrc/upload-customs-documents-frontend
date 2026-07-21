@@ -29,13 +29,9 @@ import java.util.UUID
 final case class FileUploadContext(
   config: FileUploadSessionConfig,
   hostService: HostService = HostService.Any,
-  active: Boolean = true,
-  userWantsToUploadNextFile: Boolean = false
+  active: Boolean = true
 ) {
   def isValid: Boolean = config.isValid && hostService.userAgent.nonEmpty
-
-//  given CustomizedServiceContent = config.content
-//  given Features                 = config.features
 
   def messages(using m: Messages): Messages =
     if (config.content.yesNoQuestionRequiredError.isDefined)

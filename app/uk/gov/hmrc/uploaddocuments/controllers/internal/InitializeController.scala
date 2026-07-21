@@ -47,12 +47,10 @@ class InitializeController @Inject() (
             .prettyPrint(Json.toJson(payload)(FileUploadInitializationRequest.writeNoDownloadUrl))}")
         whenAuthenticatedInBackchannel {
           for {
-            maybeExistingContext <- journeyContextService.getJourneyContext()
             _ <- journeyContextService.putJourneyContext(
                    FileUploadContext(
                      payload.config,
-                     HostService(request),
-                     userWantsToUploadNextFile = maybeExistingContext.exists(_.userWantsToUploadNextFile)
+                     HostService(request)
                    )
                  )
             _ <- fileUploadService.putFiles(FileUploads(payload))

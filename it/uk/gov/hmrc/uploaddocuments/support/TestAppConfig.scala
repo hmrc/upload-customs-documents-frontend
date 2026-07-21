@@ -46,8 +46,6 @@ case class TestAppConfig(
   override val upscanInitiateRetryIntervals: Seq[FiniteDuration] =
     Seq(FiniteDuration(10, "ms"), FiniteDuration(20, "ms"))
 
-  override val upscanInitialWaitTime: Duration    = Duration(2, TimeUnit.SECONDS)
-  override val upscanWaitInterval: Duration       = Duration(500, TimeUnit.MILLISECONDS)
   override val lockReleaseCheckInterval: Duration = Duration(500, TimeUnit.MILLISECONDS)
   override val lockTimeout: Duration              = Duration(2, TimeUnit.SECONDS)
 

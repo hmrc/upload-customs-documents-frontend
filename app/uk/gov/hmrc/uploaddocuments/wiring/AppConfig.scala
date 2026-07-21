@@ -60,8 +60,6 @@ trait AppConfig {
   val countdown: Int
   val fileUploadResultPushRetryIntervals: Seq[FiniteDuration]
   val upscanInitiateRetryIntervals: Seq[FiniteDuration]
-  val upscanInitialWaitTime: Duration
-  val upscanWaitInterval: Duration
   def lockReleaseCheckInterval: Duration
   def lockTimeout: Duration
 }
@@ -86,8 +84,6 @@ class AppConfigImpl @Inject() (config: ServicesConfig, configuration: Configurat
   override val upscanInitiateRetryIntervals: Seq[FiniteDuration] =
     Retries.getConfIntervals("upscan.retryIntervals", configuration)
 
-  override val upscanInitialWaitTime: Duration = Duration.apply(config.getString("upscan.initialCallbackWaitTime"))
-  override val upscanWaitInterval: Duration    = Duration.apply(config.getString("upscan.waitInterval"))
   override val lockReleaseCheckInterval: Duration =
     Duration.apply(config.getString("mongodb.lock.releaseCheckInterval"))
   override val lockTimeout: Duration = Duration.apply(config.getString("mongodb.lock.timeout"))
