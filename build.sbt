@@ -2,6 +2,8 @@ import play.sbt.routes.RoutesKeys
 import uk.gov.hmrc.sbtdistributables.SbtDistributablesPlugin.*
 
 ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-xml" % VersionScheme.Always
+ThisBuild / scalaVersion := "3.3.7"
+ThisBuild / majorVersion := 0
 
 lazy val root = (project in file("."))
   .enablePlugins(PlayScala, SbtDistributablesPlugin)
@@ -9,7 +11,6 @@ lazy val root = (project in file("."))
   .settings(
     name := "upload-customs-documents-frontend",
     organization := "uk.gov.hmrc",
-    scalaVersion := "3.3.7",
     semanticdbEnabled := true,
     semanticdbVersion := scalafixSemanticdb.revision,
     PlayKeys.playDefaultPort := 10110,
@@ -18,7 +19,6 @@ lazy val root = (project in file("."))
     libraryDependencies ++= AppDependencies.compile ++ AppDependencies.test,
     CodeCoverageSettings.settings,
     Compile / unmanagedResourceDirectories += baseDirectory.value / "resources",
-    majorVersion := 0,
     Test / javaOptions += "-Djava.locale.providers=CLDR,JRE",
     scalacOptions ++= Seq(
       s"-Wconf:src=${target.value}/scala-${scalaBinaryVersion.value}/routes/.*:s",
@@ -35,13 +35,9 @@ lazy val it = project
   .disablePlugins(JUnitXmlReportPlugin)
   .dependsOn(root % "test->test")
   .settings(
-    majorVersion := 0,
-    scalaVersion := "3.3.7",
     Test / scalaSource := baseDirectory.value,
     Test / parallelExecution := false,
     Test / fork := false,
     Test / javaOptions += "-Djava.locale.providers=CLDR,JRE"
   )
-  .disablePlugins(JUnitXmlReportPlugin) // Required to prevent https://github.com/scalatest/scalatest/issues/1427
-  .enablePlugins(PlayScala, SbtDistributablesPlugin)
 
