@@ -18,22 +18,26 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.stream.Materializer
+import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
 import play.api.{Configuration, Environment}
 import play.api.mvc.{Request, Result}
 import play.api.test.FakeRequest
 import play.api.test.Helpers.*
+import uk.gov.hmrc.http.client.HttpClientV2
 import uk.gov.hmrc.http.{HeaderCarrier, SessionKeys}
+import uk.gov.hmrc.uploaddocuments.connectors.FrontendAuthConnector
 import uk.gov.hmrc.uploaddocuments.models.{FileUploads, JourneyId}
 import uk.gov.hmrc.uploaddocuments.services.FileUploadService
+import uk.gov.hmrc.uploaddocuments.support.SHA256
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration.*
 
-class FilePostedControllerSpec extends AnyWordSpec with Matchers {
+class FilePostedControllerSpec extends AnyWordSpec with Matchers with MockFactory {
 
   given sys: ActorSystem  = ActorSystem("FilePostedControllerSpec")
   given mat: Materializer = Materializer(sys)
@@ -56,11 +60,12 @@ class FilePostedControllerSpec extends AnyWordSpec with Matchers {
     override def lockTimeout: Duration                                   = 2.seconds
   }
 
-  // BaseControllerComponents with no-op auth connector: whenAuthenticated is overridden below
-  // so authConnector.authorise is never invoked in these tests.
+  // BaseControllerComponents needs a real FrontendAuthConnector (its authConnector field's static type),
+  // wired with the test AppConfig above and a mocked HttpClientV2. whenAuthenticated is overridden below
+  // so authConnector.authorise (and therefore the HTTP client) is never invoked in these tests.
   val components: BaseControllerComponents = new BaseControllerComponents(
     appConfig = testAppConfig,
-    authConnector = null,
+    authConnector = new FrontendAuthConnector(testAppConfig, mock[HttpClientV2]),
     environment = Environment.simple(),
     configuration = Configuration.empty,
     messagesControllerComponents = stubMessagesControllerComponents()
@@ -79,30 +84,32 @@ class FilePostedControllerSpec extends AnyWordSpec with Matchers {
       ): Future[Result] = body
     }
 
+  val testSessionId: String    = "test-session-id-12345"
+  val testJourneyId: JourneyId = JourneyId(SHA256.compute(testSessionId))
+
   /** FakeRequest carrying a session ID so that whenInSession resolves to a JourneyId. */
   def fakeGet(uri: String): FakeRequest[play.api.mvc.AnyContentAsEmpty.type] =
-    FakeRequest("GET", uri).withSession(SessionKeys.sessionId -> "test-session-id-12345")
+    FakeRequest("GET", uri).withSession(SessionKeys.sessionId -> testSessionId)
 
   "FilePostedController.markFileUploadAsPosted" should {
 
     "redirect to /choose-files when a valid key query param is provided" in {
-      val svc = new FileUploadService(null, null, null, null, null) {
-        override def markFileAsPosted(key: String)(using journeyId: JourneyId): Future[Option[FileUploads]] =
-          Future.successful(Some(FileUploads()))
-      }
-      val controller = makeController(svc)
+      val mockService = mock[FileUploadService]
+      (mockService
+        .markFileAsPosted(_: String)(using _: JourneyId))
+        .expects("test-file-key", testJourneyId)
+        .returning(Future.successful(Some(FileUploads())))
+
+      val controller = makeController(mockService)
       val result     = call(controller.markFileUploadAsPosted, fakeGet("/file-posted?key=test-file-key"))
       status(result) shouldBe SEE_OTHER
       redirectLocation(result) shouldBe Some(routes.ChooseMultipleFilesController.showChooseMultipleFiles.url)
     }
 
     "return BadRequest when no key query parameter is provided" in {
-      val svc = new FileUploadService(null, null, null, null, null) {
-        override def markFileAsPosted(key: String)(using journeyId: JourneyId): Future[Option[FileUploads]] =
-          Future.successful(None)
-      }
-      val controller = makeController(svc)
-      val result     = call(controller.markFileUploadAsPosted, fakeGet("/file-posted"))
+      val mockService = mock[FileUploadService]
+      val controller  = makeController(mockService)
+      val result      = call(controller.markFileUploadAsPosted, fakeGet("/file-posted"))
       status(result) shouldBe BAD_REQUEST
     }
   }
