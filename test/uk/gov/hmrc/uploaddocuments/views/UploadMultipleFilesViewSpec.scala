@@ -176,6 +176,13 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
       belowMax.text should not include messages("view.upload-multiple-files.uploadMoreFilesThanLimit", 4)
     }
 
+    "show the too-many-files message and hide the form when Posted uploads fill the remaining slots" in {
+      // render(...) has maximumNumberOfFiles = 4
+      val doc = render(FileUploads(Seq.fill(3)(acceptedFile) :+ postedFile), None, None)
+      doc.select("input[type=file]").size shouldBe 0
+      doc.text should include(messages("view.upload-multiple-files.uploadMoreFilesThanLimit", 4))
+    }
+
     "use uploadAnotherTypeText when set" in {
       val customContent = CustomizedServiceContent(uploadAnotherTypeText = Some("Add a different document"))
       render(FileUploads(Seq(acceptedFile)), Some(uploadReq), Some("/another"), customContent)

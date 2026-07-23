@@ -249,6 +249,31 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         result.body should include("You can upload up to")
         verify(0, postRequestedFor(urlEqualTo("/upscan/v2/initiate")))
       }
+
+      "not initiate Upscan and hide the upload form when a Posted file fills the last remaining slot" in {
+        setContext()
+        val accepted = Seq.tabulate(FILES_LIMIT - 1) { i =>
+          FileUpload.Accepted(
+            Nonce.Any,
+            Timestamp.Any,
+            s"ref-$i",
+            "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
+            ZonedDateTime.parse("2018-04-24T09:30:00Z"),
+            "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
+            s"test$i.pdf",
+            "application/pdf",
+            4567890
+          )
+        }
+        setFileUploads(FileUploads(accepted :+ FileUpload.Posted(Nonce.Any, Timestamp.Any, "ref-posted")))
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result = await(request("/choose-files").get())
+
+        result.status shouldBe 200
+        result.body should not include "type=\"file\""
+        verify(0, postRequestedFor(urlEqualTo("/upscan/v2/initiate")))
+      }
     }
   }
 }

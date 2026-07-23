@@ -44,7 +44,7 @@ class ChooseMultipleFilesController @Inject() (
       whenAuthenticated {
         withJourneyContext { implicit journeyConfig =>
           withFileUploads { files =>
-            if (files.acceptedCount >= journeyConfig.config.maximumNumberOfFiles)
+            if (files.acceptedOrPostedCount >= journeyConfig.config.maximumNumberOfFiles)
               Future.successful(Ok(renderView(journeyConfig, files.withoutInitiated, None)))
             else
               files.findInitiatedWithRequest.filter(_.timestamp.duration < initiatedUploadReuseMaxAgeMillis) match {

@@ -60,6 +60,7 @@
 }
 @anyNonReady = @{ fileUploads.files.exists { case _: FileUpload.Posted => true; case _ => false } }
 @acceptedCount = @{ fileUploads.acceptedCount }
+@acceptedOrPostedCount = @{ fileUploads.acceptedOrPostedCount }
 @erroredFiles = @{ displayedFiles.collect { case e: ErroredFileUpload => e } }
 
 @statusTag(file: FileUpload) = @{
@@ -209,7 +210,7 @@
     </div>
   }
 
-  @if(uploadRequest.isEmpty && acceptedCount >= maximumNumberOfFiles) {
+  @if(uploadRequest.isEmpty && acceptedOrPostedCount >= maximumNumberOfFiles) {
     @html.p{ @messages("view.upload-multiple-files.uploadMoreFilesThanLimit", maximumNumberOfFiles) }
   }
 

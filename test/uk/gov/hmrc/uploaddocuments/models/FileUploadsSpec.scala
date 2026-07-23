@@ -182,6 +182,22 @@ class FileUploadsSpec extends UnitSpec {
       ).initiatedOrAcceptedCount shouldBe 5
     }
 
+    "count accepted or posted" in {
+      FileUploads(
+        Seq(
+          postedFileUpload1,
+          acceptedFileUpload,
+          initiatedFileUpload2,
+          acceptedFileUpload,
+          postedFileUpload2,
+          initiatedFileUpload3,
+          duplicateFileUpload,
+          rejectedFileUpload,
+          failedFileUpload
+        )
+      ).acceptedOrPostedCount shouldBe 4
+    }
+
     "have isReady property" in {
       postedFileUpload1.isReady shouldBe false
       initiatedFileUpload1.isReady shouldBe false

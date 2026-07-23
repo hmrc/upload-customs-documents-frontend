@@ -33,6 +33,7 @@ case class FileUploads(files: Seq[FileUpload] = Seq.empty) {
   lazy val postedCount: Int    = files.count { case _: FileUpload.Posted => true; case _ => false }
 
   lazy val initiatedOrAcceptedCount: Int = acceptedCount + initiatedCount + postedCount
+  lazy val acceptedOrPostedCount: Int    = acceptedCount + postedCount
 
   lazy val toUploadedFiles: Seq[UploadedFile] =
     files.flatMap(UploadedFile(_))
