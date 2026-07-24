@@ -22,7 +22,7 @@ import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
 import javax.inject.Inject
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class FileVerificationService @Inject() (fileUploadService: FileUploadService) extends LoggerUtil {
 

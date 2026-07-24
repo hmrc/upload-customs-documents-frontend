@@ -82,8 +82,8 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
 
     "enable the govuk file-upload drop-zone with i18n text" in {
       val doc = render(FileUploads(Seq.empty), Some(uploadReq), None)
-      doc.select(".govuk-drop-zone[data-module=govuk-file-upload]").size shouldBe 1
-      doc.select(".govuk-drop-zone input[type=file]").size shouldBe 1
+      doc.select(".govuk-file-upload-wrapper[data-module=govuk-file-upload]").size shouldBe 1
+      doc.select(".govuk-file-upload-wrapper input[type=file]").size shouldBe 1
       doc.body().html() should include("Choose file")
       doc.body().html() should include("No file chosen")
     }
