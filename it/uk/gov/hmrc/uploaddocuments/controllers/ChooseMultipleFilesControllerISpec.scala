@@ -250,6 +250,42 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         verify(0, postRequestedFor(urlEqualTo("/upscan/v2/initiate")))
       }
 
+      "render the minimum error when ?error=minimum and no files are uploaded" in {
+
+        setContext() // default config: minimumNumberOfFiles = 1, no continueWhenEmptyUrl
+        setFileUploads()
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val callbackUrl =
+          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+        val result = await(request("/choose-files?error=minimum").get())
+
+        result.status shouldBe 200
+        result.body should include(htmlEscapedMessage("error.summary.heading"))
+        result.body should include(htmlEscapedMessage("error.file-upload.required"))
+        result.body should include(htmlEscapedPageTitleWithError("view.upload-multiple-files.title"))
+      }
+
+      "not render the minimum error when ?error=minimum but we already have that minimum" in {
+
+        setContext()
+        setFileUploads(nonEmptyFileUploads) // 1 accepted, minimum 1 -> met
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val callbackUrl =
+          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+        val result = await(request("/choose-files?error=minimum").get())
+
+        result.status shouldBe 200
+        result.body should not include htmlEscapedMessage("error.file-upload.required")
+      }
+
       "not initiate Upscan and hide the upload form when a Posted file fills the last remaining slot" in {
         setContext()
         val accepted = Seq.tabulate(FILES_LIMIT - 1) { i =>
@@ -273,6 +309,20 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         result.status shouldBe 200
         result.body should not include "type=\"file\""
         verify(0, postRequestedFor(urlEqualTo("/upscan/v2/initiate")))
+      }
+
+      "not render the minimum error when ?error=minimum and all the slots are filled with Posted files" in {
+        setContext() // default config: minimumNumberOfFiles = 1, no continueWhenEmptyUrl
+        setFileUploads(FileUploads(Seq.tabulate(FILES_LIMIT) { i =>
+          FileUpload.Posted(Nonce.Any, Timestamp.Any, s"ref-posted-$i")
+        }))
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result = await(request("/choose-files?error=minimum").get())
+
+        result.status shouldBe 200
+        result.body should not include htmlEscapedMessage("error.file-upload.required")
+        result.body should not include "href=\"#file\""
       }
     }
   }

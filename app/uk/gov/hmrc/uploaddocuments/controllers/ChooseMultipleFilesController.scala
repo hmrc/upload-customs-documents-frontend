@@ -44,15 +44,28 @@ class ChooseMultipleFilesController @Inject() (
       whenAuthenticated {
         withJourneyContext { implicit journeyConfig =>
           withFileUploads { files =>
+            val showMinimumError =
+              request.getQueryString("error").contains("minimum") && journeyConfig.isBelowMinimumFiles(files)
             if (files.acceptedOrPostedCount >= journeyConfig.config.maximumNumberOfFiles)
-              Future.successful(Ok(renderView(journeyConfig, files.withoutInitiated, None)))
+              Future.successful(
+                Ok(renderView(journeyConfig, files.withoutInitiated, None, showMinimumError = false))
+              )
             else
               files.findInitiatedWithRequest.filter(_.timestamp.duration < initiatedUploadReuseMaxAgeMillis) match {
                 case Some(initiated) =>
-                  Future.successful(Ok(renderView(journeyConfig, files.withoutInitiated, initiated.uploadRequest)))
+                  Future.successful(
+                    Ok(renderView(journeyConfig, files.withoutInitiated, initiated.uploadRequest, showMinimumError))
+                  )
                 case None =>
                   initiateUpscanService.initiateNextFileUpload().map { case (upscanResponse, updatedFiles) =>
-                    Ok(renderView(journeyConfig, updatedFiles.withoutInitiated, Some(upscanResponse.uploadRequest)))
+                    Ok(
+                      renderView(
+                        journeyConfig,
+                        updatedFiles.withoutInitiated,
+                        Some(upscanResponse.uploadRequest),
+                        showMinimumError
+                      )
+                    )
                   }
               }
           }
@@ -64,7 +77,8 @@ class ChooseMultipleFilesController @Inject() (
   private def renderView(
     context: FileUploadContext,
     files: FileUploads,
-    uploadRequest: Option[UploadRequest]
+    uploadRequest: Option[UploadRequest],
+    showMinimumError: Boolean
   )(using request: Request[_]) =
     uploadMultipleFilesView(
       maximumNumberOfFiles = context.config.maximumNumberOfFiles,
@@ -80,8 +94,13 @@ class ChooseMultipleFilesController @Inject() (
       statusCall = routes.FileVerificationController.checkFileVerificationStatus,
       continueAction = routes.ContinueToHostController.continueToHost,
       uploadAnotherTypeUrl =
-        if (context.config.features.showYesNoQuestionBeforeContinue) context.config.continueAfterYesAnswerUrl else None,
+        if (
+          context.config.features.showYesNoQuestionBeforeContinue && context.config.continueAfterYesAnswerUrl.isDefined
+        )
+          Some(routes.ContinueToHostController.uploadAnotherType.url)
+        else None,
       filePickerAcceptFilter = context.config.getFilePickerAcceptFilter,
-      backLink = context.config.backlinkUrl.map(Call("GET", _))
+      backLink = context.config.backlinkUrl.map(Call("GET", _)),
+      showMinimumError = showMinimumError
     )(request, context.messages, context.config.features, context.config.content)
 }

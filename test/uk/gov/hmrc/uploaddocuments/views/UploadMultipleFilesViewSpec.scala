@@ -39,7 +39,8 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
     files: FileUploads,
     uploadReq: Option[UploadRequest],
     anotherType: Option[String],
-    content: CustomizedServiceContent = CustomizedServiceContent()
+    content: CustomizedServiceContent = CustomizedServiceContent(),
+    showMinimumError: Boolean = false
   ) =
     Jsoup.parse(
       view(
@@ -55,7 +56,8 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
         continueAction = Call("GET", "/continue-to-host"),
         uploadAnotherTypeUrl = anotherType,
         filePickerAcceptFilter = ".pdf,.jpg",
-        backLink = None
+        backLink = None,
+        showMinimumError = showMinimumError
       )(fakeRequest, messages, features, content).body
     )
 
@@ -233,6 +235,25 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
       render(FileUploads(Seq(acceptedFile)), Some(uploadReq), None).title should not startWith messages(
         "error.browser.title.prefix"
       )
+    }
+
+    "render the minimum-files error in the summary and on the upload input when showMinimumError is set" in {
+      val doc = render(FileUploads(Seq.empty), Some(uploadReq), None, showMinimumError = true)
+      doc.select(".govuk-error-summary__list a[href=#file]").text should include("Upload a supporting document")
+      doc.select("#file.govuk-file-upload--error").size shouldBe 1
+      doc.title should startWith(messages("error.browser.title.prefix"))
+    }
+
+    "use fileUploadRequiredError override for the minimum-files error when set" in {
+      val custom = CustomizedServiceContent(fileUploadRequiredError = Some("Please add a document first"))
+      val doc    = render(FileUploads(Seq.empty), Some(uploadReq), None, custom, showMinimumError = true)
+      doc.select(".govuk-error-summary__list a[href=#file]").text shouldBe "Please add a document first"
+    }
+
+    "not render the minimum-files error when showMinimumError is false" in {
+      val doc = render(FileUploads(Seq.empty), Some(uploadReq), None)
+      doc.select(".govuk-error-summary__list a[href=#file]").size shouldBe 0
+      doc.select("#file.govuk-file-upload--error").size shouldBe 0
     }
   }
 }

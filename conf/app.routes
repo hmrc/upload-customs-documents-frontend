@@ -15,6 +15,7 @@ GET        /uploaded/:reference/remove                              @uk.gov.hmrc
 GET        /preview/:reference/:fileName                            @uk.gov.hmrc.uploaddocuments.controllers.PreviewController.previewFileUploadByReference(reference: String, fileName: String)
 
 GET        /continue-to-host                                        @uk.gov.hmrc.uploaddocuments.controllers.ContinueToHostController.continueToHost
+GET        /upload-another-type                                     @uk.gov.hmrc.uploaddocuments.controllers.ContinueToHostController.uploadAnotherType
 
 GET        /timedout                                                @uk.gov.hmrc.uploaddocuments.controllers.SessionController.showTimeoutPage
 GET        /keep-alive                                              @uk.gov.hmrc.uploaddocuments.controllers.SessionController.keepAlive(continueUrl: Option[RedirectUrl] ?= None)

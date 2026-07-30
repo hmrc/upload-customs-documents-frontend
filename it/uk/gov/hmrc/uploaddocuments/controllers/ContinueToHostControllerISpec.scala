@@ -47,7 +47,7 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
         result.body shouldBe expected
       }
 
-      "redirect to the continueUrl if empty file uploads and no continueWhenEmptyUrl" in {
+      "redirect back to choose-files with the minimum error if empty file uploads and no continueWhenEmptyUrl" in {
 
         val context = FileUploadContext(
           fileUploadSessionConfig
@@ -61,11 +61,29 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
 
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
 
-        val expected = givenSomePage(200, "/continue-url")
-        val result   = await(request("/continue-to-host").get())
+        val result = await(request("/continue-to-host").withFollowRedirects(false).get())
 
-        result.status shouldBe 200
-        result.body shouldBe expected
+        result.status shouldBe 303
+        result.header("Location") shouldBe Some(
+          routes.ChooseMultipleFilesController.showChooseMultipleFiles.url + "?error=minimum"
+        )
+      }
+
+      "redirect back to choose-files with the minimum error when accepted files are below minimumNumberOfFiles" in {
+
+        val context = FileUploadContext(fileUploadSessionConfig.copy(minimumNumberOfFiles = 2))
+
+        setContext(context)
+        setFileUploads(nonEmptyFileUploads) // 1 accepted, minimum 2 -> blocked
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result = await(request("/continue-to-host").withFollowRedirects(false).get())
+
+        result.status shouldBe 303
+        result.header("Location") shouldBe Some(
+          routes.ChooseMultipleFilesController.showChooseMultipleFiles.url + "?error=minimum"
+        )
       }
 
       "redirect to the continueWhenEmptyUrl if empty file uploads" in {
@@ -129,6 +147,50 @@ class ContinueToHostControllerISpec extends ControllerISpecBase with ExternalApi
 
         result.status shouldBe 200
         result.body shouldBe expected
+      }
+    }
+
+    "GET /upload-another-type" should {
+
+      "redirect to continueAfterYesAnswerUrl when the minimum is met" in {
+
+        val context = FileUploadContext(
+          fileUploadSessionConfig.copy(
+            continueAfterYesAnswerUrl = Some(s"$wireMockBaseUrlAsString/continue-after-yes")
+          )
+        )
+
+        setContext(context)
+        setFileUploads(nonEmptyFileUploads)
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val expected = givenSomePage(200, "/continue-after-yes")
+        val result   = await(request("/upload-another-type").get())
+
+        result.status shouldBe 200
+        result.body shouldBe expected
+      }
+
+      "redirect back to choose-files with the minimum error when empty and no continueWhenEmptyUrl" in {
+
+        val context = FileUploadContext(
+          fileUploadSessionConfig.copy(
+            continueAfterYesAnswerUrl = Some(s"$wireMockBaseUrlAsString/continue-after-yes")
+          )
+        )
+
+        setContext(context)
+        setFileUploads(FileUploads())
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result = await(request("/upload-another-type").withFollowRedirects(false).get())
+
+        result.status shouldBe 303
+        result.header("Location") shouldBe Some(
+          routes.ChooseMultipleFilesController.showChooseMultipleFiles.url + "?error=minimum"
+        )
       }
     }
   }

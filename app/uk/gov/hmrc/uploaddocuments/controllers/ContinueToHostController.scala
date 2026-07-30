@@ -37,7 +37,41 @@ class ContinueToHostController @Inject() (
       whenAuthenticated {
         withJourneyContext { implicit journeyConfig =>
           withFileUploads { files =>
-            Future(Redirect(redirectRoute(files, journeyConfig)))
+            if (journeyConfig.isBelowMinimumFiles(files))
+              Future.successful(
+                Redirect(
+                  routes.ChooseMultipleFilesController.showChooseMultipleFiles.url,
+                  Map("error" -> Seq("minimum"))
+                )
+              )
+            else
+              Future.successful(Redirect(redirectRoute(files, journeyConfig)))
+          }
+        }
+      }
+    }
+  }
+
+  // GET /upload-another-type
+  final val uploadAnotherType: Action[AnyContent] = Action.async { implicit request =>
+    whenInSession { implicit journeyId =>
+      whenAuthenticated {
+        withJourneyContext { implicit journeyConfig =>
+          withFileUploads { files =>
+            if (journeyConfig.isBelowMinimumFiles(files))
+              Future.successful(
+                Redirect(
+                  routes.ChooseMultipleFilesController.showChooseMultipleFiles.url,
+                  Map("error" -> Seq("minimum"))
+                )
+              )
+            else
+              Future.successful(
+                Redirect(
+                  journeyConfig.config.continueAfterYesAnswerUrl
+                    .getOrElse(journeyConfig.config.continueUrl)
+                )
+              )
           }
         }
       }

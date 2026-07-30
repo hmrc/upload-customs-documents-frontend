@@ -38,6 +38,12 @@ final case class FileUploadContext(
       new EnhancedMessages(m, Map("error.choice.required" -> config.content.yesNoQuestionRequiredError.getOrElse("")))
     else m
 
+  def isBelowMinimumFiles(files: FileUploads): Boolean = {
+    val accepted    = files.acceptedCount
+    val emptyOptOut = accepted == 0 && config.continueWhenEmptyUrl.isDefined
+    accepted < config.minimumNumberOfFiles && !emptyOptOut
+  }
+
   def deactivate(): FileUploadContext =
     copy(active = false)
 }
