@@ -42,7 +42,10 @@ case class S3UploadError(
   errorMessage: String,
   errorRequestId: Option[String] = None,
   errorResource: Option[String] = None
-)
+) {
+  // True when S3 rejects the POST because no file was submitted (clicking Upload without choosing a file)
+  val isMissingFile: Boolean = errorCode == "400" || errorCode == "InvalidArgument"
+}
 
 object S3UploadError {
   given formats: Format[S3UploadError] = Json.format[S3UploadError]

@@ -50,7 +50,8 @@
   uploadAnotherTypeUrl: Option[String],
   filePickerAcceptFilter: String,
   backLink: Option[Call],
-  showMinimumError: Boolean = false
+  showMinimumError: Boolean = false,
+  showFileRequiredError: Boolean = false
 )(implicit request: Request[_], messages: Messages, features: Features, serviceContent: CustomizedServiceContent)
 
 @displayedFiles = @{
@@ -64,6 +65,7 @@
 @acceptedOrPostedCount = @{ fileUploads.acceptedOrPostedCount }
 @erroredFiles = @{ displayedFiles.collect { case e: ErroredFileUpload => e } }
 @minimumErrorMessage = @{ serviceContent.fileUploadRequiredError.getOrElse(messages("error.file-upload.required")) }
+@showFileRequired = @{ showMinimumError || showFileRequiredError }
 
 @statusTag(file: FileUpload) = @{
   file match {
@@ -118,17 +120,17 @@
 }
 
 @govukLayout(
-  pageTitle = pageTitleWithErrors("view.upload-multiple-files.title", erroredFiles.nonEmpty || showMinimumError),
+  pageTitle = pageTitleWithErrors("view.upload-multiple-files.title", erroredFiles.nonEmpty || showFileRequired),
   backLink = backLink.map(_.url),
   additionalHead = if (anyNonReady) Some(noscriptRefresh) else None,
   additionalScripts = Some(pollerScript)
 ) {
 
-  @if(showMinimumError || erroredFiles.nonEmpty) {
+  @if(showFileRequired || erroredFiles.nonEmpty) {
     @govukErrorSummary(ErrorSummary(
       title = Text(messages("error.summary.heading")),
       errorList =
-        (if(showMinimumError) Seq(ErrorLink(href = Some("#file"), content = Text(minimumErrorMessage))) else Seq.empty) ++
+        (if(showFileRequired) Seq(ErrorLink(href = Some("#file"), content = Text(minimumErrorMessage))) else Seq.empty) ++
         erroredFiles.map { file =>
           ErrorLink(
             href = Some(s"#error-${file.reference}"),
@@ -157,7 +159,7 @@
         chooseFilesButtonText = Some(messages("view.upload-file.chooseFilesButton")),
         dropInstructionText = Some(messages("view.upload-file.dropInstruction")),
         noFileChosenText = Some(messages("view.upload-file.noFileChosen")),
-        errorMessage = if(showMinimumError) Some(ErrorMessage(content = Text(minimumErrorMessage))) else None,
+        errorMessage = if(showFileRequired) Some(ErrorMessage(content = Text(minimumErrorMessage))) else None,
         label = Label(content = Text(
           if(acceptedCount == 0)
             serviceContent.chooseFirstFileLabel.filter(_.nonEmpty).getOrElse(messages("view.upload-file.first.fileLabel"))

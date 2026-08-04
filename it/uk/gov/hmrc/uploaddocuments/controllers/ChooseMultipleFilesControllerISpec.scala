@@ -286,6 +286,44 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
         result.body should not include htmlEscapedMessage("error.file-upload.required")
       }
 
+      "render the file-required error when ?error=fileRequired and no files are uploaded" in {
+
+        setContext()
+        setFileUploads()
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val callbackUrl =
+          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+        val result = await(request("/choose-files?error=fileRequired").get())
+
+        result.status shouldBe 200
+        result.body should include(htmlEscapedMessage("error.summary.heading"))
+        result.body should include(htmlEscapedMessage("error.file-upload.required"))
+        result.body should include("href=\"#file\"")
+        result.body should include(htmlEscapedPageTitleWithError("view.upload-multiple-files.title"))
+      }
+
+      "render the file-required error when ?error=fileRequired even when the minimum is already met" in {
+
+        setContext()
+        setFileUploads(nonEmptyFileUploads) // 1 accepted, minimum 1 -> met
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val callbackUrl =
+          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+        val result = await(request("/choose-files?error=fileRequired").get())
+
+        result.status shouldBe 200
+        result.body should include(htmlEscapedMessage("error.file-upload.required"))
+        result.body should include("href=\"#file\"")
+      }
+
       "not initiate Upscan and hide the upload form when a Posted file fills the last remaining slot" in {
         setContext()
         val accepted = Seq.tabulate(FILES_LIMIT - 1) { i =>

@@ -40,7 +40,8 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
     uploadReq: Option[UploadRequest],
     anotherType: Option[String],
     content: CustomizedServiceContent = CustomizedServiceContent(),
-    showMinimumError: Boolean = false
+    showMinimumError: Boolean = false,
+    showFileRequiredError: Boolean = false
   ) =
     Jsoup.parse(
       view(
@@ -57,7 +58,8 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
         uploadAnotherTypeUrl = anotherType,
         filePickerAcceptFilter = ".pdf,.jpg",
         backLink = None,
-        showMinimumError = showMinimumError
+        showMinimumError = showMinimumError,
+        showFileRequiredError = showFileRequiredError
       )(fakeRequest, messages, features, content).body
     )
 
@@ -254,6 +256,25 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
       val doc = render(FileUploads(Seq.empty), Some(uploadReq), None)
       doc.select(".govuk-error-summary__list a[href=#file]").size shouldBe 0
       doc.select("#file.govuk-file-upload--error").size shouldBe 0
+    }
+
+    "render the file-required error in the summary and on the upload input when showFileRequiredError is set" in {
+      val doc = render(FileUploads(Seq.empty), Some(uploadReq), None, showFileRequiredError = true)
+      doc.select(".govuk-error-summary__list a[href=#file]").text should include("Upload a supporting document")
+      doc.select("#file.govuk-file-upload--error").size shouldBe 1
+      doc.title should startWith(messages("error.browser.title.prefix"))
+    }
+
+    "use fileUploadRequiredError override for the file-required error when set" in {
+      val custom = CustomizedServiceContent(fileUploadRequiredError = Some("Please add a document first"))
+      val doc    = render(FileUploads(Seq.empty), Some(uploadReq), None, custom, showFileRequiredError = true)
+      doc.select(".govuk-error-summary__list a[href=#file]").text shouldBe "Please add a document first"
+    }
+
+    "render the file-required error as the highlighted box, not an errored row" in {
+      val doc = render(FileUploads(Seq.empty), Some(uploadReq), None, showFileRequiredError = true)
+      doc.select("#file.govuk-file-upload--error").size shouldBe 1
+      doc.select(".govuk-summary-list").size shouldBe 0
     }
   }
 }

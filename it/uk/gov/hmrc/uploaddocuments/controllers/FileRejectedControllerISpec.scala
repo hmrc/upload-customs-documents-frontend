@@ -85,6 +85,39 @@ class FileRejectedControllerISpec extends ControllerISpecBase {
         )
       }
 
+      "not mark a file as rejected but redirect to choose-files with the file-required error when no file was submitted" in {
+
+        setContext()
+        setFileUploads(
+          FileUploads(files =
+            Seq(
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
+            )
+          )
+        )
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result = await(
+          request(
+            "/file-rejected?key=2b72fe99-8adf-4edb-865e-622ae710f77c&errorCode=InvalidArgument&errorMessage=POST+requires+exactly+one+file+upload+per+request."
+          ).withFollowRedirects(false).get()
+        )
+
+        result.status shouldBe Status.SEE_OTHER
+        result.header("Location") shouldBe Some(
+          routes.ChooseMultipleFilesController.showChooseMultipleFiles.url + "?error=fileRequired"
+        )
+
+        getFileUploads() shouldBe Some(
+          FileUploads(files =
+            Seq(
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
+            )
+          )
+        )
+      }
+
       "show an error page if the request parameters are invalid" in {
 
         setContext()
