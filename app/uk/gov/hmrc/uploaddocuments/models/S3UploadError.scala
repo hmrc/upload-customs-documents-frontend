@@ -43,8 +43,9 @@ case class S3UploadError(
   errorRequestId: Option[String] = None,
   errorResource: Option[String] = None
 ) {
-  // True when S3 rejects the POST because no file was submitted (clicking Upload without choosing a file)
-  val isMissingFile: Boolean = errorCode == "400" || errorCode == "InvalidArgument"
+  // True when S3 rejects the POST because no usable file was submitted (either no file chosen or empty file posted)
+  val isEmptyOrMissingFile: Boolean =
+    errorCode == "400" || errorCode == "InvalidArgument" || errorCode == "EntityTooSmall"
 }
 
 object S3UploadError {

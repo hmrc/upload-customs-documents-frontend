@@ -47,7 +47,7 @@ class FileRejectedController @Inject() (
                 Future.successful(InternalServerError)
               },
               s3UploadError =>
-                if (s3UploadError.isMissingFile)
+                if (s3UploadError.isEmptyOrMissingFile)
                   Future.successful(
                     Redirect(
                       routes.ChooseMultipleFilesController.showChooseMultipleFiles.url,

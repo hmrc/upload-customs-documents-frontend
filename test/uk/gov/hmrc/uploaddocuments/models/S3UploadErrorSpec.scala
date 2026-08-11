@@ -22,18 +22,18 @@ class S3UploadErrorSpec extends UnitSpec {
 
   def error(code: String): S3UploadError = S3UploadError(key = "some-key", errorCode = code, errorMessage = "msg")
 
-  "S3UploadError.isMissingFile" should {
+  "S3UploadError.isEmptyOrMissingFile" should {
 
-    "be true when the S3 error code signals no file was submitted" in {
-      error("400").isMissingFile          shouldBe true
-      error("InvalidArgument").isMissingFile shouldBe true
+    "be true when the S3 error code signals no usable file was submitted" in {
+      error("EntityTooSmall").isEmptyOrMissingFile shouldBe true
+      error("400").isEmptyOrMissingFile shouldBe true
+      error("InvalidArgument").isEmptyOrMissingFile shouldBe true
     }
 
     "be false for errors that describe a real attempted file" in {
-      error("EntityTooLarge").isMissingFile shouldBe false
-      error("EntityTooSmall").isMissingFile shouldBe false
-      error("InternalError").isMissingFile  shouldBe false
-      error("NoSuchKey").isMissingFile      shouldBe false
+      error("EntityTooLarge").isEmptyOrMissingFile shouldBe false
+      error("InternalError").isEmptyOrMissingFile shouldBe false
+      error("NoSuchKey").isEmptyOrMissingFile shouldBe false
     }
   }
 }
