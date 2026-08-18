@@ -32,9 +32,7 @@ class FormFieldMappingsSpec extends UnitSpec with FormMappingMatchers {
       }
 
       "error when not valid boolean answer supplied" in {
-        booleanMapping.bind(Map("" -> "notValid")) shouldBe Left(
-          List(FormError("", List("error.field.required"), List()))
-        )
+        booleanMapping.bind(Map("" -> "notValid")) shouldBe Left(List(FormError("", List("error.field.required"), List())))
       }
 
       "true when trueValue" in {

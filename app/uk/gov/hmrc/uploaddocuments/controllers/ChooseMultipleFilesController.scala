@@ -47,10 +47,8 @@ class ChooseMultipleFilesController @Inject() (
               .putJourneyContext(journeyConfig.copy(userWantsToUploadNextFile = false))
               .map { _ =>
                 if (preferUploadMultipleFiles && journeyConfig.config.features.showUploadMultiple) {
-                  if (
-                    journeyConfig.config.features.showYesNoQuestionBeforeContinue &&
-                    journeyConfig.config.prePopulateYesOrNoForm.nonEmpty
-                  ) {
+                  if (journeyConfig.config.features.showYesNoQuestionBeforeContinue &&
+                    journeyConfig.config.prePopulateYesOrNoForm.nonEmpty) {
                     Ok(
                       renderView(
                         journeyConfig,
@@ -124,6 +122,7 @@ class ChooseMultipleFilesController @Inject() (
       checkFileVerificationStatus = routes.FileVerificationController.checkFileVerificationStatus,
       removeFile = routes.RemoveController.removeFileUploadByReferenceAsync,
       previewFile = routes.PreviewController.previewFileUploadByReference,
+      markFileRejected = routes.FileRejectedController.markFileUploadAsRejectedAsync,
       continueAction = if (context.config.features.showYesNoQuestionBeforeContinue) {
         routes.ChooseMultipleFilesController.continueWithYesNo
       } else { routes.ContinueToHostController.continueToHost },

@@ -18,8 +18,7 @@
     "graceful-fs": "*",
     "isomorphic-fetch": "*",
     "mdn-polyfills": "*",
-    "promise-polyfill": "*",
-    "serialize-javascript": "^7.0.5"
+    "promise-polyfill": "*"
   },
   "devDependencies": {
     "@babel/core": "*",
@@ -29,7 +28,7 @@
     "@typescript-eslint/parser": "*",
     "babel-loader": "*",
     "css-loader": "^6.10.0",
-    "css-minimizer-webpack-plugin": "^8.0.0",
+    "css-minimizer-webpack-plugin": "^5.0.1",
     "eslint": "*",
     "eslint-webpack-plugin": "*",
     "mini-css-extract-plugin": "^2.8.1",

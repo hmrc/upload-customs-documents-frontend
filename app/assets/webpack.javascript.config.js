@@ -1,5 +1,3 @@
-globalThis.crypto ??= require('node:crypto').webcrypto;
-
 const path = require('path');
 const ESLintPlugin = require('eslint-webpack-plugin');
 

@@ -25,15 +25,13 @@ trait UploadLog extends LoggerUtil {
   def logSuccess(
     context: FileUploadContext,
     uploadDetails: UpscanNotification.UploadDetails,
-    timestamp: Timestamp
-  ): Unit = {
+    timestamp: Timestamp): Unit = {
     val success =
       Success(
         context.hostService.userAgent,
         uploadDetails.fileMimeType,
         uploadDetails.size,
-        duration = Some(timestamp.duration)
-      )
+        duration = Some(timestamp.duration))
     Logger.info(s"json${Json.stringify(Json.toJson(success))}")
   }
 
@@ -47,8 +45,7 @@ trait UploadLog extends LoggerUtil {
         context.hostService.userAgent,
         failureDetails.failureReason.toString,
         failureDetails.message,
-        duration = Some(timestamp.duration)
-      )
+        duration = Some(timestamp.duration))
     Logger.info(s"json${Json.stringify(Json.toJson(failure))}")
   }
 
@@ -63,7 +60,7 @@ case class Success(
   service: String,
   fileMimeType: String,
   fileSize: Int,
-  success: Boolean = true,
+  success: Boolean       = true,
   duration: Option[Long] = None
 )
 
@@ -75,7 +72,7 @@ final case class Failure(
   service: String,
   error: String,
   description: String,
-  success: Boolean = false,
+  success: Boolean       = false,
   duration: Option[Long] = None
 )
 

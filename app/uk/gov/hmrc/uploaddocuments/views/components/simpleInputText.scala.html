@@ -32,7 +32,8 @@
     name: Option[String] = None,
     headingMessageArgs: Seq[String] = Seq(),
     hint: Option[Html] = None,
-    classes: Option[String] = None
+    classes: Option[String] = None,
+    stripWhitespace: Boolean = false
 )(implicit messages: Messages)
 
 @govukInput(Input(

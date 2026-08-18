@@ -32,7 +32,9 @@
   footerBlock: Option[Html] = None,
   footerItems: Seq[FooterItem] = Seq.empty,
   bodyEndBlock: Option[Html] = None,
-  scriptsBlock: Option[Html] = None
+  scriptsBlock: Option[Html] = None,
+  assetPath: Option[String] = None,
+  cspNonce: Option[String] = None
 )(contentBlock: Html)(implicit messages: Messages, rh: RequestHeader)
 
 @headerDefault = {

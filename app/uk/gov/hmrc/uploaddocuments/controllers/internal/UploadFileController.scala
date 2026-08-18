@@ -76,7 +76,7 @@ class UploadFileController @Inject() (
                         log.error(s"Failure to store object because of $exception")
                         exception.printStackTrace()
                         Future.successful(BadRequest(s"Failure to store object because of $exception"))
-                      case scala.util.Success(_) =>
+                      case scala.util.Success(objectWithMD5) =>
                         objectStoreClient
                           .presignedDownloadUrl(path = objectStorePath)
                           .transformWith {
