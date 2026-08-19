@@ -118,13 +118,13 @@ view.upload-multiple-files.uploaded=Wedi'i uwchlwytho
 view.upload-multiple-files.chooseFirstFileLabel=Dewiswch y ffeil gyntaf i’w huwchlwytho
 view.upload-multiple-files.chooseNextFileLabel=Dewiswch y ffeil i’w huwchlwytho
 view.upload-multiple-files.line1=Gall pob ffeil fod yn {0} neu lai.
-view.upload-multiple-files.line2=Mathau o ffeiliau a dderbynnir: {0}.
+view.upload-multiple-files.line2=Mathau derbyniol o ffeiliau: {0}.
 view.upload-multiple-files.uploading=Yn uwchlwytho
 view.upload-multiple-files.uploadAnotherType=Uwchlwytho math arall o ddogfen
-view.upload-multiple-files.uploadingFileName=Yn uwchlwytho ffeil
-view.upload-file.chooseFilesButton=Dewiswch ffeil
+view.upload-multiple-files.uploadingFileName=Wrthi’n uwchlwytho’r ffeil
+view.upload-file.chooseFilesButton=Dewis ffeil
 view.upload-file.dropInstruction=neu ollwng ffeil
-view.upload-file.noFileChosen=Dim ffeil wedi’i dewis
+view.upload-file.noFileChosen=Heb ddewis ffeil
 view.upload-file.first.fileLabel=Dewiswch y ffeil gyntaf i’w huwchlwytho
 view.upload-file.next.fileLabel=Dewiswch y ffeil i’w huwchlwytho
 
