@@ -104,6 +104,7 @@ class ChooseMultipleFilesController @Inject() (
       previewFileCall = routes.PreviewController.previewFileUploadByReference,
       statusCall = routes.FileVerificationController.checkFileVerificationStatus,
       continueAction = routes.ContinueToHostController.continueToHost,
+      filePostedUrl = routes.FilePostedController.markFileUploadAsPosted.url,
       uploadAnotherTypeUrl =
         if (
           context.config.features.showYesNoQuestionBeforeContinue && context.config.continueAfterYesAnswerUrl.isDefined
