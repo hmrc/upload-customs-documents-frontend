@@ -47,6 +47,7 @@
   previewFileCall: (String, String) => Call,
   statusCall: String => Call,
   continueAction: Call,
+  filePostedUrl: String,
   uploadAnotherTypeUrl: Option[String],
   filePickerAcceptFilter: String,
   backLink: Option[Call],
@@ -111,7 +112,8 @@
   }
 }
 
-@pollerScript = {
+@pageScripts = {
+  <script src="@controllers.routes.Assets.versioned("javascripts/upload-navigation.js")"></script>
   <script src="@controllers.routes.Assets.versioned("javascripts/upload-status-poller.js")"></script>
 }
 
@@ -123,7 +125,7 @@
   pageTitle = pageTitleWithErrors("view.upload-multiple-files.title", erroredFiles.nonEmpty || showFileRequired),
   backLink = backLink.map(_.url),
   additionalHead = if (anyNonReady) Some(noscriptRefresh) else None,
-  additionalScripts = Some(pollerScript)
+  additionalScripts = Some(pageScripts)
 ) {
 
   @if(showFileRequired || erroredFiles.nonEmpty) {
@@ -148,7 +150,11 @@
   }
 
   @uploadRequest.map { req =>
-    <form action="@req.href" method="POST" enctype="multipart/form-data" novalidate>
+    <form action="@req.href" method="POST" enctype="multipart/form-data" novalidate
+          data-upload-form=""
+          data-upload-key="@req.fields.getOrElse("key", "")"
+          data-file-posted-url="@filePostedUrl"
+          data-maximum-file-size-bytes="@maximumFileSizeBytes">
       @req.fields.map { case (key, value) => @forms.inputHidden(key, value) }
 
       @govukFileUpload(FileUploadViewModel(
@@ -206,7 +212,7 @@
               @statusTag(file)
             </dd>
             <dd class="govuk-summary-list__actions">
-              <a class="govuk-link" href="@removeFileCall(file.reference).url">
+              <a class="govuk-link" data-replace-nav="" href="@removeFileCall(file.reference).url">
                 @messages("view.upload-multiple-files.remove")
                 <span class="govuk-visually-hidden">@removeHiddenText(file)</span>
               </a>

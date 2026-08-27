@@ -55,6 +55,7 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
         previewFileCall = (ref, name) => Call("GET", s"/preview/$ref/$name"),
         statusCall = ref => Call("GET", s"/file-verification/$ref/status"),
         continueAction = Call("GET", "/continue-to-host"),
+        filePostedUrl = "/file-posted",
         uploadAnotherTypeUrl = anotherType,
         filePickerAcceptFilter = ".pdf,.jpg",
         backLink = None,
