@@ -18,30 +18,16 @@ package uk.gov.hmrc.uploaddocuments.views
 
 import play.api.data.FormError
 import play.api.i18n.Messages
-import play.api.libs.json.Json
-import play.api.mvc.Call
 import uk.gov.hmrc.uploaddocuments.models.*
 
 object UploadFileViewHelper {
 
-  def initialScriptStateFrom(
-    initialFileUploads: Seq[FileUpload],
-    previewFile: (String, String) => Call,
-    maximumFileSizeBytes: Long,
-    allowedFileTypesHint: String
-  )(implicit messages: Messages): String = {
-    val fileVerificationStatuses = initialFileUploads.map(file =>
-      FileVerificationStatus(file, previewFile, maximumFileSizeBytes, allowedFileTypesHint)
-    )
-    Json.stringify(Json.toJson(fileVerificationStatuses))
-  }
-
-  def toFormError(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(implicit
-    messages: Messages
+  def toFormError(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(using
+    Messages
   ): FormError =
     FormError("file", Seq(toMessage(error, maximumFileSizeBytes, allowedFileTypesHint)))
 
-  def toMessage(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(implicit
+  def toMessage(error: FileUploadError, maximumFileSizeBytes: Long, allowedFileTypesHint: String)(using
     messages: Messages
   ): String = error match {
     case FileTransmissionFailed(error) =>

@@ -27,7 +27,7 @@ import uk.gov.hmrc.play.audit.http.connector.AuditConnector
 import uk.gov.hmrc.play.bootstrap.config.HttpAuditEvent
 import uk.gov.hmrc.play.bootstrap.frontend.http.FrontendErrorHandler
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
-import uk.gov.hmrc.uploaddocuments.views.html.templates.{ErrorTemplate, GovukLayoutWrapper}
+import uk.gov.hmrc.uploaddocuments.views.html.templates.{ErrorTemplate, Layout}
 import uk.gov.hmrc.uploaddocuments.views.html.{ErrorView, PageNotFoundErrorView}
 
 import javax.inject.{Inject, Singleton}
@@ -40,11 +40,11 @@ class ErrorHandler @Inject() (
   val messagesApi: MessagesApi,
   val auditConnector: AuditConnector,
   @Named("appName") val appName: String,
-  govUkWrapper: GovukLayoutWrapper,
+  layout: Layout,
   html: uk.gov.hmrc.uploaddocuments.views.components.html,
   pageNotFoundErrorView: PageNotFoundErrorView,
   errorView: ErrorView
-)(implicit val config: Configuration, val ec: ExecutionContext)
+)(using val config: Configuration, val ec: ExecutionContext)
     extends FrontendErrorHandler with AuthRedirects with ErrorAuditing {
 
   private val isDevEnv =
@@ -63,7 +63,7 @@ class ErrorHandler @Inject() (
 
   override def resolveError(request: RequestHeader, exception: Throwable) = {
     auditServerError(request, exception)
-    implicit val r = Request(request, "")
+    given Request[String] = Request(request, "")
     Future.successful(exception match {
       case _: NoActiveSession => toGGLogin(if (isDevEnv) s"http://${request.host}${request.uri}" else s"${request.uri}")
       case _: InsufficientEnrolments => Forbidden
@@ -74,12 +74,12 @@ class ErrorHandler @Inject() (
     })
   }
 
-  override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(implicit
+  override def standardErrorTemplate(pageTitle: String, heading: String, message: String)(using
     request: RequestHeader
   ) =
-    Future.successful(new ErrorTemplate(govUkWrapper, html)(pageTitle, heading, message))
+    Future.successful(new ErrorTemplate(layout, html)(pageTitle, heading, message))
 
-  override def notFoundTemplate(implicit request: RequestHeader) =
+  override def notFoundTemplate(using request: RequestHeader) =
     Future.successful(pageNotFoundErrorView())
 }
 
@@ -102,7 +102,7 @@ trait ErrorAuditing extends HttpAuditEvent {
   private val notFoundError   = "Resource Endpoint Not Found"
   private val badRequestError = "Request bad format exception"
 
-  def auditServerError(request: RequestHeader, ex: Throwable)(implicit ec: ExecutionContext): Unit = {
+  def auditServerError(request: RequestHeader, ex: Throwable)(using ec: ExecutionContext): Unit = {
     val eventType = ex match {
       case _: NotFoundException     => ResourceNotFound
       case _: JsValidationException => ServerValidationError
@@ -119,7 +119,7 @@ trait ErrorAuditing extends HttpAuditEvent {
     )
   }
 
-  def auditClientError(request: RequestHeader, statusCode: Int, message: String)(implicit
+  def auditClientError(request: RequestHeader, statusCode: Int, message: String)(using
     ec: ExecutionContext
   ): Unit = {
     import play.api.http.Status.*

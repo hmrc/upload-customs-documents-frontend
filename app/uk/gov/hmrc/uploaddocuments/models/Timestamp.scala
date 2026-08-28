@@ -68,6 +68,6 @@ object Timestamp {
       }
   }
 
-  implicit final val formats: Format[Timestamp] =
+  given formats: Format[Timestamp] =
     SimpleDecimalFormat[Timestamp](s => Timestamp(s.toLongExact), n => BigDecimal(n.value))
 }

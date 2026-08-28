@@ -14,184 +14,227 @@
  * limitations under the License.
  *@
 
-@import uk.gov.hmrc.uploaddocuments.models.{FileUpload,CustomizedServiceContent,Features}
+@import uk.gov.hmrc.uploaddocuments.models.{FileUpload, FileUploads, UploadRequest, FileUploadError, CustomizedServiceContent, Features, ErroredFileUpload}
 @import uk.gov.hmrc.uploaddocuments.views.UploadFileViewHelper
-@import uk.gov.hmrc.uploaddocuments.views.html.partials.multiFileUpload
-@import uk.gov.hmrc.uploaddocuments.views.html.partials.errorManager
+@import uk.gov.hmrc.uploaddocuments.views.ViewHelpers.{pageTitleWithErrors, pageHeading}
+@import uk.gov.hmrc.govukfrontend.views.html.components._
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.fileupload.{FileUpload => FileUploadViewModel}
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.errorsummary.{ErrorSummary, ErrorLink}
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.content.HtmlContent
+@import uk.gov.hmrc.govukfrontend.views.viewmodels.tag.Tag
+@import play.api.mvc.Call
 @import play.twirl.api.HtmlFormat
-@import uk.gov.hmrc.uploaddocuments.views.ViewHelpers.pageTitle
-@import uk.gov.hmrc.uploaddocuments.views.ViewHelpers.pageHeading
-@import uk.gov.hmrc.govukfrontend.views.html.components.Text
-@import uk.gov.hmrc.govukfrontend.views.viewmodels.radios.RadioItem
-@import uk.gov.hmrc.govukfrontend.views.viewmodels.content.Text
 
 @this(
-  govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.GovukLayoutWrapper,
+  govukLayout: uk.gov.hmrc.uploaddocuments.views.html.templates.Layout,
+  govukFileUpload: GovukFileUpload,
+  govukButton: GovukButton,
+  govukErrorSummary: GovukErrorSummary,
+  govukErrorMessage: GovukErrorMessage,
+  govukTag: GovukTag,
   forms: uk.gov.hmrc.uploaddocuments.views.components.forms,
   html: uk.gov.hmrc.uploaddocuments.views.components.html
 )
 
 @(
-  minimumNumberOfFiles: Int,
   maximumNumberOfFiles: Int,
-  initialNumberOfEmptyRows: Int,
   maximumFileSizeBytes: Long,
-  filePickerAcceptFilter: String,
   allowedFileTypesHint: String,
   newFileDescription: Option[String],
-  initialFileUploads: Seq[FileUpload],
-  initiateNextFileUpload: String => Call,
-  checkFileVerificationStatus: String => Call,
-  removeFile: String => Call,
-  previewFile: (String,String) => Call,
+  uploadRequest: Option[UploadRequest],
+  fileUploads: FileUploads,
+  removeFileCall: String => Call,
+  previewFileCall: (String, String) => Call,
+  statusCall: String => Call,
   continueAction: Call,
+  filePostedUrl: String,
+  uploadAnotherTypeUrl: Option[String],
+  filePickerAcceptFilter: String,
   backLink: Option[Call],
-  showYesNoQuestion: Boolean,
-  yesNoQuestionText: Option[String],
-  form: Form[Boolean]
+  showMinimumError: Boolean = false,
+  showFileRequiredError: Boolean = false
 )(implicit request: Request[_], messages: Messages, features: Features, serviceContent: CustomizedServiceContent)
 
-@tokenOpt = @{play.filters.csrf.CSRF.getToken}
+@displayedFiles = @{
+  fileUploads.files.filter {
+    case _: FileUpload.Posted | _: FileUpload.Accepted | _: ErroredFileUpload => true
+    case _                                                                     => false
+  }
+}
+@anyNonReady = @{ fileUploads.files.exists { case _: FileUpload.Posted => true; case _ => false } }
+@acceptedCount = @{ fileUploads.acceptedCount }
+@acceptedOrPostedCount = @{ fileUploads.acceptedOrPostedCount }
+@erroredFiles = @{ displayedFiles.collect { case e: ErroredFileUpload => e } }
+@minimumErrorMessage = @{ serviceContent.fileUploadRequiredError.getOrElse(messages("error.file-upload.required")) }
+@showFileRequired = @{ showMinimumError || showFileRequiredError }
+
+@statusTag(file: FileUpload) = @{
+  file match {
+    case _: FileUpload.Accepted =>
+      govukTag(Tag(content = Text(messages("view.upload-multiple-files.uploaded")), classes = "govuk-tag--green"))
+    case _: FileUpload.Posted =>
+      govukTag(Tag(content = Text(messages("view.upload-multiple-files.uploading")), classes = "govuk-tag--yellow"))
+    case _ => HtmlFormat.empty
+  }
+}
+
+@nameHtml(file: FileUpload) = @{
+  file match {
+    case f: FileUpload.Accepted =>
+      Html(s"""<a class="govuk-link" href="${previewFileCall(f.reference, f.fileName).url}">${HtmlFormat.escape(f.fileName).body}</a>""")
+    case _ => Html(messages("view.upload-multiple-files.uploadingFileName"))
+  }
+}
+
+@typeText(file: FileUpload) = @{
+  (file match {
+    case f: FileUpload.Accepted => f.safeDescription
+    case _                      => newFileDescription
+  }).getOrElse("")
+}
+
+@errorMessageFor(file: ErroredFileUpload) = @{
+  UploadFileViewHelper.toMessage(FileUploadError(file), maximumFileSizeBytes, allowedFileTypesHint)
+}
+
+@rowHeading(file: FileUpload) = @{
+  file match {
+    case d: FileUpload.Duplicate => d.duplicateFileName
+    case _                       => typeText(file)
+  }
+}
+
+@removeHiddenText(file: FileUpload) = @{
+  file match {
+    case a: FileUpload.Accepted  => a.fileName
+    case d: FileUpload.Duplicate => d.duplicateFileName
+    case _                       => typeText(file)
+  }
+}
+
+@pageScripts = {
+  <script src="@controllers.routes.Assets.versioned("javascripts/upload-navigation.js")"></script>
+  <script src="@controllers.routes.Assets.versioned("javascripts/upload-status-poller.js")"></script>
+}
+
+@noscriptRefresh = {
+  <noscript><meta http-equiv="refresh" content="3"></noscript>
+}
 
 @govukLayout(
-  pageTitle = pageTitle("view.upload-multiple-files.title"),
-  backLink = backLink.map(_.url)
+  pageTitle = pageTitleWithErrors("view.upload-multiple-files.title", erroredFiles.nonEmpty || showFileRequired),
+  backLink = backLink.map(_.url),
+  additionalHead = if (anyNonReady) Some(noscriptRefresh) else None,
+  additionalScripts = Some(pageScripts)
 ) {
 
-  @*
-   * Available parameters:
-   * + minimumNumberOfFiles - this is the value the frontend service will check file upload list against, 
-   *                          if number of upload will be less then the minimum, user will be not able to progress
-   * + maximumNumberOfFiles - this is the value the frontend service will check file upload list against, 
-   *                          if number of upload will exceed the limit, user will be not able to progress
-   *
-   * + initialFileUploads - existing file uploads in different states, 
-   *                        use to provide initial input for multi-file upload script
-   *
-   * + initiateNextFileUpload - a function accepting UPLOAD_ID (some unique string) and returning a call to frontend service,
-   *                            POST request to this call will provision new file upload and return 200 with JSON result 
-              {"uploadId":"123abc","upscanReference":"f029444f-415c-4dec-9cf2-36774ec63ab8","uploadRequest":{"href":"https://s3.amazonaws.com/bucket/123abc","fields":{"foo1":"bar1"}}}      
-   * 
-   * + checkFileVerificationStatus - a function accepting upscan reference and returning a call to frontend service,
-   *                                 GET request to this call will return either 404 or 200 with JSON status, i.e. one of: 
-   *         - {"reference":"$reference$","fileStatus":"NOT_UPLOADED","uploadRequest":{"href":"https://s3.amazonaws.com/bucket/123abc","fields":{"foo1":"bar1"}}}
-   *         - {"reference":"$reference$","fileStatus":"POSTED"}
-   *         - {"reference":"$reference$","fileStatus":"ACCEPTED","fileMimeType":"application/pdf","fileName":"test.pdf","fileSize":4567890,"previewUrl":"/upload-customs-documents/new/uploaded/f029444f-415c-4dec-9cf2-36774ec63ab8"}
-   *         - {"reference":"$reference$","fileStatus":"FAILED","errorMessage":"The selected file contains a virus - upload a different one"}
-   *         - {"reference":"$reference$","fileStatus":"REJECTED","errorMessage":"The selected file could not be uploaded"}
-   *         - {"reference":"$reference$","fileStatus":"DUPLICATE","errorMessage":"The selected file has already been uploaded"}
-   *
-   * + removeFile - a function accepting upscan reference and returning a call to frontend service,
-   *                POST request to this call will remove specified file upload and return 204
-   *
-   * + previewFile - a function accepting upscan reference and file name, and returning a call to preview uploaded file
-   *
-   * + markFileRejected - a call to reject a file in a special case S3 upload fails without failure redirect, 
-   *                      expected payload:
-   *                      {"key":"$reference$","errorCode":"EntityTooLarge","errorMessage":""}
-   * 
-   * + continueAction - a call to proceed next (i.e. to the check-your-answers page)
-   *@
+  @if(showFileRequired || erroredFiles.nonEmpty) {
+    @govukErrorSummary(ErrorSummary(
+      title = Text(messages("error.summary.heading")),
+      errorList =
+        (if(showFileRequired) Seq(ErrorLink(href = Some("#file"), content = Text(minimumErrorMessage))) else Seq.empty) ++
+        erroredFiles.map { file =>
+          ErrorLink(
+            href = Some(s"#error-${file.reference}"),
+            content = Text(errorMessageFor(file))
+          )
+        }
+    ))
+  }
 
   @html.h1(pageHeading("view.upload-multiple-files.heading"), classes = serviceContent.pageTitleClasses.getOrElse("govuk-heading-l"))
 
   @serviceContent.safeDescriptionHtml.map(d => Html(d)).getOrElse {
-    @html.p{ @messages("view.upload-multiple-files.line1", maximumNumberOfFiles) }
-    @html.p{ @messages("view.upload-multiple-files.line2") }
-
-    @html.p(
-      content = Html(messages("view.upload-multiple-files.uploadOnSelect")),
-      classes = "govuk-body govuk-visually-hidden"
-    )
+    @html.p{ @messages("view.upload-multiple-files.line1", UploadFileViewHelper.humanReadableFileSize(maximumFileSizeBytes)) }
+    @html.p{ @messages("view.upload-multiple-files.line2", allowedFileTypesHint) }
   }
 
-  <form
-    action="@continueAction.url"
-    method="@continueAction.method"
-    class="multi-file-upload"
-    data-multi-file-upload-start-rows="@Math.min(initialNumberOfEmptyRows,maximumNumberOfFiles)"
-    data-multi-file-upload-min-files="@minimumNumberOfFiles"
-    data-multi-file-upload-max-files="@maximumNumberOfFiles"
-    data-multi-file-upload-max-file-size="@maximumFileSizeBytes"
-    data-multi-file-upload-send-url-tpl="@initiateNextFileUpload("{fileId}")"
-    data-multi-file-upload-status-url-tpl="@checkFileVerificationStatus("{fileRef}")"
-    data-multi-file-upload-remove-url-tpl="@removeFile("{fileRef}")"
-    data-multi-file-upload-uploaded-files="@UploadFileViewHelper.initialScriptStateFrom(initialFileUploads, previewFile, maximumFileSizeBytes, allowedFileTypesHint)"
-    data-multi-file-upload-error-generic="@messages("error.file-upload.try-again")"
-    data-multi-file-upload-error-remove-file="@messages("error.file-upload.remove.try-again")"
-    data-multi-file-upload-error-invalid-size-large="@messages("error.file-upload.invalid-size-large",UploadFileViewHelper.humanReadableFileSize(maximumFileSizeBytes))"
-    data-multi-file-upload-error-invalid-size-small="@messages("error.file-upload.invalid-size-small")"
-    data-multi-file-upload-error-invalid-type="@messages("error.file-upload.invalid-type","",allowedFileTypesHint)"
-    data-multi-file-upload-error-select-file="@serviceContent.fileUploadRequiredError.getOrElse(messages("error.file-upload.required"))"
-    data-multi-file-upload-still-transferring="@messages("view.upload-multiple-files.stillTransferring")"
-    data-multi-file-upload-document-uploaded="@messages("view.upload-multiple-files.documentUploaded", "{fileName}")"
-    data-multi-file-upload-document-deleted="@messages("view.upload-multiple-files.documentDeleted", "{fileName}")"
-    data-multi-file-upload-choose-first-file-label="@serviceContent.chooseFirstFileLabel.getOrElse(messages("view.upload-multiple-files.chooseFirstFileLabel"))"
-    data-multi-file-upload-choose-next-file-label="@serviceContent.chooseNextFileLabel.getOrElse(messages("view.upload-multiple-files.chooseNextFileLabel"))"
-    @newFileDescription.map{value => data-multi-file-upload-new-file-description="@value"}.getOrElse("")
-    @if(features.showAddAnotherDocumentButton){data-multi-file-upload-show-add-another-document-button}
-    @if(features.enableMultipleFilesPicker){data-multi-file-upload-enable-multiple-files-picker}
-    @if(form.errors.nonEmpty){data-multi-file-upload-initial-error="@form.errors.map(error => messages(error.message,error.args:_*)).head"}
-  >
+  @uploadRequest.map { req =>
+    <form action="@req.href" method="POST" enctype="multipart/form-data" novalidate
+          data-upload-form=""
+          data-upload-key="@req.fields.getOrElse("key", "")"
+          data-file-posted-url="@filePostedUrl"
+          data-maximum-file-size-bytes="@maximumFileSizeBytes">
+      @req.fields.map { case (key, value) => @forms.inputHidden(key, value) }
 
-    <span id="multi-file-upload__notifications" aria-live="assertive" role="alert"></span>
+      @govukFileUpload(FileUploadViewModel(
+        name = "file",
+        id = "file",
+        attributes = Map("accept" -> filePickerAcceptFilter),
+        javascript = Some(true),
+        chooseFilesButtonText = Some(messages("view.upload-file.chooseFilesButton")),
+        dropInstructionText = Some(messages("view.upload-file.dropInstruction")),
+        noFileChosenText = Some(messages("view.upload-file.noFileChosen")),
+        errorMessage = if(showFileRequired) Some(ErrorMessage(content = Text(minimumErrorMessage))) else None,
+        label = Label(content = Text(
+          if(acceptedCount == 0)
+            serviceContent.chooseFirstFileLabel.filter(_.nonEmpty).getOrElse(messages("view.upload-file.first.fileLabel"))
+          else
+            serviceContent.chooseNextFileLabel.filter(_.nonEmpty).getOrElse(messages("view.upload-file.next.fileLabel"))
+        ))
+      ))
 
-    @html.p(
-      content = Html(messages("view.upload-multiple-files.uploadMoreFilesThanLimit", maximumNumberOfFiles)),
-      classes="govuk-body multi-file-upload__upload-more-message hidden"
-    )
+      @govukButton(Button(
+        content = Text(messages("form.upload-file.submit")),
+        classes = "govuk-button--secondary",
+        preventDoubleClick = Some(true)
+      ))
+    </form>
+  }
 
-    <div class="multi-file-upload__input-list">
-
+  @if(displayedFiles.nonEmpty) {
+    <div aria-live="polite">
+      <dl class="govuk-summary-list govuk-summary-list--long-key">
+        @displayedFiles.map { file =>
+          <div class="govuk-summary-list__row"
+               data-upload-status-row=""
+               data-status-url="@statusCall(file.reference).url">
+            <dt class="govuk-summary-list__key">
+              @file match {
+                case errored: ErroredFileUpload => {
+                  <div id="error-@errored.reference" class="govuk-form-group govuk-form-group--error" tabindex="-1">
+                    @defining(rowHeading(errored)) { heading =>
+                      @if(heading.nonEmpty) {
+                        <span class="govuk-!-font-weight-bold">@heading</span>
+                      }
+                    }
+                    @govukErrorMessage(ErrorMessage(content = Text(errorMessageFor(errored))))
+                  </div>
+                }
+                case _ => {
+                  @nameHtml(file)
+                  <br>
+                  <span class="govuk-body-s">@typeText(file)</span>
+                }
+              }
+            </dt>
+            <dd class="govuk-summary-list__value">
+              @statusTag(file)
+            </dd>
+            <dd class="govuk-summary-list__actions">
+              <a class="govuk-link" data-replace-nav="" href="@removeFileCall(file.reference).url">
+                @messages("view.upload-multiple-files.remove")
+                <span class="govuk-visually-hidden">@removeHiddenText(file)</span>
+              </a>
+            </dd>
+          </div>
+        }
+      </dl>
     </div>
+  }
 
-    <dl class="multi-file-upload__item-list govuk-!-margin-bottom-5"></dl>
+  @if(uploadRequest.isEmpty && acceptedOrPostedCount >= maximumNumberOfFiles) {
+    @html.p{ @messages("view.upload-multiple-files.uploadMoreFilesThanLimit", maximumNumberOfFiles) }
+  }
 
-    @if(tokenOpt.isDefined){
-      <input type="hidden" name="@tokenOpt.get.name" value="@{HtmlFormat.escape(tokenOpt.get.value)}"/>
+  <div class="govuk-button-group govuk-!-margin-top-6">
+    @govukButton(Button(content = Text(messages("form.file-uploaded.continue")), href = Some(continueAction.url)))
+    @uploadAnotherTypeUrl.map { url =>
+      @govukButton(Button(
+        content = Text(serviceContent.uploadAnotherTypeText.filter(_.nonEmpty).getOrElse(messages("view.upload-multiple-files.uploadAnotherType"))),
+        href = Some(url),
+        classes = "govuk-button--secondary"
+      ))
     }
-
-    <button type="button" class="multi-file-upload__add-another govuk-button govuk-button--secondary hidden">@serviceContent.addAnotherDocumentButtonText.getOrElse(messages("view.upload-multiple-files.addAnother"))</button>
-
-    <p class="govuk-body multi-file-upload__form-status hidden" aria-hidden="true">
-      @messages("view.upload-multiple-files.stillTransferring")...
-      <span class="file-upload__spinner ccms-loader"></span>
-    </p>
-
-    <div>
-     @if(showYesNoQuestion){
-        @forms.inputRadio(
-          form = form,
-          idPrefix = "choice",
-          name = "choice",
-          inline = true,
-          items = Seq(
-            RadioItem(
-              value = Some("yes"),
-              content = Text(messages("form.file-uploaded.choice.yes")),
-              checked = form("choice").value.contains("yes")
-            ),
-            RadioItem(
-              value = Some("no"),
-              content = Text(messages("form.file-uploaded.choice.no")),
-              checked = form("choice").value.contains("no"),
-              conditionalHtml = None
-            )
-          ),
-          legend = yesNoQuestionText,
-          legendAsHeading = false,
-          legendAsH2 = serviceContent.yesNoQuestionAsHeader,
-          legendClasses = "govuk-fieldset__legend govuk-fieldset__legend--m govuk-!-margin-bottom-4 govuk-!-padding-top-4 govuk-!-font-weight-bold"
-        )
-      }
-
-      @html.button("form.upload-multiple-files.continue")
-    </div>
-
-    <script type="text/x-template" id="multi-file-upload-item-tpl"> @multiFileUpload.item() </script>
-    <script type="text/x-template" id="multi-file-upload-input-tpl"> @multiFileUpload.input(filePickerAcceptFilter) </script>
-    <script type="text/x-template" id="error-manager-summary-tpl"> @errorManager.summary(messages) </script>
-    <script type="text/x-template" id="error-manager-summary-item-tpl"> @errorManager.summaryItem() </script>
-    <script type="text/x-template" id="error-manager-message-tpl"> @errorManager.message(messages) </script>
-  </form>
+  </div>
 }

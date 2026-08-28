@@ -28,7 +28,7 @@ trait HttpErrorRateMeter extends LoggerUtil {
   def meterName[T](serviceName: String, statusCode: Int): String =
     if (statusCode >= 500) s"Http5xxErrorCount-$serviceName" else s"Http4xxErrorCount-$serviceName"
 
-  def countErrors[T](serviceName: String)(future: Future[T])(implicit ec: ExecutionContext): Future[T] =
+  def countErrors[T](serviceName: String)(future: Future[T])(using ExecutionContext): Future[T] =
     future.andThen {
       case Success(response: HttpResponse) if response.status >= 400 =>
         record(meterName(serviceName, response.status))

@@ -97,7 +97,7 @@ object UpscanNotification {
 
     val nullifyZero: JsValue => JsValue = { case JsNumber(n) if n.toInt == 0 => JsNull; case v => v }
 
-    implicit val formats: Format[UploadDetails] = Format(
+    given formats: Format[UploadDetails] = Format(
       ((__ \ "uploadTimestamp").read[ZonedDateTime] and
         (__ \ "checksum").read[String] and
         (__ \ "fileName").read[String].map(decodeMimeEncodedWord) and
@@ -119,7 +119,7 @@ object UpscanNotification {
   }
 
   object FailureDetails {
-    implicit val formats: Format[FailureDetails] = Json.format[FailureDetails]
+    given formats: Format[FailureDetails] = Json.format[FailureDetails]
   }
 
   object FailureReason extends EnumerationFormats[FailureReason] {
@@ -134,7 +134,7 @@ object UpscanNotification {
   val upscanFileReadyFormat: Format[UpscanFileReady]   = Json.format[UpscanFileReady]
   val upscanFileFailedFormat: Format[UpscanFileFailed] = Json.format[UpscanFileFailed]
 
-  implicit lazy val reads: Reads[UpscanNotification] =
+  given reads: Reads[UpscanNotification] =
     Reads {
       case o: JsObject if (o \ fileStatus).asOpt[String].contains(READY) =>
         upscanFileReadyFormat.reads(o)
@@ -149,7 +149,7 @@ object UpscanNotification {
     case o => o
   }
 
-  implicit lazy val writes: Writes[UpscanNotification] = {
+  given writes: Writes[UpscanNotification] = {
     case i: UpscanFileReady  => upscanFileReadyFormat.transform(addFileStatus(READY)).writes(i)
     case i: UpscanFileFailed => upscanFileFailedFormat.transform(addFileStatus(FAILED)).writes(i)
   }

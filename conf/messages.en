@@ -113,59 +113,24 @@ summary.file-names=File names
 view.upload-multiple-files.heading=Upload your documents
 view.upload-multiple-files.title=Upload your documents
 view.upload-multiple-files.uploadMoreFilesThanLimit=You can upload up to {0} files.
-view.upload-multiple-files.document=Document
 view.upload-multiple-files.remove=Remove
-view.upload-multiple-files.removing=Removing...
-view.upload-multiple-files.pending=Pending
-view.upload-multiple-files.preview=Preview
-view.upload-multiple-files.uploaded=Ready to submit
-view.upload-multiple-files.documentUploaded=Document {0} has been uploaded
-view.upload-multiple-files.documentDeleted=Document {0} has been deleted
+view.upload-multiple-files.uploaded=Uploaded
 view.upload-multiple-files.chooseFirstFileLabel=Select the first file to upload
 view.upload-multiple-files.chooseNextFileLabel=Select another file to upload
-view.upload-multiple-files.stillTransferring=The selected file has not fully uploaded
-view.upload-multiple-files.uploadOnSelect=Choose your files to start uploading them
-view.upload-multiple-files.line1=You can upload up to {0} documents.
-view.upload-multiple-files.line2=Each document must be smaller than 6MB.
-view.upload-multiple-files.addAnother=Add another document
-view.upload-file.first.title=Upload your first document
-view.upload-file.first.heading=Upload your first document
+view.upload-multiple-files.line1=Each file can be {0} or smaller.
+view.upload-multiple-files.line2=Acceptable file types: {0}.
+view.upload-multiple-files.uploading=Uploading
+view.upload-multiple-files.uploadAnotherType=Upload another type of document
+view.upload-multiple-files.uploadingFileName=Uploading file
+view.upload-file.chooseFilesButton=Choose file
+view.upload-file.dropInstruction=or drop file
+view.upload-file.noFileChosen=No file chosen
 view.upload-file.first.fileLabel=Select the first file to upload
 view.upload-file.next.fileLabel=Select another file to upload
-view.upload-file.next.title=Upload another document
-view.upload-file.next.heading=Upload another document
-view.upload-file.waiting=Your document is being uploaded. You’ll be redirected once the file has been processed.
-view.upload-file.line1=You can upload up to {0} documents individually.
-view.upload-file.line2=Each document must be smaller than 6MB.
-view.upload-file.help.linkText=Types of file you can upload
-view.upload-file.help.line1=These file types are allowed:
-view.upload-file.help.fileFormat1=image (.jpg, .jpeg, .png or .tiff)
-view.upload-file.help.fileFormat2=PDF (.pdf)
-view.upload-file.help.fileFormat3=email (.txt or .msg)
-view.upload-file.help.fileFormat4=Microsoft (Word, Excel or PowerPoint)
-view.upload-file.help.fileFormat5=Open Document Format (ODF)
-view.upload-file.help.line4=You cannot upload zip files or documents that are password-protected.
-
-# View Summaries
-# ----------------------------------------------------------
-view.summary.empty.title=You haven’t uploaded any documents
-view.summary.empty.heading=You haven’t uploaded any documents
-view.summary.singular.title=You’ve uploaded 1 document
-view.summary.singular.heading=You’ve uploaded 1 document
-view.summary.plural.title=You’ve uploaded {0} documents
-view.summary.plural.heading=You’ve uploaded {0} documents
-view.summary.uploadFile.heading=Do you want to upload a document?
-view.summary.uploadAnotherFile.heading=Do you want to upload another document?
-view.summary.list.singular.heading=Document you’ve uploaded
-view.summary.list.heading=Documents you’ve uploaded
-view.summary.maximum=You can upload up to {0} files.
 
 # Forms
 # ----------------------------------------------------------
 form.upload-file.submit=Upload
-form.file-uploaded.choice.yes= Yes 
-form.file-uploaded.choice.no= No 
-form.file-uploaded.choice.noConditional=By continuing, you will now submit all the documents you’ve uploaded
 form.file-uploaded.continue=Continue
 form.upload-multiple-files.continue=Continue
 

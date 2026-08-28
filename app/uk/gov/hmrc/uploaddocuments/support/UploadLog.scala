@@ -68,7 +68,7 @@ case class Success(
 )
 
 object Success {
-  implicit val format: Format[Success] = Json.format[Success]
+  given format: Format[Success] = Json.format[Success]
 }
 
 final case class Failure(
@@ -80,5 +80,5 @@ final case class Failure(
 )
 
 object Failure {
-  implicit val format: Format[Failure] = Json.format[Failure]
+  given format: Format[Failure] = Json.format[Failure]
 }

@@ -19,5 +19,5 @@ package uk.gov.hmrc.uploaddocuments.support
 sealed trait DummyContext
 
 object DummyContext {
-  implicit val default: DummyContext = new DummyContext {}
+  given default: DummyContext = new DummyContext {}
 }

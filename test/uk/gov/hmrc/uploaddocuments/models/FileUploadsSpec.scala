@@ -182,6 +182,22 @@ class FileUploadsSpec extends UnitSpec {
       ).initiatedOrAcceptedCount shouldBe 5
     }
 
+    "count accepted or posted" in {
+      FileUploads(
+        Seq(
+          postedFileUpload1,
+          acceptedFileUpload,
+          initiatedFileUpload2,
+          acceptedFileUpload,
+          postedFileUpload2,
+          initiatedFileUpload3,
+          duplicateFileUpload,
+          rejectedFileUpload,
+          failedFileUpload
+        )
+      ).acceptedOrPostedCount shouldBe 4
+    }
+
     "have isReady property" in {
       postedFileUpload1.isReady shouldBe false
       initiatedFileUpload1.isReady shouldBe false
@@ -189,6 +205,42 @@ class FileUploadsSpec extends UnitSpec {
       failedFileUpload.isReady shouldBe true
       rejectedFileUpload.isReady shouldBe true
       duplicateFileUpload.isReady shouldBe true
+    }
+
+    "drop only initiated placeholders, keeping posted, accepted and errored uploads" in {
+      val initiated = FileUpload.Initiated(Nonce(1), Timestamp.Any, "ref-i")
+      val posted    = FileUpload.Posted(Nonce(2), Timestamp.Any, "ref-p")
+      val accepted = FileUpload.Accepted(
+        Nonce(3),
+        Timestamp.Any,
+        "ref-a",
+        "url",
+        ZonedDateTime.parse("2020-01-01T00:00:00Z"),
+        "checksum",
+        "f.pdf",
+        "application/pdf",
+        1
+      )
+      val rejected =
+        FileUpload.Rejected(Nonce(4), Timestamp.Any, "ref-r", S3UploadError("ref-r", "EntityTooLarge", "too big"))
+
+      val result = FileUploads(Seq(initiated, posted, accepted, rejected)).withoutInitiated
+
+      result.files shouldBe Seq(posted, accepted, rejected)
+    }
+
+    "findInitiatedWithRequest" should {
+      "return the first Initiated entry that still carries its uploadRequest" in {
+        val bare = FileUpload.Initiated(Nonce(1), Timestamp.Any, "ref-bare", uploadRequest = None)
+        val live = FileUpload.Initiated(
+          Nonce(2),
+          Timestamp.Any,
+          "ref-live",
+          uploadRequest = Some(UploadRequest("https://s3", Map("k" -> "v")))
+        )
+        FileUploads(Seq(bare, live)).findInitiatedWithRequest shouldBe Some(live)
+        FileUploads(Seq(bare)).findInitiatedWithRequest shouldBe None
+      }
     }
   }
 }

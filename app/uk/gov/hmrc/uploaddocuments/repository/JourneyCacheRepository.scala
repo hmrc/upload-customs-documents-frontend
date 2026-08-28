@@ -29,7 +29,7 @@ class JourneyCacheRepository @Inject() (
   mongoComponent: MongoComponent,
   timestampSupport: TimestampSupport,
   appConfig: AppConfig
-)(implicit ec: ExecutionContext)
+)(using ec: ExecutionContext)
     extends MongoCacheRepository(
       mongoComponent = mongoComponent,
       collectionName = "upload-customs-documents-journeys",

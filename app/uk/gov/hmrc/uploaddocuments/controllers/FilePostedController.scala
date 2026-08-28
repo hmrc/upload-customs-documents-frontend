@@ -18,7 +18,6 @@ package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.uploaddocuments.forms.Forms
-import uk.gov.hmrc.uploaddocuments.models.JourneyId
 import uk.gov.hmrc.uploaddocuments.services.FileUploadService
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
@@ -26,22 +25,27 @@ import javax.inject.{Inject, Singleton}
 import scala.concurrent.{ExecutionContext, Future}
 
 @Singleton
-class FilePostedController @Inject() (components: BaseControllerComponents, fileUploadService: FileUploadService)(
-  implicit ec: ExecutionContext
+class FilePostedController @Inject() (components: BaseControllerComponents, fileUploadService: FileUploadService)(using
+  ExecutionContext
 ) extends BaseController(components) with LoggerUtil {
 
-  // GET /journey/:journeyId/file-posted
-  final def asyncMarkFileUploadAsPosted(implicit journeyId: JourneyId): Action[AnyContent] = Action.async {
-    implicit request =>
-      Forms.UpscanUploadSuccessForm
-        .bindFromRequest()
-        .fold(
-          _ => {
-            Logger.error("[asyncMarkFileUploadAsPosted] Query Parameters from Upscan could not be bound to form")
-            Logger.debug(s"[asyncMarkFileUploadAsPosted] Query Params Received: ${request.queryString}")
-            Future.successful(BadRequest)
-          },
-          s3UploadSuccess => fileUploadService.markFileAsPosted(s3UploadSuccess.key).map(_ => Created)
-        )
+  // GET /file-posted   (S3 success redirect, server-side; key+bucket arrive as query params)
+  final val markFileUploadAsPosted: Action[AnyContent] = Action.async { implicit request =>
+    whenInSession { implicit journeyId =>
+      whenAuthenticated {
+        Forms.UpscanUploadSuccessForm
+          .bindFromRequest()
+          .fold(
+            _ => {
+              Logger.error("[markFileUploadAsPosted] Upscan success params could not be bound from query string")
+              Future.successful(BadRequest)
+            },
+            s3UploadSuccess =>
+              fileUploadService
+                .markFileAsPosted(s3UploadSuccess.key)
+                .map(_ => Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles))
+          )
+      }
+    }
   }
 }

@@ -44,7 +44,7 @@ trait EnumerationFormats[A] {
   /** Optionally returns enum for a given key, if exists or None */
   def valueOf(key: String): Option[A] = valuesMap.get(key)
 
-  implicit val format: Format[A] = Format(
+  given format: Format[A] = Format(
     {
       case JsString(key) =>
         valueOf(key)
@@ -63,6 +63,6 @@ trait EnumerationFormats[A] {
   )
 
   /** Instance of a typeclass declaration */
-  implicit val enumerationFormats: EnumerationFormats[A] = this
+  given enumerationFormats: EnumerationFormats[A] = this
 
 }

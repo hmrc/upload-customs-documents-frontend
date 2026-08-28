@@ -28,7 +28,7 @@ class LanguageSwitchController @Inject() (
   controllerComponents: MessagesControllerComponents
 ) extends FrontendController(controllerComponents) with I18nSupport {
 
-  private def fallbackURL: String            = "/upload-customs-documents/"
+  private def fallbackURL: String            = routes.ChooseMultipleFilesController.showChooseMultipleFiles.url
   private def languageMap: Map[String, Lang] = appConfig.languageMap
 
   def switchToLanguage(language: String): Action[AnyContent] = Action { implicit request =>
