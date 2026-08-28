@@ -31,7 +31,7 @@
       var input = form.querySelector('input[type="file"]');
       var file = input && input.files && input.files[0];
 
-      if (!file) return;
+      if (!file || file.size < 1) return;
       if (maximumBytes && file.size > maximumBytes) return;
 
       event.preventDefault();
