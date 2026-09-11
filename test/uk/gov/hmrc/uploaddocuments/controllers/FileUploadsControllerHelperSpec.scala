@@ -35,7 +35,7 @@ class FileUploadsControllerHelperSpec extends UnitSpec {
     final val underTest = new FileUploadsControllerHelper {
       override val govukStartUrl: String = "dummy-gov-uk-start-url"
       override val fileUploadService: FileUploadService = new FileUploadService(null, null, null, null, null) {
-        override def getFiles(implicit journeyId: JourneyId): Future[Option[FileUploads]] =
+        override def getFiles(using JourneyId): Future[Option[FileUploads]] =
           Future.successful(fileUploadsResponse)
       }
     }

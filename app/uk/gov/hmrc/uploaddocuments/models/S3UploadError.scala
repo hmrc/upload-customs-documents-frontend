@@ -42,10 +42,14 @@ case class S3UploadError(
   errorMessage: String,
   errorRequestId: Option[String] = None,
   errorResource: Option[String] = None
-)
+) {
+  // True when S3 rejects the POST because no usable file was submitted (either no file chosen or empty file posted)
+  val isEmptyOrMissingFile: Boolean =
+    errorCode == "400" || errorCode == "InvalidArgument" || errorCode == "EntityTooSmall"
+}
 
 object S3UploadError {
-  implicit val formats: Format[S3UploadError] = Json.format[S3UploadError]
+  given formats: Format[S3UploadError] = Json.format[S3UploadError]
 
   def from(
     key: String,

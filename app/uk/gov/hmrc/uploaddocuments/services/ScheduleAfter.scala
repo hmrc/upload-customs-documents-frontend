@@ -27,6 +27,6 @@ object ScheduleAfter extends FutureTimeoutSupport {
   /** Delay execution of the future by given miliseconds */
   def apply[T](delayInMiliseconds: Long)(
     body: => Future[T]
-  )(implicit scheduler: Scheduler, ec: ExecutionContext): Future[T] =
+  )(using scheduler: Scheduler, ec: ExecutionContext): Future[T] =
     after(duration = FiniteDuration(delayInMiliseconds, "ms"), using = scheduler)(body)
 }

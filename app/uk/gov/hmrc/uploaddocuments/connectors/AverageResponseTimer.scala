@@ -25,7 +25,7 @@ import scala.concurrent.{ExecutionContext, Future}
 trait AverageResponseTimer extends LoggerUtil {
   val kenshooRegistry: MetricRegistry
 
-  def timer[T](serviceName: String)(function: => Future[T])(implicit ec: ExecutionContext): Future[T] = {
+  def timer[T](serviceName: String)(function: => Future[T])(using ec: ExecutionContext): Future[T] = {
     val start = System.nanoTime()
     function.andThen { case _ =>
       val duration = Duration(System.nanoTime() - start, NANOSECONDS)

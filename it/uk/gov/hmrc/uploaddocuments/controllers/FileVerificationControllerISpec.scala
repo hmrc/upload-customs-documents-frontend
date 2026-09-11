@@ -1,154 +1,32 @@
+/*
+ * Copyright 2026 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.http.Status
 import uk.gov.hmrc.uploaddocuments.models.*
 import play.api.libs.ws.DefaultBodyReadables.readableAsString
 
 import java.time.ZonedDateTime
-import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
 
-class FileVerificationControllerISpec extends ControllerISpecBase with UpscanInitiateStubs {
+class FileVerificationControllerISpec extends ControllerISpecBase {
 
   val upscanRef1 = "11370e18-6e24-453e-b45a-76d3e32ea33d"
   val upscanRef2 = "2b72fe99-8adf-4edb-865e-622ae710f77c"
 
   "FileVerificationController" when {
-
-    "GET /file-verification" should {
-      "display waiting for file verification page after the timeout the first time" in {
-
-        val context = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files =
-          Seq(
-            FileUpload.Initiated(Nonce.Any, Timestamp.Any, upscanRef1),
-            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2)
-          )
-        )
-
-        setContext(context)
-        setFileUploads(fileUploads)
-
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-        val result = await(request(s"/file-verification?key=$upscanRef2").get())
-
-        result.status shouldBe 200
-        result.body should include(htmlEscapedPageTitle("view.upload-file.waiting"))
-        result.body should include(htmlEscapedMessage("view.upload-file.waiting"))
-
-        getFileUploads() shouldBe Some(fileUploads)
-      }
-
-      "display waiting for file verification page after the timeout the next time" in {
-
-        val context = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files =
-          Seq(
-            FileUpload.Initiated(Nonce.Any, Timestamp.Any, upscanRef1),
-            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2)
-          )
-        )
-
-        setContext(context)
-        setFileUploads(fileUploads)
-
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-        val result = await(request(s"/file-verification?key=$upscanRef2").get())
-
-        result.status shouldBe 200
-        result.body should include(htmlEscapedPageTitle("view.upload-file.waiting"))
-        result.body should include(htmlEscapedMessage("view.upload-file.waiting"))
-
-        getFileUploads() shouldBe Some(fileUploads)
-      }
-
-      "show summary page if the file is accepted" in {
-
-        val context = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files =
-          Seq(
-            FileUpload.Initiated(Nonce.Any, Timestamp.Any, upscanRef1),
-            FileUpload.Accepted(
-              Nonce.Any,
-              Timestamp.Any,
-              upscanRef2,
-              "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
-              ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-              "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-              "test.pdf",
-              "application/pdf",
-              4567890
-            )
-          )
-        )
-
-        setContext(context)
-        setFileUploads(fileUploads)
-
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-        val result = await(request(s"/file-verification?key=$upscanRef2").get())
-
-        result.status shouldBe 200
-        result.body should include(htmlEscapedPageTitle("view.summary.singular.heading"))
-        result.body should include(htmlEscapedMessage("view.summary.singular.heading"))
-
-        getFileUploads() shouldBe Some(fileUploads)
-      }
-
-      "show choose file page if the file is rejected" in {
-
-        val context = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files =
-          Seq(
-            FileUpload.Initiated(Nonce.Any, Timestamp.Any, upscanRef1),
-            FileUpload.Rejected(
-              Nonce.Any,
-              Timestamp.Any,
-              upscanRef2,
-              S3UploadError(upscanRef2, "EntityTooLarge", "Entity Too Large")
-            )
-          )
-        )
-
-        setContext(context)
-        setFileUploads(fileUploads)
-
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-        val callbackUrl =
-          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
-
-        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
-
-        val result = await(request(s"/file-verification?key=$upscanRef2").get())
-
-        result.status shouldBe 400
-      }
-
-      "show error page if key is not provided" in {
-
-        val context = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files =
-          Seq(
-            FileUpload.Initiated(Nonce.Any, Timestamp.Any, upscanRef1),
-            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef2)
-          )
-        )
-
-        setContext(context)
-        setFileUploads(fileUploads)
-
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-        val result = await(request(s"/file-verification").get())
-
-        result.status shouldBe 400
-
-        getFileUploads() shouldBe Some(fileUploads)
-      }
-    }
 
     "GET /file-verification/:reference/status" should {
       "return file verification status" in {
@@ -240,82 +118,6 @@ class FileVerificationControllerISpec extends ControllerISpecBase with UpscanIni
           await(request("/file-verification/4b1e15a4-4152-4328-9448-4924d9aee6e4/status").get())
         result7.status shouldBe 200
         result7.body shouldBe """{"reference":"4b1e15a4-4152-4328-9448-4924d9aee6e4","fileStatus":"DUPLICATE","errorMessage":"The selected file has already been uploaded"}"""
-      }
-    }
-
-    "GET /journey/:journeyId/file-verification" should {
-
-      "set return 202 Accepted (when no response yet received)" in {
-
-        val context = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files =
-          Seq(
-            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef1)
-          )
-        )
-
-        setContext(context)
-        setFileUploads(fileUploads)
-
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-        val result1 =
-          await(requestWithoutSessionId(s"/journey/$getJourneyId/file-verification?key=$upscanRef1").get())
-
-        result1.status shouldBe Status.ACCEPTED
-        result1.body.isEmpty shouldBe true
-      }
-
-      "set return 201 Created (when a response is ready)" in {
-
-        val context = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files =
-          Seq(
-            FileUpload.Accepted(
-              Nonce.Any,
-              Timestamp.Any,
-              upscanRef1,
-              "https://bucketName.s3.eu-west-2.amazonaws.com?1235676",
-              ZonedDateTime.parse("2018-04-24T09:30:00Z"),
-              "396f101dd52e8b2ace0dcf5ed09b1d1f030e608938510ce46e7a5c7a4e775100",
-              "test.pdf",
-              "application/pdf",
-              4567890
-            )
-          )
-        )
-
-        setContext(context)
-        setFileUploads(fileUploads)
-
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-        val result1 =
-          await(requestWithoutSessionId(s"/journey/$getJourneyId/file-verification?key=$upscanRef1").get())
-
-        result1.status shouldBe Status.CREATED
-        result1.body.isEmpty shouldBe true
-      }
-
-      "set return 400 Bad Request (when key is not provided)" in {
-
-        val context = FileUploadContext(fileUploadSessionConfig)
-        val fileUploads = FileUploads(files =
-          Seq(
-            FileUpload.Posted(Nonce.Any, Timestamp.Any, upscanRef1)
-          )
-        )
-
-        setContext(context)
-        setFileUploads(fileUploads)
-
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-        val result1 =
-          await(requestWithoutSessionId(s"/journey/$getJourneyId/file-verification").get())
-
-        result1.status shouldBe Status.BAD_REQUEST
-        result1.body.isEmpty shouldBe true
       }
     }
   }

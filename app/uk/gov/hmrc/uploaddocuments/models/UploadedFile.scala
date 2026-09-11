@@ -34,7 +34,7 @@ case class UploadedFile(
 )
 
 object UploadedFile {
-  implicit val formats: Format[UploadedFile] = Json.format[UploadedFile]
+  given formats: Format[UploadedFile] = Json.format[UploadedFile]
 
   def apply(file: FileUpload): Option[UploadedFile] = file match {
     case f: FileUpload.Accepted =>

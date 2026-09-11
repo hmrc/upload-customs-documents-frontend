@@ -44,7 +44,7 @@ class FileUploadResultPushConnector @Inject() (
 
   import FileUploadResultPushConnector.*
 
-  def push(request: Request)(implicit hc: HeaderCarrier, jid: JourneyId, ec: ExecutionContext): Future[Response] = {
+  def push(request: Request)(using hc: HeaderCarrier, jid: JourneyId, ec: ExecutionContext): Future[Response] = {
     val responseReads = new FileUploadResultPushConnectorReads(request.hostService)
     retry(appConfig.fileUploadResultPushRetryIntervals: _*)(shouldRetry, errorMessage) {
       monitor(s"ConsumedAPI-push-file-uploads-${request.hostService.userAgent}-POST") {
@@ -56,7 +56,7 @@ class FileUploadResultPushConnector @Inject() (
                   .prettyPrint(Json.toJson(payload)(Payload.writeNoDownloadUrl))}"
             )
           http
-            .post(URI.create(endpointUrl).toURL())(
+            .post(URI.create(endpointUrl).toURL)(
               request.hostService.populate(hc).withExtraHeaders("FileUploadJourney" -> jid.value)
             )
             .withBody(Json.toJson(payload))

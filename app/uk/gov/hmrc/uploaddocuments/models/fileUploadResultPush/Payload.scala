@@ -36,7 +36,7 @@ object Payload {
       .previewFileUploadByReference(reference, fileName)
       .url
 
-  implicit val format: Format[Payload] = Json.format[Payload]
+  given format: Format[Payload] = Json.format[Payload]
 
   // Used by logging as we can't leak the internal AWS Download URL to Kibana (even in QA/Staging)
   val writeNoDownloadUrl: Writes[Payload] = Writes { model =>
@@ -46,6 +46,6 @@ object Payload {
         model.uploadedFiles.map(_.copy(downloadUrl = "")),
         model.cargo
       )
-    )(format)
+    )
   }
 }

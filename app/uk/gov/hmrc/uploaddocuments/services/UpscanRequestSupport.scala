@@ -16,16 +16,14 @@
 
 package uk.gov.hmrc.uploaddocuments.services
 
-import play.api.mvc.RequestHeader
 import uk.gov.hmrc.uploaddocuments.controllers.{internal, routes}
 import uk.gov.hmrc.uploaddocuments.models.{JourneyId, Nonce, UpscanInitiateRequest}
-import uk.gov.hmrc.uploaddocuments.support.JsEnabled.COOKIE_JSENABLED
 import uk.gov.hmrc.uploaddocuments.wiring.AppConfig
 
 trait UpscanRequestSupport {
   val appConfig: AppConfig
 
-  final def upscanRequest(nonce: Nonce, maximumFileSizeBytes: Long)(implicit journeyId: JourneyId, rh: RequestHeader) =
+  final def upscanRequest(nonce: Nonce, maximumFileSizeBytes: Long)(using JourneyId) =
     UpscanInitiateRequest(
       callbackUrl = callbackFromUpscan(nonce),
       successRedirect = Some(successRedirect()),
@@ -34,34 +32,13 @@ trait UpscanRequestSupport {
       maximumFileSize = Some(maximumFileSizeBytes.toInt)
     )
 
-  final def upscanRequestWhenUploadingMultipleFiles(
-    nonce: Nonce,
-    maximumFileSizeBytes: Long
-  )(implicit journeyId: JourneyId, rh: RequestHeader) =
-    UpscanInitiateRequest(
-      callbackUrl = callbackFromUpscan(nonce),
-      successRedirect = Some(successRedirectWhenUploadingMultipleFiles()),
-      errorRedirect = Some(errorRedirect()),
-      minimumFileSize = Some(1),
-      maximumFileSize = Some(maximumFileSizeBytes.toInt)
-    )
-
-  final def callbackFromUpscan(nonce: Nonce)(implicit journeyId: JourneyId) =
+  final def callbackFromUpscan(nonce: Nonce)(using journeyId: JourneyId) =
     appConfig.baseInternalCallbackUrl +
       internal.routes.CallbackFromUpscanController.callbackFromUpscan(journeyId, nonce.toString).url
 
-  final def successRedirect()(implicit journeyId: JourneyId, rh: RequestHeader): String =
-    appConfig.baseExternalCallbackUrl + (rh.cookies.get(COOKIE_JSENABLED) match {
-      case Some(_) => routes.FileVerificationController.asyncWaitingForFileVerification(journeyId)
-      case None    => routes.FileVerificationController.showWaitingForFileVerification(None)
-    })
+  final def successRedirect(): String =
+    appConfig.baseExternalCallbackUrl + routes.FilePostedController.markFileUploadAsPosted.url
 
-  final def successRedirectWhenUploadingMultipleFiles()(implicit journeyId: JourneyId): String =
-    appConfig.baseExternalCallbackUrl + routes.FilePostedController.asyncMarkFileUploadAsPosted(journeyId)
-
-  final def errorRedirect()(implicit journeyId: JourneyId, rh: RequestHeader): String =
-    appConfig.baseExternalCallbackUrl + (rh.cookies.get(COOKIE_JSENABLED) match {
-      case Some(_) => routes.FileRejectedController.asyncMarkFileUploadAsRejected(journeyId)
-      case None    => routes.FileRejectedController.markFileUploadAsRejected
-    })
+  final def errorRedirect(): String =
+    appConfig.baseExternalCallbackUrl + routes.FileRejectedController.markFileUploadAsRejected.url
 }

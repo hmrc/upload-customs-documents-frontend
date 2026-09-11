@@ -21,7 +21,7 @@ import play.api.libs.json.{Format, JsPath, Json, Writes}
 final case class FileUploadInitializationRequest(config: FileUploadSessionConfig, existingFiles: Seq[UploadedFile])
 
 object FileUploadInitializationRequest {
-  implicit val formats: Format[FileUploadInitializationRequest] = Format(
+  given formats: Format[FileUploadInitializationRequest] = Format(
     for {
       config        <- (JsPath \ "config").read[FileUploadSessionConfig]
       existingFiles <- (JsPath \ "existingFiles").readWithDefault[Seq[UploadedFile]](Seq.empty)
@@ -36,6 +36,6 @@ object FileUploadInitializationRequest {
         model.config,
         model.existingFiles.map(_.copy(downloadUrl = ""))
       )
-    )(formats)
+    )
   }
 }

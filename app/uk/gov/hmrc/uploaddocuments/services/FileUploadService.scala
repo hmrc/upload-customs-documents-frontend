@@ -39,68 +39,83 @@ class FileUploadService @Inject() (
   override val lockRepositoryProvider: MongoLockRepository,
   val appConfig: AppConfig,
   val actorSystem: ActorSystem
-)(implicit ec: ExecutionContext)
+)(using ec: ExecutionContext)
     extends LoggerUtil with UploadLog with JourneyLocking {
 
-  implicit lazy val scheduler: Scheduler = actorSystem.scheduler
+  given scheduler: Scheduler = actorSystem.scheduler
 
   def lockReleaseCheckInterval: Duration = appConfig.lockReleaseCheckInterval
   def lockTimeout: Duration              = appConfig.lockTimeout
 
-  def getFiles(implicit journeyId: JourneyId): Future[Option[FileUploads]] =
+  def getFiles(using journeyId: JourneyId): Future[Option[FileUploads]] =
     repo.get(journeyId.value)(DataKeys.uploadedFiles)
 
-  def putFiles(files: FileUploads)(implicit journeyId: JourneyId): Future[FileUploads] =
+  def putFiles(files: FileUploads)(using journeyId: JourneyId): Future[FileUploads] =
     repo.put(journeyId.value)(DataKeys.uploadedFiles, files).map(_ => files)
 
-  def wipeOut()(implicit journeyId: JourneyId): Future[Unit] =
+  def wipeOut()(using journeyId: JourneyId): Future[Unit] =
     repo.delete(journeyId.value)(DataKeys.uploadedFiles)
 
   def withFiles[T](
     journeyNotFoundResult: => Future[T]
-  )(f: FileUploads => Future[T])(implicit journeyId: JourneyId): Future[T] =
+  )(f: FileUploads => Future[T])(using journeyId: JourneyId): Future[T] =
     getFiles.flatMap(_.fold {
       Logger.error("[withFiles] No files exist for the supplied journeyID")
       Logger.debug(s"[withFiles] journeyId: '$journeyId'")
       journeyNotFoundResult
     }(f))
 
-  def removeFile(reference: String)(implicit
+  def removeFile(reference: String)(using
     hc: HeaderCarrier,
     journeyId: JourneyId,
     journeyContext: FileUploadContext
   ): Future[Option[(Response, FileUploads)]] =
-    withFiles[Option[(Response, FileUploads)]](Future.successful(None)) { files =>
-      for {
-        updatedFiles <- putFiles(files.copy(files = files.files.filterNot(_.reference == reference)))
-        result       <- fileUploadResultPushConnector.push(Request(journeyContext, updatedFiles))
-      } yield Some(result -> updatedFiles)
+    takeLock[Option[(Response, FileUploads)]](Future.successful(None)) {
+      withFiles[Option[(Response, FileUploads)]](Future.successful(None)) { files =>
+        for {
+          updatedFiles <- putFiles(files.copy(files = files.files.filterNot(_.reference == reference)))
+          result       <- fileUploadResultPushConnector.push(Request(journeyContext, updatedFiles))
+        } yield Some(result -> updatedFiles)
+      }
     }
 
-  def markFileAsPosted(key: String)(implicit journeyId: JourneyId): Future[Option[FileUploads]] =
+  def markFileAsPosted(key: String)(using journeyId: JourneyId): Future[Option[FileUploads]] =
     takeLock[Option[FileUploads]](Future.successful(None)) {
       withFiles[Option[FileUploads]](Future.successful(None)) { files =>
-        val updatedFileUploads =
-          FileUploads(files.files.map {
-            case FileUpload.Initiated(nonce, _, `key`, _, _) => FileUpload.Posted(nonce, Timestamp.now, key)
-            case file                                        => file
-          })
-
-        if (updatedFileUploads == files) {
+        val keyMatchesInitiated = files.files.exists {
+          case FileUpload.Initiated(_, _, `key`, _, _) => true
+          case _                                       => false
+        }
+        if (!keyMatchesInitiated) {
           Logger.info(s"[markFileAsPosted] No file with the supplied journeyID & key was updated and marked as posted")
           Logger.debug(
             s"[markFileAsPosted] No file with the supplied journeyID: '$journeyId' & key: '$key' was updated and marked as posted"
           )
           Future.successful(None)
         } else {
+          val updatedFileUploads = FileUploads(files.files.flatMap {
+            case FileUpload.Initiated(nonce, _, `key`, _, _) => Some(FileUpload.Posted(nonce, Timestamp.now, key))
+            case _: ErroredFileUpload                        => None
+            case file                                        => Some(file)
+          })
           putFiles(updatedFileUploads).map(_ => Some(updatedFileUploads))
         }
       }
     }
 
+  def putInitiatedFile(nonce: Nonce, upscanResponse: UpscanInitiateResponse)(using
+    journeyId: JourneyId
+  ): Future[Option[FileUploads]] =
+    takeLock[Option[FileUploads]](Future.successful(None)) {
+      withFiles[Option[FileUploads]](Future.successful(None)) { files =>
+        val updatedFiles = files.withoutInitiated + FileUpload(nonce, None)(upscanResponse)
+        putFiles(updatedFiles).map(Some(_))
+      }
+    }
+
   def markFileAsRejected(
     s3UploadError: S3UploadError
-  )(implicit journeyId: JourneyId, journeyContext: FileUploadContext): Future[Option[FileUploads]] =
+  )(using journeyId: JourneyId, journeyContext: FileUploadContext): Future[Option[FileUploads]] =
     takeLock[Option[FileUploads]](Future.successful(None)) {
       withFiles[Option[FileUploads]](Future.successful(None)) { files =>
         logFailure(journeyContext, s3UploadError)
@@ -125,7 +140,7 @@ class FileUploadService @Inject() (
       }
     }
 
-  def markFileWithUpscanResponseAndNotifyHost(notification: UpscanNotification, requestNonce: Nonce)(implicit
+  def markFileWithUpscanResponseAndNotifyHost(notification: UpscanNotification, requestNonce: Nonce)(using
     context: FileUploadContext,
     journeyId: JourneyId,
     hc: HeaderCarrier
@@ -165,7 +180,7 @@ class FileUploadService @Inject() (
     notification: UpscanNotification,
     requestNonce: Nonce,
     fileUploads: FileUploads
-  )(implicit context: FileUploadContext) =
+  )(using context: FileUploadContext) =
     FileUploads(fileUploads.files.map {
       case fileUpload if fileUpload.nonce == requestNonce =>
         notification match {

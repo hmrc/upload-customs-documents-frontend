@@ -16,9 +16,8 @@
 
 package uk.gov.hmrc.uploaddocuments.controllers
 
-import play.api.mvc.{Action, AnyContent, Request, Result}
+import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.uploaddocuments.forms.Forms
-import uk.gov.hmrc.uploaddocuments.models.JourneyId
 import uk.gov.hmrc.uploaddocuments.services.{FileUploadService, JourneyContextService}
 import uk.gov.hmrc.uploaddocuments.support.UploadLog
 
@@ -30,7 +29,7 @@ class FileRejectedController @Inject() (
   components: BaseControllerComponents,
   override val fileUploadService: FileUploadService,
   override val journeyContextService: JourneyContextService
-)(implicit ec: ExecutionContext)
+)(using ExecutionContext)
     extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper
     with UploadLog {
 
@@ -48,43 +47,20 @@ class FileRejectedController @Inject() (
                 Future.successful(InternalServerError)
               },
               s3UploadError =>
-                fileUploadService.markFileAsRejected(s3UploadError).map { _ =>
-                  Redirect(routes.ChooseSingleFileController.showChooseFile(None))
-                }
+                if (s3UploadError.isEmptyOrMissingFile)
+                  Future.successful(
+                    Redirect(
+                      routes.ChooseMultipleFilesController.showChooseMultipleFiles.url,
+                      Map("error" -> Seq("fileRequired"))
+                    )
+                  )
+                else
+                  fileUploadService.markFileAsRejected(s3UploadError).map { _ =>
+                    Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles)
+                  }
             )
         }
       }
     }
   }
-
-  // POST /file-rejected
-  final val markFileUploadAsRejectedAsync: Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        rejectedAsyncLogicWithStatus(Created)
-      }
-    }
-  }
-
-  // GET /journey/:journeyId/file-rejected
-  final def asyncMarkFileUploadAsRejected(implicit journeyId: JourneyId): Action[AnyContent] = Action.async {
-    implicit request =>
-      rejectedAsyncLogicWithStatus(NoContent)
-  }
-
-  private def rejectedAsyncLogicWithStatus(
-    status: => Result
-  )(implicit request: Request[AnyContent], journeyId: JourneyId): Future[Result] =
-    withJourneyContext { implicit journeyContext =>
-      Forms.UpscanUploadErrorForm
-        .bindFromRequest()
-        .fold(
-          _ => {
-            Logger.error("[rejectedAsyncLogicWithStatus] Query Parameters from Upscan could not be bound to form")
-            Logger.debug(s"[rejectedAsyncLogicWithStatus] Query Params Received: ${request.queryString}")
-            Future.successful(BadRequest)
-          },
-          s3UploadError => fileUploadService.markFileAsRejected(s3UploadError).map(_ => status)
-        )
-    }
 }

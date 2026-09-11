@@ -29,7 +29,7 @@ import org.mongodb.scala.SingleObservableFuture
 
 class JourneyContextServiceISpec extends AppISpec with LogCapturing with BeforeAndAfterEach {
 
-  implicit lazy val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  given ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   lazy val repo                      = app.injector.instanceOf[JourneyCacheRepository]
   lazy val testjourneyContextService = app.injector.instanceOf[JourneyContextService]
@@ -48,7 +48,7 @@ class JourneyContextServiceISpec extends AppISpec with LogCapturing with BeforeA
 
         await(repo.collection.countDocuments().toFuture()) shouldBe 0
 
-        await(testjourneyContextService.putJourneyContext(fileUploadContext)(journeyId))
+        await(testjourneyContextService.putJourneyContext(fileUploadContext)(using journeyId))
 
         await(repo.collection.countDocuments().toFuture()) shouldBe 1
         await(repo.get(journeyId.value)(DataKeys.journeyContext)) shouldBe Some(fileUploadContext)
@@ -58,12 +58,12 @@ class JourneyContextServiceISpec extends AppISpec with LogCapturing with BeforeA
 
         await(repo.collection.countDocuments().toFuture()) shouldBe 0
 
-        await(testjourneyContextService.putJourneyContext(fileUploadContext)(journeyId))
+        await(testjourneyContextService.putJourneyContext(fileUploadContext)(using journeyId))
         await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
         val updatedRecord = fileUploadContext.copy(config = fileUploadContext.config.copy(continueUrl = "foo"))
 
-        await(testjourneyContextService.putJourneyContext(updatedRecord)(journeyId))
+        await(testjourneyContextService.putJourneyContext(updatedRecord)(using journeyId))
 
         await(repo.collection.countDocuments().toFuture()) shouldBe 1
         await(repo.get(journeyId.value)(DataKeys.journeyContext)) shouldBe Some(updatedRecord)
@@ -76,27 +76,27 @@ class JourneyContextServiceISpec extends AppISpec with LogCapturing with BeforeA
 
         await(repo.collection.countDocuments().toFuture()) shouldBe 0
 
-        await(testjourneyContextService.getJourneyContext()(journeyId)) shouldBe None
+        await(testjourneyContextService.getJourneyContext()(using journeyId)) shouldBe None
       }
 
       "return FileUploadContext when journey exist" in {
 
         await(repo.collection.countDocuments().toFuture()) shouldBe 0
 
-        await(testjourneyContextService.putJourneyContext(fileUploadContext)(journeyId))
+        await(testjourneyContextService.putJourneyContext(fileUploadContext)(using journeyId))
         await(repo.collection.countDocuments().toFuture()) shouldBe 1
 
-        await(testjourneyContextService.getJourneyContext()(journeyId)) shouldBe Some(fileUploadContext)
+        await(testjourneyContextService.getJourneyContext()(using journeyId)) shouldBe Some(fileUploadContext)
       }
     }
 
     "calling .withJourneyContext()" should {
       "provide journey context if exists" in {
-        await(testjourneyContextService.putJourneyContext(fileUploadContext)(journeyId))
+        await(testjourneyContextService.putJourneyContext(fileUploadContext)(using journeyId))
         await(
           testjourneyContextService.withJourneyContext(Future.successful(Results.NotImplemented))(_ =>
             Future.successful(Results.NonAuthoritativeInformation)
-          )(_ => Future.successful(Results.Ok))(journeyId)
+          )(_ => Future.successful(Results.Ok))(using journeyId)
         ) shouldBe Results.Ok
       }
 
@@ -104,16 +104,16 @@ class JourneyContextServiceISpec extends AppISpec with LogCapturing with BeforeA
         await(
           testjourneyContextService.withJourneyContext(Future.successful(Results.NotImplemented))(_ =>
             Future.successful(Results.NonAuthoritativeInformation)
-          )(_ => Future.successful(Results.Ok))(journeyId)
+          )(_ => Future.successful(Results.Ok))(using journeyId)
         ) shouldBe Results.NotImplemented
       }
 
       "return journeyNotActiveResult if journey context not active anymore" in {
-        await(testjourneyContextService.putJourneyContext(fileUploadContext.deactivate())(journeyId))
+        await(testjourneyContextService.putJourneyContext(fileUploadContext.deactivate())(using journeyId))
         await(
           testjourneyContextService.withJourneyContext(Future.successful(Results.NotImplemented))(_ =>
             Future.successful(Results.NonAuthoritativeInformation)
-          )(_ => Future.successful(Results.Ok))(journeyId)
+          )(_ => Future.successful(Results.Ok))(using journeyId)
         ) shouldBe Results.NonAuthoritativeInformation
       }
     }

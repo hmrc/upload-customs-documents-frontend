@@ -40,6 +40,7 @@ final case class CustomizedServiceContent(
   fileUploadedProgressBarLabel: Option[String] = None,
   chooseFirstFileLabel: Option[String] = None,
   chooseNextFileLabel: Option[String] = None,
+  uploadAnotherTypeText: Option[String] = None,
   addAnotherDocumentButtonText: Option[String] = None,
   private val yesNoQuestionText: Option[String] = None,
   yesNoQuestionRequiredError: Option[String] = None,
@@ -64,7 +65,6 @@ object CustomizedServiceContent {
     override val values: Set[PhaseBanner] = Set(alpha, beta)
   }
 
-  implicit val format: Format[CustomizedServiceContent] =
-    Json.format[CustomizedServiceContent]
+  given format: Format[CustomizedServiceContent] = Json.format[CustomizedServiceContent]
 
 }

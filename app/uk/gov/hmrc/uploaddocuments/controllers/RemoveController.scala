@@ -27,7 +27,7 @@ class RemoveController @Inject() (
   components: BaseControllerComponents,
   override val journeyContextService: JourneyContextService,
   fileUploadService: FileUploadService
-)(implicit ec: ExecutionContext)
+)(using ec: ExecutionContext)
     extends BaseController(components) with JourneyContextControllerHelper {
 
   // GET /uploaded/:reference/remove
@@ -39,24 +39,9 @@ class RemoveController @Inject() (
             case Some((Left(_), _)) | None =>
               Logger.error(s"[removeFileUploadByReference] Failed to remove file with reference: '$reference'")
               InternalServerError
-            case Some((Right(_), updatedFilesWithFileRemoved)) =>
-              if (updatedFilesWithFileRemoved.isEmpty) {
-                Redirect(routes.ChooseSingleFileController.showChooseFile(None))
-              } else {
-                Redirect(routes.SummaryController.showSummary)
-              }
+            case Some((Right(_), _)) =>
+              Redirect(routes.ChooseMultipleFilesController.showChooseMultipleFiles)
           }
-        }
-      }
-    }
-  }
-
-  // POST /uploaded/:reference/remove
-  final def removeFileUploadByReferenceAsync(reference: String): Action[AnyContent] = Action.async { implicit request =>
-    whenInSession { implicit journeyId =>
-      whenAuthenticated {
-        withJourneyContext { implicit journeyContext =>
-          fileUploadService.removeFile(reference).map(_ => NoContent)
         }
       }
     }

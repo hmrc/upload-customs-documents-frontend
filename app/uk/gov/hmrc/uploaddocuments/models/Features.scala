@@ -27,5 +27,5 @@ case class Features(
 )
 
 object Features {
-  implicit val format: Format[Features] = Json.using[Json.WithDefaultValues].format[Features]
+  given format: Format[Features] = Json.using[Json.WithDefaultValues].format[Features]
 }

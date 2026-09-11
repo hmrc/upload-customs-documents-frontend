@@ -24,7 +24,7 @@ case class JourneyId(value: String) extends AnyVal {
 }
 
 object JourneyId {
-  implicit lazy val pathBindable: PathBindable[JourneyId] =
+  given pathBindable: PathBindable[JourneyId] =
     new PathBindable[JourneyId] {
       override def bind(key: String, value: String): Either[String, models.JourneyId] =
         if (value.nonEmpty) Right(JourneyId(value)) else Left("journeyId is empty")

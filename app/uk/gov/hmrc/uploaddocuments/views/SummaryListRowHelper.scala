@@ -34,7 +34,7 @@ trait SummaryListRowHelper {
     url: Option[String] = None,
     line2: Option[String] = None,
     escape: Boolean = true
-  )(implicit messages: Messages): SummaryListRow =
+  )(using messages: Messages): SummaryListRow =
     SummaryListRow(
       key = Key(
         content = Text(messages(label)),

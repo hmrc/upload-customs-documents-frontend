@@ -71,7 +71,7 @@ object FileUploadSessionConfig {
   final val defaultMaximumFileSizeBytes          = 10 * 1024 * 1024
   final val defaultAllowedContentTypes           = "image/jpeg,image/png,application/pdf,text/plain"
 
-  implicit val format: Format[FileUploadSessionConfig] =
+  given format: Format[FileUploadSessionConfig] =
     Format(
       ((JsPath \ "nonce").read[Nonce]
         and (JsPath \ "continueUrl").read[String]

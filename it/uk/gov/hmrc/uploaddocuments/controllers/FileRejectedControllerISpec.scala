@@ -1,21 +1,33 @@
+/*
+ * Copyright 2026 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.http.Status
-import play.api.libs.json.Json
 import uk.gov.hmrc.uploaddocuments.models.*
-import uk.gov.hmrc.uploaddocuments.stubs.UpscanInitiateStubs
-import play.api.libs.ws.DefaultBodyReadables.readableAsString
-import play.api.libs.ws.writeableOf_JsValue
 
 import java.time.ZonedDateTime
 
-class FileRejectedControllerISpec extends ControllerISpecBase with UpscanInitiateStubs {
+class FileRejectedControllerISpec extends ControllerISpecBase {
 
   "FileRejectedController" when {
 
     "GET /file-rejected" should {
 
-      "show upload document again with new Upscan Initiate request (Rendering a Bad Request with errors)" in {
+      "mark the file as rejected and redirect to the choose-files page" in {
 
         setContext()
         setFileUploads(
@@ -38,19 +50,15 @@ class FileRejectedControllerISpec extends ControllerISpecBase with UpscanInitiat
         )
 
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-        val callbackUrl =
-          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
-        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
         val result = await(
           request(
             "/file-rejected?key=2b72fe99-8adf-4edb-865e-622ae710f77c&errorCode=EntityTooLarge&errorMessage=Entity+Too+Large"
-          ).get()
+          ).withFollowRedirects(false).get()
         )
 
-        result.status shouldBe Status.BAD_REQUEST
-        result.body should include(htmlEscapedPageTitle("view.upload-file.next.title"))
-        result.body should include(htmlEscapedMessage("view.upload-file.next.heading"))
+        result.status shouldBe Status.SEE_OTHER
+        result.header("Location") shouldBe Some(routes.ChooseMultipleFilesController.showChooseMultipleFiles.url)
 
         getFileUploads() shouldBe Some(
           FileUploads(files =
@@ -66,29 +74,78 @@ class FileRejectedControllerISpec extends ControllerISpecBase with UpscanInitiat
                 "application/pdf",
                 4567890
               ),
-              FileUpload.Initiated(
+              FileUpload.Rejected(
                 Nonce.Any,
                 Timestamp.Any,
-                "11370e18-6e24-453e-b45a-76d3e32ea33d",
-                Some(
-                  UploadRequest(
-                    href = "https://bucketName.s3.eu-west-2.amazonaws.com",
-                    fields = Map(
-                      "Content-Type"            -> "application/xml",
-                      "acl"                     -> "private",
-                      "key"                     -> "xxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
-                      "policy"                  -> "xxxxxxxx==",
-                      "x-amz-algorithm"         -> "AWS4-HMAC-SHA256",
-                      "x-amz-credential"        -> "ASIAxxxxxxxxx/20180202/eu-west-2/s3/aws4_request",
-                      "x-amz-date"              -> "yyyyMMddThhmmssZ",
-                      "x-amz-meta-callback-url" -> callbackUrl,
-                      "x-amz-signature"         -> "xxxx",
-                      "success_action_redirect" -> "https://myservice.com/nextPage",
-                      "error_action_redirect"   -> "https://myservice.com/errorPage"
-                    )
-                  )
-                )
+                "2b72fe99-8adf-4edb-865e-622ae710f77c",
+                S3UploadError("2b72fe99-8adf-4edb-865e-622ae710f77c", "EntityTooLarge", "Entity Too Large")
               )
+            )
+          )
+        )
+      }
+
+      "not mark a file as rejected but redirect to choose-files with the file-required error when no file was submitted" in {
+
+        setContext()
+        setFileUploads(
+          FileUploads(files =
+            Seq(
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
+            )
+          )
+        )
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result = await(
+          request(
+            "/file-rejected?key=2b72fe99-8adf-4edb-865e-622ae710f77c&errorCode=InvalidArgument&errorMessage=POST+requires+exactly+one+file+upload+per+request."
+          ).withFollowRedirects(false).get()
+        )
+
+        result.status shouldBe Status.SEE_OTHER
+        result.header("Location") shouldBe Some(
+          routes.ChooseMultipleFilesController.showChooseMultipleFiles.url + "?error=fileRequired"
+        )
+
+        getFileUploads() shouldBe Some(
+          FileUploads(files =
+            Seq(
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
+            )
+          )
+        )
+      }
+
+      "not mark a file as rejected but redirect to choose-files with the file-required error when the file is empty" in {
+
+        setContext()
+        setFileUploads(
+          FileUploads(files =
+            Seq(
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
+            )
+          )
+        )
+
+        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+        val result = await(
+          request(
+            "/file-rejected?key=2b72fe99-8adf-4edb-865e-622ae710f77c&errorCode=EntityTooSmall&errorMessage=Your+proposed+upload+is+smaller+than+the+minimum+allowed+size"
+          ).withFollowRedirects(false).get()
+        )
+
+        result.status shouldBe Status.SEE_OTHER
+        result.header("Location") shouldBe Some(
+          routes.ChooseMultipleFilesController.showChooseMultipleFiles.url + "?error=fileRequired"
+        )
+
+        getFileUploads() shouldBe Some(
+          FileUploads(files =
+            Seq(
+              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
             )
           )
         )
@@ -117,134 +174,15 @@ class FileRejectedControllerISpec extends ControllerISpecBase with UpscanInitiat
         )
 
         givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-        val callbackUrl =
-          appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
-        givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
 
         val result = await(
           request(
             "/file-rejected?zoo=2b72fe99-8adf-4edb-865e-622ae710f77c&foo=EntityTooLarge&bar=Entity+Too+Large"
-          ).get()
+          ).withFollowRedirects(false).get()
         )
 
         result.status shouldBe Status.INTERNAL_SERVER_ERROR
 
-      }
-    }
-
-    "POST /file-rejected" should {
-      "mark file upload as rejected" in {
-
-        setContext()
-        setFileUploads(
-          FileUploads(files =
-            Seq(
-              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
-              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-            )
-          )
-        )
-
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-        val result = await(
-          request("/file-rejected").post(
-            Json.obj(
-              fields = "key" -> "2b72fe99-8adf-4edb-865e-622ae710f77c",
-              "errorCode"    -> "EntityTooLarge",
-              "errorMessage" -> "Entity Too Large"
-            )
-          )
-        )
-
-        result.status shouldBe 201
-
-        getFileUploads() shouldBe Some(
-          FileUploads(files =
-            Seq(
-              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
-              FileUpload.Rejected(
-                Nonce.Any,
-                Timestamp.Any,
-                "2b72fe99-8adf-4edb-865e-622ae710f77c",
-                S3UploadError("2b72fe99-8adf-4edb-865e-622ae710f77c", "EntityTooLarge", "Entity Too Large")
-              )
-            )
-          )
-        )
-      }
-
-      "return 500 if parameters are invalid" in {
-
-        setContext()
-        setFileUploads(
-          FileUploads(files =
-            Seq(
-              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
-              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-            )
-          )
-        )
-
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-        val result = await(
-          request("/file-rejected").post(
-            Json.obj(
-              fields = "zoo" -> "2b72fe99-8adf-4edb-865e-622ae710f77c",
-              "foo" -> "EntityTooLarge",
-              "bar" -> "Entity Too Large"
-            )
-          )
-        )
-
-        result.status shouldBe 400
-
-      }
-    }
-
-    "GET /journey/:journeyId/file-rejected" should {
-      "set current file upload status as rejected and return 204 NoContent" in {
-
-        setContext()
-        setFileUploads(
-          FileUploads(files =
-            Seq(
-              FileUpload.Initiated(Nonce.Any, Timestamp.Any, "11370e18-6e24-453e-b45a-76d3e32ea33d"),
-              FileUpload.Posted(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-            )
-          )
-        )
-
-        givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
-
-        val result1 =
-          await(
-            requestWithoutSessionId(
-              s"/journey/$getJourneyId/file-rejected?key=11370e18-6e24-453e-b45a-76d3e32ea33d&errorCode=ABC123&errorMessage=ABC+123"
-            ).get()
-          )
-
-        result1.status shouldBe 204
-        result1.body.isEmpty shouldBe true
-
-        getFileUploads() shouldBe Some(
-          FileUploads(files =
-            Seq(
-              FileUpload.Rejected(
-                Nonce.Any,
-                Timestamp.Any,
-                "11370e18-6e24-453e-b45a-76d3e32ea33d",
-                S3UploadError(
-                  key = "11370e18-6e24-453e-b45a-76d3e32ea33d",
-                  errorCode = "ABC123",
-                  errorMessage = "ABC 123"
-                )
-              ),
-              FileUpload.Posted(Nonce.Any, Timestamp.Any, "2b72fe99-8adf-4edb-865e-622ae710f77c")
-            )
-          )
-        )
       }
     }
   }

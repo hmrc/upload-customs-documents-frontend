@@ -31,7 +31,7 @@ trait JourneyLocking extends LoggerUtil {
   def lockReleaseCheckInterval: Duration
   def lockTimeout: Duration
 
-  def lockKeeper(implicit journeyId: JourneyId) = LockService(
+  def lockKeeper(using journeyId: JourneyId) = LockService(
     lockRepository = lockRepositoryProvider,
     lockId = journeyId.value,
     ttl = lockTimeout
@@ -39,7 +39,7 @@ trait JourneyLocking extends LoggerUtil {
 
   def takeLock[T](
     timeOutResult: => Future[T]
-  )(f: => Future[T])(implicit ec: ExecutionContext, scheduler: Scheduler, journeyId: JourneyId): Future[T] = {
+  )(f: => Future[T])(using ec: ExecutionContext, scheduler: Scheduler, journeyId: JourneyId): Future[T] = {
 
     val timeOut       = System.nanoTime() + lockTimeout.toNanos
     val checkInterval = lockReleaseCheckInterval

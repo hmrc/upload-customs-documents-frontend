@@ -24,7 +24,7 @@ import uk.gov.hmrc.uploaddocuments.models.fileUploadResultPush.Error
 import uk.gov.hmrc.uploaddocuments.models.{HostService, JourneyId}
 import uk.gov.hmrc.uploaddocuments.utils.LoggerUtil
 
-class FileUploadResultPushConnectorReads(hostService: HostService)(implicit journeyId: JourneyId)
+class FileUploadResultPushConnectorReads(hostService: HostService)(using journeyId: JourneyId)
     extends HttpReads[FileUploadResultPushConnector.Response] with LoggerUtil {
 
   def read(method: String, url: String, response: HttpResponse): FileUploadResultPushConnector.Response = {

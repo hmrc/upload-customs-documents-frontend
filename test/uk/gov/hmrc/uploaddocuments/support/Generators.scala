@@ -23,9 +23,8 @@ import java.time.ZonedDateTime
 
 object Generators {
 
-  final implicit class OptionExt[A](val value: Option[A]) extends AnyVal {
-    def existsIn(set: Set[A]): Boolean =
-      value.exists(set.contains)
+  extension [A](value: Option[A]) {
+    def existsIn(set: Set[A]): Boolean = value.exists(set.contains)
   }
 
   final val upperCaseChar = Gen.oneOf("ABCDEFGHIJKLMNOPRSUWXYZ".toIndexedSeq)

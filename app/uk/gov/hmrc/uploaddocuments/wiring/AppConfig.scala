@@ -49,10 +49,10 @@ trait AppConfig {
   val contactHost: String
   val contactFormServiceIdentifier: String
 
-  def requestUri(implicit request: RequestHeader): String =
+  def requestUri(using request: RequestHeader): String =
     URLEncoder.encode(baseExternalCallbackUrl + request.uri, "UTF-8")
 
-  def reportProblemUrl(implicit request: RequestHeader): String =
+  def reportProblemUrl(using RequestHeader): String =
     s"$contactHost/contact/problem_reports_nonjs?newTab=true&service=$contactFormServiceIdentifier&backUrl=$requestUri"
 
   val signOutUrl: String
@@ -60,8 +60,6 @@ trait AppConfig {
   val countdown: Int
   val fileUploadResultPushRetryIntervals: Seq[FiniteDuration]
   val upscanInitiateRetryIntervals: Seq[FiniteDuration]
-  val upscanInitialWaitTime: Duration
-  val upscanWaitInterval: Duration
   def lockReleaseCheckInterval: Duration
   def lockTimeout: Duration
 }
@@ -86,8 +84,6 @@ class AppConfigImpl @Inject() (config: ServicesConfig, configuration: Configurat
   override val upscanInitiateRetryIntervals: Seq[FiniteDuration] =
     Retries.getConfIntervals("upscan.retryIntervals", configuration)
 
-  override val upscanInitialWaitTime: Duration = Duration.apply(config.getString("upscan.initialCallbackWaitTime"))
-  override val upscanWaitInterval: Duration    = Duration.apply(config.getString("upscan.waitInterval"))
   override val lockReleaseCheckInterval: Duration =
     Duration.apply(config.getString("mongodb.lock.releaseCheckInterval"))
   override val lockTimeout: Duration = Duration.apply(config.getString("mongodb.lock.timeout"))
