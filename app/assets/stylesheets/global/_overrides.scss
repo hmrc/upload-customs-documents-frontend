@@ -1,5 +1,9 @@
 // Overrides for GOV UK frontend CSS rules
 
+.hidden {
+  display: none !important;
+}
+
 // Show red border around a focused field with error
 .govuk-input--error {
   border: $govuk-focus-width solid $govuk-error-colour !important;
