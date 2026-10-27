@@ -32,7 +32,7 @@ trait Retries extends LoggerUtil {
 
   def retry[A](intervals: FiniteDuration*)(shouldRetry: Try[A] => Boolean, retryReason: A => String)(
     block: => Future[A]
-  )(implicit ec: ExecutionContext): Future[A] = {
+  )(using ec: ExecutionContext): Future[A] = {
     def loop(remainingIntervals: Seq[FiniteDuration])(mdcData: Map[String, String])(block: => Future[A]): Future[A] =
       // scheduling will loose MDC data. Here we explicitly ensure it is available on block.
       Mdc

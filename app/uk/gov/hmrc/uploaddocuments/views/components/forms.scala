@@ -37,10 +37,7 @@ class forms @Inject() (
   val inputCharacterCount: uk.gov.hmrc.uploaddocuments.views.html.components.InputCharacterCount
 ) {
 
-  def formWithCSRF(action: play.api.mvc.Call, args: (Symbol, String)*)(body: => Html)(implicit
-    request: Request[_],
-    messages: Messages
-  ) =
+  def formWithCSRF(action: play.api.mvc.Call, args: (Symbol, String)*)(body: => Html)(using Request[_], Messages) =
     _formWithCSRF.apply(
       action,
       (Seq(

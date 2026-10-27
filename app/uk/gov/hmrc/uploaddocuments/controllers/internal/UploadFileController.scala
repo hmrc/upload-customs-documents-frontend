@@ -22,6 +22,7 @@ import play.api.mvc.{Action, AnyContent}
 import uk.gov.hmrc.objectstore.client.play.Implicits.*
 import uk.gov.hmrc.objectstore.client.play.PlayObjectStoreClient
 import uk.gov.hmrc.objectstore.client.{Path, RetentionPeriod}
+import uk.gov.hmrc.http.HeaderCarrier
 import uk.gov.hmrc.play.http.HeaderCarrierConverter
 import uk.gov.hmrc.uploaddocuments.controllers.{BaseController, BaseControllerComponents, JourneyContextControllerHelper}
 import uk.gov.hmrc.uploaddocuments.models.{FileToUpload, UploadedFile}
@@ -39,7 +40,7 @@ class UploadFileController @Inject() (
   val fileUploadService: FileUploadService,
   override val journeyContextService: JourneyContextService,
   objectStoreClient: PlayObjectStoreClient
-)(implicit ec: ExecutionContext)
+)(using ec: ExecutionContext)
     extends BaseController(components) with JourneyContextControllerHelper {
 
   val log: Logger = play.api.Logger(this.getClass())
@@ -47,7 +48,8 @@ class UploadFileController @Inject() (
   // POST /internal/upload
   final val uploadFile: Action[AnyContent] = Action
     .async { implicit request =>
-      implicit val hc = HeaderCarrierConverter.fromRequest(request) // required to process Session-ID from the cookie
+      given HeaderCarrier =
+        HeaderCarrierConverter.fromRequest(request) // required to process Session-ID from the cookie
       whenInSession { implicit journeyId =>
         whenAuthenticatedInBackchannel {
           withJourneyContextWithErrorHandler {

@@ -30,14 +30,14 @@ class CallbackFromUpscanController @Inject() (
   components: BaseControllerComponents,
   override val journeyContextService: JourneyContextService,
   override val fileUploadService: FileUploadService
-)(implicit ec: ExecutionContext)
+)(using ec: ExecutionContext)
     extends BaseController(components) with FileUploadsControllerHelper with JourneyContextControllerHelper {
 
   // POST /callback-from-upscan/journey/:journeyId/:nonce
   final def callbackFromUpscan(journeyId: JourneyId, nonce: String): Action[JsValue] =
     Action.async(parse.tolerantJson) { implicit request =>
       withJsonBody[UpscanNotification] { payload =>
-        implicit val journey: JourneyId = journeyId
+        given JourneyId = journeyId
         withJourneyContextWithErrorHandler {
           logErrorResponse(payload)
           Future.successful(NoContent)

@@ -41,5 +41,5 @@ case class UpscanInitiateResponse(
 )
 
 object UpscanInitiateResponse {
-  implicit val formats: Format[UpscanInitiateResponse] = Json.format[UpscanInitiateResponse]
+  given formats: Format[UpscanInitiateResponse] = Json.format[UpscanInitiateResponse]
 }

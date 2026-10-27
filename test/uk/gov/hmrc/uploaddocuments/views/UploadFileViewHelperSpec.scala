@@ -22,7 +22,7 @@ import uk.gov.hmrc.uploaddocuments.support.UnitSpec
 
 class UploadFileViewHelperSpec extends UnitSpec {
 
-  implicit val messages: MessagesImpl = MessagesImpl(
+  given messages: MessagesImpl = MessagesImpl(
     Lang("en"),
     new DefaultMessagesApi(
       messages = Map(

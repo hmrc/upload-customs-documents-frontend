@@ -32,7 +32,7 @@ class PreviewController @Inject() (
   components: BaseControllerComponents,
   val actorSystem: ActorSystem,
   override val fileUploadService: FileUploadService
-)(implicit ec: ExecutionContext)
+)(using ec: ExecutionContext)
     extends BaseController(components) with FileStream with FileUploadsControllerHelper {
 
   // GET /preview/:reference/:fileName

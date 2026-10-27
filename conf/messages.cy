@@ -113,59 +113,24 @@ summary.file-names=Enwau’r ffeiliau
 view.upload-multiple-files.heading=Uwchlwytho’ch dogfennau
 view.upload-multiple-files.title=Uwchlwytho’ch dogfennau
 view.upload-multiple-files.uploadMoreFilesThanLimit=Gallwch uwchlwytho hyd at {0} ffeil. Er mwyn uwchlwytho rhagor, mae’n rhaid i chi gyflwyno’r ffeiliau hyn yn gyntaf, ac wedyn defnyddio’r gwasanaeth eto.
-view.upload-multiple-files.document=Dogfen
 view.upload-multiple-files.remove=Tynnu
-view.upload-multiple-files.removing=Tynnu...
-view.upload-multiple-files.pending=Ar y gweill
-view.upload-multiple-files.preview=Rhagolwg
-view.upload-multiple-files.uploaded=Barod i gyflwyno
-view.upload-multiple-files.documentUploaded=Mae dogfen {0} wedi’i huwchlwytho
-view.upload-multiple-files.documentDeleted=Mae dogfen {0} wedi’i dileu
+view.upload-multiple-files.uploaded=Wedi'i uwchlwytho
 view.upload-multiple-files.chooseFirstFileLabel=Dewiswch y ffeil gyntaf i’w huwchlwytho
 view.upload-multiple-files.chooseNextFileLabel=Dewiswch y ffeil i’w huwchlwytho
-view.upload-multiple-files.stillTransferring=Nid yw’r ffeil dan sylw wedi’i huwchlwytho’n llawn
-view.upload-multiple-files.uploadOnSelect=Dewiswch eich ffeiliau i ddechrau eu huwchlwytho
-view.upload-multiple-files.line1=Gallwch uwchlwytho hyd at {0} dogfen.
-view.upload-multiple-files.line2=Mae’n rhaid i bob dogfen fod yn llai na 6MB.
-view.upload-multiple-files.addAnother=Ychwanegu dogfen arall
-view.upload-file.first.title=Uwchlwythwch eich dogfen gyntaf
-view.upload-file.first.heading=Uwchlwythwch eich dogfen gyntaf
+view.upload-multiple-files.line1=Gall pob ffeil fod yn {0} neu lai.
+view.upload-multiple-files.line2=Mathau derbyniol o ffeiliau: {0}.
+view.upload-multiple-files.uploading=Yn uwchlwytho
+view.upload-multiple-files.uploadAnotherType=Uwchlwytho math arall o ddogfen
+view.upload-multiple-files.uploadingFileName=Wrthi’n uwchlwytho’r ffeil
+view.upload-file.chooseFilesButton=Dewis ffeil
+view.upload-file.dropInstruction=neu ollwng ffeil
+view.upload-file.noFileChosen=Heb ddewis ffeil
 view.upload-file.first.fileLabel=Dewiswch y ffeil gyntaf i’w huwchlwytho
 view.upload-file.next.fileLabel=Dewiswch y ffeil i’w huwchlwytho
-view.upload-file.next.title=Uwchlwytho dogfen arall
-view.upload-file.next.heading=Uwchlwytho dogfen arall
-view.upload-file.waiting=Mae’ch dogfen wrthi’n cael ei huwchlwytho. Cewch eich ailgyfeirio ar ôl i’r ffeil gael ei phrosesu.
-view.upload-file.line1=Gallwch uwchlwytho hyd at {0} dogfen ar wahân.
-view.upload-file.line2=Mae’n rhaid i bob dogfen fod yn llai na 6MB.
-view.upload-file.help.linkText=Mathau o ffeiliau y gallwch eu huwchlwytho
-view.upload-file.help.line1=Caniateir y mathau hyn o ffeiliau:
-view.upload-file.help.fileFormat1=delwedd (.jpg, .jpeg, .png neu .tiff)
-view.upload-file.help.fileFormat2=PDF (.pdf)
-view.upload-file.help.fileFormat3=e-bost (.txt neu .msg)
-view.upload-file.help.fileFormat4=Microsoft (Word, Excel neu PowerPoint)
-view.upload-file.help.fileFormat5=Fformat Dogfen Agored (ODF)
-view.upload-file.help.line4=Ni allwch uwchlwytho ffeiliau zip na dogfennau sydd wedi’u diogelu gan gyfrinair.
-
-# View Summaries
-# ----------------------------------------------------------
-view.summary.empty.title=Nid ydych wedi uwchlwytho unrhyw ddogfennau
-view.summary.empty.heading=Nid ydych wedi uwchlwytho unrhyw ddogfennau
-view.summary.singular.title=Rydych wedi uwchlwytho 1 o ddogfennau
-view.summary.singular.heading=Rydych wedi uwchlwytho 1 o ddogfennau
-view.summary.plural.title=Rydych wedi uwchlwytho {0} o ddogfennau
-view.summary.plural.heading=Rydych wedi uwchlwytho {0} o ddogfennau
-view.summary.uploadFile.heading=A hoffech uwchlwytho dogfen?
-view.summary.uploadAnotherFile.heading=A hoffech uwchlwytho dogfen arall?
-view.summary.list.singular.heading=Dogfennau rydych wedi’u huwchlwytho
-view.summary.list.heading=Dogfennau rydych wedi’u huwchlwytho
-view.summary.maximum=Gallwch uwchlwytho hyd at {0} ffeil.
 
 # Forms
 # ----------------------------------------------------------
 form.upload-file.submit=Uwchlwytho
-form.file-uploaded.choice.yes= Iawn 
-form.file-uploaded.choice.no= Na 
-form.file-uploaded.choice.noConditional=Drwy barhau, byddwch nawr yn cyflwyno’r holl ddogfennau rydych wedi’u huwchlwytho
 form.file-uploaded.continue=Yn eich blaen
 form.upload-multiple-files.continue=Yn eich blaen
 

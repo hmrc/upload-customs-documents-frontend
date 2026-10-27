@@ -40,7 +40,7 @@ class UploadHttpClientV2 @Inject() (
   override protected def mkRequestBuilder(
     url: URL,
     method: String
-  )(implicit
+  )(using
     hc: HeaderCarrier
   ): RequestBuilderImpl =
     super

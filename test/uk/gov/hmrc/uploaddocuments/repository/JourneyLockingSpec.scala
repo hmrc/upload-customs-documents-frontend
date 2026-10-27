@@ -32,9 +32,9 @@ import java.time.Instant
 
 class JourneyLockingSpec extends UnitSpec with MockFactory with LogCapturing {
 
-  implicit val journeyId: JourneyId = JourneyId("foo")
-  implicit val scheduler: Scheduler = ActorSystem("JourneyLockingTestsActor").scheduler
-  implicit val ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
+  given journeyId: JourneyId = JourneyId("foo")
+  given scheduler: Scheduler = ActorSystem("JourneyLockingTestsActor").scheduler
+  given ec: ExecutionContext = scala.concurrent.ExecutionContext.Implicits.global
 
   class fixture {
     lazy val mockLockRepo = mock[LockRepository]

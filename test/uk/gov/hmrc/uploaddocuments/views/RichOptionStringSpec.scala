@@ -21,7 +21,7 @@ import org.scalatest.wordspec.AnyWordSpec
 
 class RichOptionStringSpec extends AnyWordSpec with Matchers {
 
-  import CommonUtilsHelper.RichOptionString
+  import CommonUtilsHelper.*
 
   "RichOptionString.mapNonEmpty" should {
     "map Some(nonEmpty) using the provided function" in {

@@ -28,7 +28,7 @@ trait FileUploadsControllerHelper {
   val fileUploadService: FileUploadService
   val govukStartUrl: String
 
-  def withFileUploads(body: FileUploads => Future[Result])(implicit journeyId: JourneyId): Future[Result] =
+  def withFileUploads(body: FileUploads => Future[Result])(using JourneyId): Future[Result] =
     fileUploadService.withFiles(Future.successful(Results.Redirect(govukStartUrl)))(body)
 
 }

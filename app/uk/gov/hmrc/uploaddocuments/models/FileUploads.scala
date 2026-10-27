@@ -33,6 +33,7 @@ case class FileUploads(files: Seq[FileUpload] = Seq.empty) {
   lazy val postedCount: Int    = files.count { case _: FileUpload.Posted => true; case _ => false }
 
   lazy val initiatedOrAcceptedCount: Int = acceptedCount + initiatedCount + postedCount
+  lazy val acceptedOrPostedCount: Int    = acceptedCount + postedCount
 
   lazy val toUploadedFiles: Seq[UploadedFile] =
     files.flatMap(UploadedFile(_))
@@ -42,6 +43,15 @@ case class FileUploads(files: Seq[FileUpload] = Seq.empty) {
   lazy val onlyAccepted: FileUploads =
     copy(files = files.filter { case _: FileUpload.Accepted => true; case _ => false })
 
+  lazy val withoutInitiated: FileUploads =
+    copy(files = files.filter {
+      case _: FileUpload.Initiated => false
+      case _                       => true
+    })
+
+  lazy val findInitiatedWithRequest: Option[FileUpload.Initiated] =
+    files.collectFirst { case i: FileUpload.Initiated if i.uploadRequest.isDefined => i }
+
   def hasFileWithDescription(description: String): Boolean =
     files.exists { case a: FileUpload.Accepted => a.safeDescription.contains(description); case _ => false }
 
@@ -50,7 +60,7 @@ case class FileUploads(files: Seq[FileUpload] = Seq.empty) {
 }
 
 object FileUploads {
-  implicit val formats: Format[FileUploads] = Json.format[FileUploads]
+  given formats: Format[FileUploads] = Json.format[FileUploads]
   def apply(initRequest: FileUploadInitializationRequest): FileUploads =
     FileUploads(initRequest.existingFiles.take(initRequest.config.maximumNumberOfFiles).map(FileUpload.apply))
 }

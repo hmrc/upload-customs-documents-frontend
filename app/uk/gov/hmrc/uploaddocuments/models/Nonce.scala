@@ -61,7 +61,7 @@ object Nonce {
       }
   }
 
-  implicit final val formats: Format[Nonce] =
+  given formats: Format[Nonce] =
     SimpleDecimalFormat[Nonce](s => Nonce(s.toIntExact), n => BigDecimal(n.value))
 
   final def intToByteArray(value: Int): Array[Byte] =

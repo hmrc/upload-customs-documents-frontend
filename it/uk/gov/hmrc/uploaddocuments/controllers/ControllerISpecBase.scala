@@ -1,3 +1,19 @@
+/*
+ * Copyright 2026 HM Revenue & Customs
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import play.api.libs.ws.{DefaultWSCookie, StandaloneWSRequest}
@@ -16,15 +32,15 @@ trait ControllerISpecBase extends ServerISpec {
   val journeyId = "sadasdjkasdhuqyhwa326176318346674e764764"
   val sessionId = SessionId(journeyId)
 
-  implicit val hc: HeaderCarrier = HeaderCarrier(sessionId = Some(sessionId))
-  def getJourneyId: String       = SHA256.compute(journeyId)
+  given hc: HeaderCarrier  = HeaderCarrier(sessionId = Some(sessionId))
+  def getJourneyId: String = SHA256.compute(journeyId)
 
   lazy val newJourneyRepo = app.injector.instanceOf[JourneyCacheRepository]
 
   import play.api.i18n.*
-  implicit val messages: Messages = MessagesImpl(Lang("en"), app.injector.instanceOf[MessagesApi])
+  given messages: Messages = MessagesImpl(Lang("en"), app.injector.instanceOf[MessagesApi])
 
-  def sessionCookie(implicit hc: HeaderCarrier) = sessionCookieBaker
+  def sessionCookie(using hc: HeaderCarrier) = sessionCookieBaker
     .encodeAsCookie(
       Session(
         Map(
@@ -40,7 +56,7 @@ trait ControllerISpecBase extends ServerISpec {
       play.api.http.HeaderNames.AUTHORIZATION -> "Bearer XYZ"
     )
 
-  final def request(path: String)(implicit hc: HeaderCarrier): StandaloneWSRequest =
+  final def request(path: String)(using hc: HeaderCarrier): StandaloneWSRequest =
     withHeaders {
       wsClient
         .url(s"$baseUrl$path")
@@ -53,14 +69,14 @@ trait ControllerISpecBase extends ServerISpec {
         )
     }
 
-  final def backchannelRequest(path: String)(implicit hc: HeaderCarrier): StandaloneWSRequest =
+  final def backchannelRequest(path: String)(using hc: HeaderCarrier): StandaloneWSRequest =
     withHeaders {
       wsClient
         .url(s"$backchannelBaseUrl$path")
         .withHttpHeaders(HeaderNames.xSessionId -> hc.sessionId.map(_.value).getOrElse(""))
     }
 
-  final def requestWithCookies(path: String, cookies: (String, String)*)(implicit
+  final def requestWithCookies(path: String, cookies: (String, String)*)(using
     hc: HeaderCarrier
   ): StandaloneWSRequest =
     withHeaders {

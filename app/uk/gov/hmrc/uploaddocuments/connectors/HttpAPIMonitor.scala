@@ -19,7 +19,7 @@ package uk.gov.hmrc.uploaddocuments.connectors
 import scala.concurrent.{ExecutionContext, Future}
 
 trait HttpAPIMonitor extends AverageResponseTimer with HttpErrorRateMeter {
-  def monitor[T](serviceName: String)(function: => Future[T])(implicit ec: ExecutionContext): Future[T] =
+  def monitor[T](serviceName: String)(function: => Future[T])(using ExecutionContext): Future[T] =
     super.countErrors(serviceName) {
       super.timer(serviceName) {
         function

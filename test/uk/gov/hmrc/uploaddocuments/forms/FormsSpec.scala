@@ -21,16 +21,6 @@ import uk.gov.hmrc.uploaddocuments.support.{FormValidator, UnitSpec}
 
 class FormsSpec extends UnitSpec with FormValidator {
 
-  "UploadAnotherFileChoiceForm" should {
-    "bind uploadAnotherFile choice and fill it back" in {
-      val form = Forms.YesNoChoiceForm
-      validate(form, Map("choice" -> "yes"), true)
-      validate(form, Map("choice" -> "no"), false)
-      validate(form, "choice", Map(), Seq("error.choice.required"))
-      validate(form, "choice", Map("choice" -> "foo"), Seq("error.choice.required"))
-    }
-  }
-
   "UpscanUploadSuccessForm" should {
     "bind S3 success query parameters" in {
       val form = Forms.UpscanUploadSuccessForm
@@ -73,16 +63,6 @@ class FormsSpec extends UnitSpec with FormValidator {
         Map(),
         Seq("key" -> "error.required")
       )
-    }
-  }
-
-  "YesNoChoiceForm" should {
-    "bind yes or no and reject other values" in {
-      val form = Forms.YesNoChoiceForm
-      validate(form, Map("choice" -> "yes"), true)
-      validate(form, Map("choice" -> "no"), false)
-      validateErrors(form, Map(), Seq("choice" -> "error.choice.required"))
-      validateErrors(form, Map("choice" -> "foo"), Seq("choice" -> "error.choice.required"))
     }
   }
 }

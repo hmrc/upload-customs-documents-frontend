@@ -24,7 +24,7 @@ import org.scalatest.matchers.should.Matchers
 abstract class JsonFormatTest[A: Format](info: Informer) extends Matchers {
 
   case class TestEntity(entity: A)
-  implicit val testFormat: Format[TestEntity] = Json.format[TestEntity]
+  given testFormat: Format[TestEntity] = Json.format[TestEntity]
 
   def validateJsonFormat(value: String, entity: A): Assertion = {
     info(nameOf(entity))

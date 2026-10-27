@@ -28,14 +28,14 @@ object ViewHelpers {
   def pageTitle(
     key: String,
     args: Any*
-  )(implicit messages: Messages, content: CustomizedServiceContent): Option[String] =
+  )(using messages: Messages, content: CustomizedServiceContent): Option[String] =
     content.title.orElse(Some(messages(key, args: _*)))
 
   def pageTitleWithErrors(
     key: String,
     hasErrors: Boolean,
     args: Any*
-  )(implicit messages: Messages, content: CustomizedServiceContent): Option[String] =
+  )(using messages: Messages, content: CustomizedServiceContent): Option[String] =
     pageTitle(key, args: _*).map { title =>
       if (hasErrors) messages(errorBrowserTitlePrefixKey) + " " + title
       else title
@@ -45,12 +45,12 @@ object ViewHelpers {
     key: String,
     form: Form[_],
     args: Any*
-  )(implicit messages: Messages, content: CustomizedServiceContent): Option[String] =
+  )(using messages: Messages, content: CustomizedServiceContent): Option[String] =
     pageTitleWithErrors(key, form.hasErrors, args: _*)
 
   def pageHeading(
     key: String
-  )(implicit messages: Messages, content: CustomizedServiceContent): String =
+  )(using messages: Messages, content: CustomizedServiceContent): String =
     content.title.getOrElse(messages(key))
 
 }

@@ -37,5 +37,5 @@ object Request {
       context.hostService
     )
 
-  implicit val format: Format[Request] = Json.format[Request]
+  given format: Format[Request] = Json.format[Request]
 }

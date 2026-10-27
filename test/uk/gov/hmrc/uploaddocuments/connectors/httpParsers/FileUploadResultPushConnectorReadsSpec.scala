@@ -27,7 +27,7 @@ import uk.gov.hmrc.uploaddocuments.support.UnitSpec
 class FileUploadResultPushConnectorReadsSpec extends UnitSpec {
 
   object TestFileUploadResultPushConnectorReads
-      extends FileUploadResultPushConnectorReads(HostService.Any)(JourneyId("foo"))
+      extends FileUploadResultPushConnectorReads(HostService.Any)(using JourneyId("foo"))
 
   "FileUploadResultPushConnectorReads.reads" when {
 
