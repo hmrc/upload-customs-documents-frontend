@@ -17,6 +17,7 @@
 package uk.gov.hmrc.uploaddocuments.controllers
 
 import com.github.tomakehurst.wiremock.client.WireMock.*
+import org.jsoup.Jsoup
 import uk.gov.hmrc.uploaddocuments.models.*
 import uk.gov.hmrc.uploaddocuments.stubs.{ExternalApiStubs, UpscanInitiateStubs}
 import play.api.libs.ws.DefaultBodyReadables.readableAsString
@@ -29,6 +30,53 @@ class ChooseMultipleFilesControllerISpec extends ControllerISpecBase with Upscan
   "ChooseMultipleFilesController" when {
 
     "GET /choose-files" should {
+
+      val defaultConfig = fileUploadSessionConfig.copy(
+        allowedContentTypes = FileUploadSessionConfig.defaultAllowedContentTypes,
+        allowedFileExtensions = None,
+        content = CustomizedServiceContent()
+      )
+
+      Seq(
+        ("default MIME types", defaultConfig, "image/jpeg,image/png,application/pdf,text/plain"),
+        (
+          "custom MIME types",
+          defaultConfig.copy(allowedContentTypes = "application/pdf,image/png"),
+          "application/pdf,image/png"
+        ),
+        (
+          "configured extensions",
+          defaultConfig.copy(allowedFileExtensions = Some(".pdf,.png")),
+          ".pdf,.png"
+        ),
+        (
+          "a custom hint when supplied",
+          defaultConfig.copy(
+            allowedFileExtensions = Some(".pdf,.png"),
+            content = CustomizedServiceContent(allowedFilesTypesHint = Some("PDF or PNG"))
+          ),
+          "PDF or PNG"
+        )
+      ).foreach { case (description, config, expectedTypes) =>
+        s"render file format guidance using $description" in {
+          setContext(FileUploadContext(config))
+          setFileUploads()
+          givenAuthorisedForEnrolment(Enrolment("HMRC-XYZ", "EORINumber", "foo"))
+
+          val callbackUrl =
+            appConfig.baseInternalCallbackUrl + s"/internal/callback-from-upscan/journey/$getJourneyId"
+          givenUpscanInitiateSucceeds(callbackUrl, hostUserAgent)
+
+          val result = await(request("/choose-files").get())
+
+          result.status shouldBe 200
+          val doc = Jsoup.parse(result.body)
+          doc.text should include(s"Acceptable file types: $expectedTypes.")
+          Seq(".tiff", ".msg", "PowerPoint", "ODF").foreach { legacyFormat =>
+            doc.text should not include legacyFormat
+          }
+        }
+      }
 
       "return 200 and render the upload multiple files page with a file upload form" in {
 

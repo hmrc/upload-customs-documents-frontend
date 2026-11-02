@@ -18,7 +18,7 @@ package uk.gov.hmrc.uploaddocuments.views
 
 import org.jsoup.Jsoup
 import org.scalatestplus.play.guice.GuiceOneAppPerSuite
-import play.api.i18n.{Messages, MessagesApi}
+import play.api.i18n.{Lang, Messages, MessagesApi, MessagesImpl}
 import play.api.mvc.Call
 import play.api.test.{FakeRequest, Injecting}
 import uk.gov.hmrc.uploaddocuments.models._
@@ -41,13 +41,15 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
     anotherType: Option[String],
     content: CustomizedServiceContent = CustomizedServiceContent(),
     showMinimumError: Boolean = false,
-    showFileRequiredError: Boolean = false
+    showFileRequiredError: Boolean = false,
+    allowedFileTypesHint: String = "PDF, JPG, PNG",
+    localizedMessages: Messages = messages
   ) =
     Jsoup.parse(
       view(
         maximumNumberOfFiles = 4,
         maximumFileSizeBytes = 9000000L,
-        allowedFileTypesHint = "PDF, JPG, PNG",
+        allowedFileTypesHint = allowedFileTypesHint,
         newFileDescription = Some("Calculation worksheet"),
         uploadRequest = uploadReq,
         fileUploads = files,
@@ -61,7 +63,7 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
         backLink = None,
         showMinimumError = showMinimumError,
         showFileRequiredError = showFileRequiredError
-      )(fakeRequest, messages, features, content).body
+      )(fakeRequest, localizedMessages, features, content).body
     )
 
   val acceptedFile = FileUpload.Accepted(
@@ -84,6 +86,31 @@ class UploadMultipleFilesViewSpec extends UnitSpec with GuiceOneAppPerSuite with
   val uploadReq = UploadRequest("https://s3", Map("k" -> "v"))
 
   "UploadMultipleFilesView" should {
+
+    Seq(
+      "en" -> "Acceptable file types: .pdf,.png.",
+      "cy" -> "Mathau derbyniol o ffeiliau: .pdf,.png."
+    ).foreach { case (language, expectedGuidance) =>
+      s"render the supplied file types in $language without legacy format guidance" in {
+        val doc = render(
+          FileUploads(),
+          Some(uploadReq),
+          None,
+          allowedFileTypesHint = ".pdf,.png",
+          localizedMessages = MessagesImpl(Lang(language), app.injector.instanceOf[MessagesApi])
+        )
+
+        doc.text should include(expectedGuidance)
+        Seq(".tiff", ".msg", "PowerPoint", "ODF").foreach { legacyFormat =>
+          doc.text should not include legacyFormat
+        }
+      }
+
+      s"keep unused file format help keys out of the $language message catalogue" in {
+        val catalogue = app.injector.instanceOf[MessagesApi].messages(language)
+        catalogue.keys.filter(_.startsWith("view.upload-file.help.")).toSeq shouldBe empty
+      }
+    }
 
     "enable the govuk file-upload drop-zone with i18n text" in {
       val doc = render(FileUploads(Seq.empty), Some(uploadReq), None)
